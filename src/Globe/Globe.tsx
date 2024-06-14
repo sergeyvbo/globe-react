@@ -93,8 +93,8 @@ const Globe = (props: Props) => {
             .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
             .attr('d', d => path(d as GeoPermissibleObjects) as string)
             .attr('fill', (d: any) => d.properties.name === selectedCountry ? SELECTED_COUNTRY_FILL : GROUND_FILL)
-            .style('stroke', 'black')
-            .style('stroke-width', 0.3)
+            //.style('stroke', 'black')
+            //.style('stroke-width', 0.3)
             .style('opacity', 0.8)
             .on('click', (_, d: any) => {
                 setCountryName(d.properties.name)
