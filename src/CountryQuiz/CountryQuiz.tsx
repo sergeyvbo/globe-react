@@ -68,7 +68,11 @@ const CountryQuiz = () => {
 
     if (geoData && options.length) {
         return (
-            <>
+            <div >
+                <Globe
+                    geoData={geoData}
+                    selectedCountry={correctOption}
+                />
                 <Quiz
                     question={'Which country is highlighted?'}
                     options={options}
@@ -79,12 +83,10 @@ const CountryQuiz = () => {
                     {showSuccess && <span className='CountryQuiz-success'>+1</span>}
                     {showFailure && <span className='CountryQuiz-failure'>-1</span>}
                 </div>
-                <Globe
-                    geoData={geoData}
-                    selectedCountry={correctOption}
-                />
 
-            </>)
+
+            </div>
+        )
     }
     return <p> Loading...</p>
 }
