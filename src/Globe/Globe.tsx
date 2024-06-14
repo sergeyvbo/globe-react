@@ -1,31 +1,32 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { GeoPermissibleObjects } from 'd3-geo';
 
-const Globe = () => {
+interface Props {
+    geoData: GeoPermissibleObjects[],
+    selectedCountry: string,
+    rotationSpeed?: number,
+    rotationDirection?: 1 | -1,
+}
+
+const Globe = (props: Props) => {
+
+    const {
+        geoData,
+        selectedCountry,
+        rotationSpeed,
+        rotationDirection,
+    } = props
+
     const mapRef = useRef<HTMLDivElement | null>(null);
     const [countryName, setCountryName] = useState('');
-    const [countriesData, setCountriesData] = useState<GeoPermissibleObjects[] | null>(null);
 
-    const globeFill = '#6CBAE9'
-    const groundFill = '#B8DEBD'
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/world.json`);
-                const data = await response.json();
-                setCountriesData(data.features);
-            } catch (error) {
-                console.error('Error fetching country data:', error);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const GLOBE_FILL = '#6CBAE9'
+    const GROUND_FILL = '#B8DEBD'
+    const SELECTED_COUNTRY_FILL = '#FF6347'
 
     useEffect(() => {
-        if (!mapRef.current || !countriesData) return;
+        if (!mapRef.current) return;
 
         const width = mapRef.current.getBoundingClientRect().width;
         //const height = 500;
@@ -47,7 +48,7 @@ const Globe = () => {
             .attr('height', height);
 
         const globe = svg.append('circle')
-            .attr('fill', globeFill)
+            .attr('fill', GLOBE_FILL)
             .attr('stroke', '#000')
             .attr('stroke-width', '0.2')
             .attr('cx', width / 2)
@@ -87,11 +88,11 @@ const Globe = () => {
         map.append('g')
             .attr('class', 'countries')
             .selectAll('path')
-            .data(countriesData)
+            .data(geoData)
             .enter().append('path')
             .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
             .attr('d', d => path(d as GeoPermissibleObjects) as string)
-            .attr('fill', groundFill)
+            .attr('fill', (d: any) => d.properties.name === selectedCountry ? SELECTED_COUNTRY_FILL : GROUND_FILL)
             .style('stroke', 'black')
             .style('stroke-width', 0.3)
             .style('opacity', 0.8)
@@ -99,21 +100,24 @@ const Globe = () => {
                 setCountryName(d.properties.name)
             });
 
-        // d3.timer(function (elapsed) {
-        //     const rotate = projection.rotate();
-        //     const k = sensitivity / projection.scale();
-        //     projection.rotate([
-        //         rotate[0] - 1 * k,
-        //         rotate[1]
-        //     ]);
-        //     path = d3.geoPath().projection(projection);
-        //     svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
-        // }, 500);
+        if (rotationSpeed) {
+            d3.timer(function (elapsed) {
+                const rotate = projection.rotate();
+                const k = sensitivity / projection.scale() * (rotationDirection ?? 1);
+                projection.rotate([
+                    rotate[0] - 1 * k,
+                    rotate[1]
+                ]);
+                path = d3.geoPath().projection(projection);
+                svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
+            }, rotationSpeed);
+        }
+
 
         return () => {
             svg.remove();
         };
-    }, [countriesData]);
+    }, []);
 
     return (
         <>

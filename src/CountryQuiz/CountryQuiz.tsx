@@ -4,14 +4,14 @@ import { Globe } from "../Globe/Globe";
 
 const CountryQuiz = () => {
 
-    const [countriesData, setCountriesData] = useState<GeoPermissibleObjects[] | null>(null);
+    const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await fetch(`${process.env.PUBLIC_URL}/world.json`);
                 const data = await response.json();
-                setCountriesData(data.features);
+                setGeoData(data.features);
             } catch (error) {
                 console.error('Error fetching country data:', error);
             }
@@ -20,8 +20,12 @@ const CountryQuiz = () => {
         fetchData();
     }, [])
 
-    if (countriesData) {
-        return <Globe />
+    if (geoData) {
+        return (
+            <Globe
+                geoData={geoData}
+                selectedCountry='Russia'
+            />)
     }
     return <p> Loading...</p>
 }
