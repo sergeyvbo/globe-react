@@ -130,7 +130,7 @@ const Globe = (props: Props) => {
 
     return (
         <>
-            <div id="map" ref={mapRef} className='Globe-map' />
+            <div id="map" ref={mapRef} />
             <div className='Globe-countryName'>{countryName}</div>
         </>
     )
