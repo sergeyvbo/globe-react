@@ -1,15 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { GeoPermissibleObjects } from 'd3-geo';
 
 const Globe = () => {
     const mapRef = useRef<HTMLDivElement | null>(null);
+    const [countryName, setCountryName] = useState('');
+    const [countriesData, setCountriesData] = useState<GeoPermissibleObjects[] | null>(null);
 
     const globeFill = '#6CBAE9'
     const groundFill = '#B8DEBD'
 
     useEffect(() => {
-        if (!mapRef.current) return;
+        const fetchData = async () => {
+            try {
+                const response = await fetch(`${process.env.PUBLIC_URL}/world.json`);
+                const data = await response.json();
+                setCountriesData(data.features);
+            } catch (error) {
+                console.error('Error fetching country data:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        if (!mapRef.current || !countriesData) return;
 
         const width = mapRef.current.getBoundingClientRect().width;
         //const height = 500;
@@ -68,39 +84,43 @@ const Globe = () => {
 
         const map = svg.append('g');
 
-        fetch('world.json')
-            .then(response => response.json())
-            .then(data => {
-                map.append('g')
-                    .attr('class', 'countries')
-                    .selectAll('path')
-                    .data(data.features)
-                    .enter().append('path')
-                    .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
-                    .attr('d', d => path(d as GeoPermissibleObjects) as string)
-                    .attr('fill', groundFill)
-                    .style('stroke', 'black')
-                    .style('stroke-width', 0.3)
-                    .style('opacity', 0.8);
-
-                d3.timer(function (elapsed) {
-                    const rotate = projection.rotate();
-                    const k = sensitivity / projection.scale();
-                    projection.rotate([
-                        rotate[0] - 1 * k,
-                        rotate[1]
-                    ]);
-                    path = d3.geoPath().projection(projection);
-                    svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
-                }, 500);
+        map.append('g')
+            .attr('class', 'countries')
+            .selectAll('path')
+            .data(countriesData)
+            .enter().append('path')
+            .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
+            .attr('d', d => path(d as GeoPermissibleObjects) as string)
+            .attr('fill', groundFill)
+            .style('stroke', 'black')
+            .style('stroke-width', 0.3)
+            .style('opacity', 0.8)
+            .on('click', (_, d: any) => {
+                setCountryName(d.properties.name)
             });
+
+        // d3.timer(function (elapsed) {
+        //     const rotate = projection.rotate();
+        //     const k = sensitivity / projection.scale();
+        //     projection.rotate([
+        //         rotate[0] - 1 * k,
+        //         rotate[1]
+        //     ]);
+        //     path = d3.geoPath().projection(projection);
+        //     svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
+        // }, 500);
 
         return () => {
             svg.remove();
         };
-    }, []);
+    }, [countriesData]);
 
-    return <div id="map" ref={mapRef} className='Globe-map' />;
+    return (
+        <>
+            <div id="map" ref={mapRef} className='Globe-map' />
+            <div className='Globe-countryName'>{countryName}</div>
+        </>
+    )
 };
 
 export { Globe };

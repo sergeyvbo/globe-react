@@ -1,7 +1,8 @@
 import './App.css';
-import { Globe } from './Globe/Globe';
+import { CountryQuiz } from './CountryQuiz/CountryQuiz';
 
 function App() {
+
   return (
     <div className="App">
       <header className="App-header">
@@ -10,7 +11,7 @@ function App() {
         </p>
       </header>
       <article className="App-article">
-        <Globe />
+        <CountryQuiz />
       </article>
     </div>
   );
