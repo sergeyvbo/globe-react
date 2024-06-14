@@ -1,2 +1,2 @@
-Fun with D3.js geo object
-React app showing rotating and draggable globe on the screen
+# A simple React + D3.js Geo Quiz
+![thumbnail](public/Thumbnail.png)
