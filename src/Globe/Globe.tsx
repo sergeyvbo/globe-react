@@ -113,6 +113,15 @@ const Globe = (props: Props) => {
             }, rotationSpeed);
         }
 
+        if (selectedCountry) {
+            const selected = geoData.find((d: any) => d.properties.name === selectedCountry);
+            if (selected) {
+                const centroid = d3.geoCentroid(selected);
+                projection.rotate([-centroid[0], -centroid[1]]);
+                path = d3.geoPath().projection(projection);
+                svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
+            }
+        }
 
         return () => {
             svg.remove();

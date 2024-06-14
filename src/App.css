@@ -43,3 +43,13 @@
   left: 10px;
   text-align: left;
 }
+
+.CountryQuiz-success {
+  color: green;
+  animation: fadeOut 1s;
+}
+
+.CountryQuiz-failure {
+  color: red;
+  animation: fadeOut 1s;
+}
