@@ -1,31 +1,73 @@
-import { GeoPermissibleObjects } from "d3";
-import { useState, useEffect } from "react";
-import { Globe } from "../Globe/Globe";
+import { ExtendedFeature, GeoPermissibleObjects, max } from "d3"
+import { useState, useEffect } from "react"
+import { Globe } from "../Globe/Globe"
+import { Quiz } from "../Quiz/Quiz"
 
 const CountryQuiz = () => {
 
-    const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null);
+    const OPTIONS_SIZE = 3
+
+    const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null)
+    const [score, setScore] = useState(0)
+    const [countries, setCountries] = useState<string[]>([])
+    const [options, setOptions] = useState<string[]>([])
+    const [correctOption, setCorrectOption] = useState<string>('')
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/world.json`);
-                const data = await response.json();
-                setGeoData(data.features);
-            } catch (error) {
-                console.error('Error fetching country data:', error);
-            }
-        };
+                const response = await fetch(`${process.env.PUBLIC_URL}/world.json`)
+                const data = await response.json()
+                setGeoData(data.features)
 
-        fetchData();
+                setCountries(data.features.map((f: ExtendedFeature) => f.properties!.name))
+            } catch (error) {
+                console.error('Error fetching country data:', error)
+            }
+        }
+
+        fetchData()
     }, [])
 
-    if (geoData) {
+    useEffect(() => {
+        startGame()
+    }, [countries])
+
+    const random = (max: number) => Math.floor(Math.random() * max)
+
+    const startGame = () => {
+        if (!countries.length) return
+        const optionsSet = new Set<string>();
+        while (optionsSet.size < OPTIONS_SIZE) {
+            const randomCountry = countries[random(countries.length)]
+            optionsSet.add(randomCountry)
+        }
+        const optionsArray = Array.from(optionsSet)
+        setOptions(optionsArray)
+        setCorrectOption(optionsArray[random(OPTIONS_SIZE)])
+    }
+
+    const onSubmit = (isCorrect: boolean) => {
+        setScore(score + (isCorrect ? 1 : -1))
+        startGame()
+    }
+
+    if (geoData && options.length) {
         return (
-            <Globe
-                geoData={geoData}
-                selectedCountry='Russia'
-            />)
+            <>
+                <Quiz
+                    question={'Which country is highlighted?'}
+                    options={options}
+                    correctOption={correctOption}
+                    onSubmit={onSubmit} />
+                <div className="CountryQuiz-score">
+                    Score: {score}
+                </div>
+                <Globe
+                    geoData={geoData}
+                    selectedCountry={correctOption}
+                />
+            </>)
     }
     return <p> Loading...</p>
 }

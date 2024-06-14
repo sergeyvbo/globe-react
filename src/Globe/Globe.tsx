@@ -117,7 +117,7 @@ const Globe = (props: Props) => {
         return () => {
             svg.remove();
         };
-    }, []);
+    }, [selectedCountry]);
 
     return (
         <>
