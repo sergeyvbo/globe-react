@@ -79,12 +79,11 @@ const CountryQuiz = () => {
                     correctOption={correctOption}
                     onSubmit={onSubmit} />
                 <div className="CountryQuiz-score">
-                    Score: {score}
-                    {showSuccess && <span className='CountryQuiz-success'>+1</span>}
-                    {showFailure && <span className='CountryQuiz-failure'>-1</span>}
+                    <h2>Score: {score}
+                        {showSuccess && <span className='CountryQuiz-success'>+1</span>}
+                        {showFailure && <span className='CountryQuiz-failure'>-1</span>}
+                    </h2>
                 </div>
-
-
             </div>
         )
     }

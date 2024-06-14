@@ -29,13 +29,11 @@ const Quiz = (props: Props) => {
     return (
         <div className="Quiz-container">
             <h3>{question}</h3>
-            <ul>
-                {options.map((option, index) => {
-                    return (
-                        <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>
-                    )
-                })}
-            </ul>
+            {options.map((option, index) => {
+                return (
+                    <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>
+                )
+            })}
         </div>
     )
 }
