@@ -71,16 +71,23 @@ const Globe = (props: Props) => {
 
         svg.call(
             d3.zoom<SVGSVGElement, unknown>()
+                .scaleExtent([0.5, 8])
                 .on('zoom', (event) => {
-                    if (event.transform.k > 0.3) {
-                        projection.scale(initialScale * event.transform.k);
-                        path = d3.geoPath().projection(projection);
-                        svg.selectAll('path').attr('d', (d: any) => path(d) as string);
-                        globe.attr('r', projection.scale());
-                    } else {
-                        event.transform.k = 0.3;
-                    }
+                    projection.scale(initialScale * event.transform.k);
+                    path = d3.geoPath().projection(projection);
+                    svg.selectAll('path').attr('d', (d: any) => path(d) as string);
+                    globe.attr('r', projection.scale());
                 })
+            // .on('zoom', (event) => {
+            //     if (event.transform.k > 0.3) {
+            //         projection.scale(initialScale * event.transform.k);
+            //         path = d3.geoPath().projection(projection);
+            //         svg.selectAll('path').attr('d', (d: any) => path(d) as string);
+            //         globe.attr('r', projection.scale());
+            //     } else {
+            //         event.transform.k = 0.3;
+            //     }
+            // })
         );
 
         const map = svg.append('g');
@@ -131,7 +138,6 @@ const Globe = (props: Props) => {
     return (
         <>
             <div id="map" ref={mapRef} />
-            <div className='Globe-countryName'>{countryName}</div>
         </>
     )
 };
