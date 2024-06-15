@@ -2,13 +2,15 @@ import { ExtendedFeature, GeoPermissibleObjects, max } from "d3"
 import { useState, useEffect } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
+import { Score } from "./Score"
 
 const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
     const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null)
-    const [score, setScore] = useState(0)
+    const [correctScore, setCorrectScore] = useState(0)
+    const [wrongScore, setWrongScore] = useState(0)
     const [countries, setCountries] = useState<string[]>([])
     const [options, setOptions] = useState<string[]>([])
     const [correctOption, setCorrectOption] = useState<string>('')
@@ -50,12 +52,12 @@ const CountryQuiz = () => {
     }
 
     const onSubmit = (isCorrect: boolean) => {
-        setScore(score + (isCorrect ? 1 : -1))
-
         if (isCorrect) {
+            setCorrectScore(correctScore + 1)
             setShowSuccess(true)
         }
         else {
+            setWrongScore(wrongScore + 1)
             setShowFailure(true)
         }
         setTimeout(() => {
@@ -74,16 +76,11 @@ const CountryQuiz = () => {
                     selectedCountry={correctOption}
                 />
                 <Quiz
-                    question={'Which country is highlighted?'}
+                    question={''}
                     options={options}
                     correctOption={correctOption}
                     onSubmit={onSubmit} />
-                <div className="CountryQuiz-score">
-                    <h2>Score: {score}
-                        {showSuccess && <span className='CountryQuiz-success'>+1</span>}
-                        {showFailure && <span className='CountryQuiz-failure'>-1</span>}
-                    </h2>
-                </div>
+                <Score correctScore={correctScore} wrongScore={wrongScore} />
             </div>
         )
     }

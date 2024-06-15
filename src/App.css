@@ -47,16 +47,17 @@ body {
 
 .CountryQuiz-score {
   position: absolute;
-  bottom: 150px;
+  bottom: 100px;
   width: 100%;
+  font-size: large;
 }
 
 .CountryQuiz-success {
-  color: green;
+  color: #B8DEBD;
   animation: fadeOut 1s;
 }
 
 .CountryQuiz-failure {
-  color: red;
+  color: #FF6347;
   animation: fadeOut 1s;
 }

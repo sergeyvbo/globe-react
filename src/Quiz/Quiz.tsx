@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 interface Props {
     question: string
@@ -28,7 +28,7 @@ const Quiz = (props: Props) => {
 
     return (
         <div className="Quiz-container">
-            <h3>{question}</h3>
+            {question && <h3>{question}</h3>}
             {options.map((option, index) => {
                 return (
                     <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>

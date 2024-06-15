@@ -7,7 +7,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>
-          Country Quiz
+          Which country is highlighted?
         </p>
       </header>
       <article className="App-article">
