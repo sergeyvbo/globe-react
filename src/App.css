@@ -54,10 +54,8 @@ body {
 
 .CountryQuiz-success {
   color: #B8DEBD;
-  animation: fadeOut 1s;
 }
 
 .CountryQuiz-failure {
   color: #FF6347;
-  animation: fadeOut 1s;
 }
