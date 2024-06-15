@@ -14,8 +14,6 @@ const CountryQuiz = () => {
     const [countries, setCountries] = useState<string[]>([])
     const [options, setOptions] = useState<string[]>([])
     const [correctOption, setCorrectOption] = useState<string>('')
-    const [showSuccess, setShowSuccess] = useState(false)
-    const [showFailure, setShowFailure] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -54,18 +52,10 @@ const CountryQuiz = () => {
     const onSubmit = (isCorrect: boolean) => {
         if (isCorrect) {
             setCorrectScore(correctScore + 1)
-            setShowSuccess(true)
         }
         else {
             setWrongScore(wrongScore + 1)
-            setShowFailure(true)
         }
-        setTimeout(() => {
-            setShowSuccess(false)
-            setShowFailure(false)
-            startGame()
-        }, 1000)
-
     }
 
     if (geoData && options.length) {
