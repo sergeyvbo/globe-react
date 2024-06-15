@@ -5,11 +5,6 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <p>
-          Which country is highlighted?
-        </p>
-      </header>
       <article className="App-article">
         <CountryQuiz />
       </article>

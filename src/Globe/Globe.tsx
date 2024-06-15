@@ -30,7 +30,7 @@ const Globe = (props: Props) => {
 
         const width = mapRef.current.getBoundingClientRect().width;
         //const height = 500;
-        const height = window.innerHeight - 200;
+        const height = window.innerHeight;
         const sensitivity = 75;
 
         const projection = d3.geoOrthographic()
