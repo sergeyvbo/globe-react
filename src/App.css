@@ -47,15 +47,24 @@ body {
 
 .CountryQuiz-score {
   position: absolute;
-  bottom: 100px;
+  bottom: 80px;
   width: 100%;
   font-size: large;
+  display: flex;
+  justify-content: center;
+}
+
+.CountryQuiz-scorebackground {
+  background: #282c3450;
+  width: auto;
+  padding: 5px;
+
 }
 
 .CountryQuiz-success {
-  color: #B8DEBD;
+  color: #56D6A7;
 }
 
 .CountryQuiz-failure {
-  color: #FF6347;
+  color: #E34A39;
 }
