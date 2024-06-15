@@ -20,7 +20,7 @@ const CountryQuiz = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/world.json`)
+                const response = await fetch(`${process.env.PUBLIC_URL}/geo.json`)
                 const data = await response.json()
                 setGeoData(data.features)
 
