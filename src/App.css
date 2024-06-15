@@ -1,10 +1,18 @@
+:root {
+  --bg: #282c34;
+  --bg-half: #282c3450;
+  --blue: #6CBAE9;
+  --green: #B8DEBD;
+  --red: #FF6347;
+}
+
 body {
   overflow: hidden;
 }
 
 .App {
   text-align: center;
-  background-color: #282c34;
+  background-color: var(--bg);
   color: white;
 }
 
@@ -16,12 +24,8 @@ body {
   font-size: calc(10px + 2vmin);
 }
 
-.App-link {
-  color: #61dafb;
-}
-
 .App-article {
-  background-color: #282c34;
+  background-color: var(--bg);
 }
 
 .Quiz-container {
@@ -34,15 +38,15 @@ body {
   margin: 5px;
   max-width: 30%;
   min-height: 50px;
-  background-color: #6CBAE9;
+  background-color: var(--blue);
 }
 
 .Quiz-button-success {
-  background-color: #B8DEBD;
+  background-color: var(--green);
 }
 
 .Quiz-button-failure {
-  background-color: #FF6347;
+  background-color: var(--red);
 }
 
 .CountryQuiz-score {
@@ -55,16 +59,16 @@ body {
 }
 
 .CountryQuiz-scorebackground {
-  background: #282c3450;
+  background: var(--bg-half);
   width: auto;
   padding: 5px;
 
 }
 
 .CountryQuiz-success {
-  color: #56D6A7;
+  color: var(--green);
 }
 
 .CountryQuiz-failure {
-  color: #E34A39;
+  color: var(--red);
 }
