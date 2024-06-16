@@ -24,6 +24,9 @@ const Globe = (props: Props) => {
     const GROUND_FILL = '#B8DEBD'
     const SELECTED_COUNTRY_FILL = '#FF6347'
 
+    const PIN_OFFSET_X = -24
+    const PIN_OFFSET_Y = -48
+
     useEffect(() => {
         if (!mapRef.current) return;
 
@@ -125,7 +128,7 @@ const Globe = (props: Props) => {
                 const projectedLabel = projection([label_x, label_y])
                 if (projectedLabel) {
                     d3.select('.map-pin')
-                        .attr('transform', `translate(${projectedLabel[0] - 24},${projectedLabel[1] - 48})`)
+                        .attr('transform', `translate(${projectedLabel[0] + PIN_OFFSET_X},${projectedLabel[1] + PIN_OFFSET_Y})`)
                         .style('display', 'block');
                 }
             } else {
