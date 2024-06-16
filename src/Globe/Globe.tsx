@@ -19,7 +19,6 @@ const Globe = (props: Props) => {
     } = props
 
     const mapRef = useRef<HTMLDivElement | null>(null);
-    const [countryName, setCountryName] = useState('');
 
     const GLOBE_FILL = '#6CBAE9'
     const GROUND_FILL = '#B8DEBD'
@@ -45,7 +44,7 @@ const Globe = (props: Props) => {
         const svg = d3.select(mapRef.current)
             .append('svg')
             .attr('width', width)
-            .attr('height', height);
+            .attr('height', height)
 
         const globe = svg.append('circle')
             .attr('fill', GLOBE_FILL)
@@ -66,17 +65,19 @@ const Globe = (props: Props) => {
                     ]);
                     path = d3.geoPath().projection(projection);
                     svg.selectAll('path').attr('d', (d: any) => path(d) as string);
+                    updatePin(geoData.find((d: any) => d.properties.name === selectedCountry))
                 })
         );
 
         svg.call(
             d3.zoom<SVGSVGElement, unknown>()
-                .scaleExtent([0.5, 8])
+                .scaleExtent([0.5, 200])
                 .on('zoom', (event) => {
                     projection.scale(initialScale * event.transform.k);
                     path = d3.geoPath().projection(projection);
                     svg.selectAll('path').attr('d', (d: any) => path(d) as string);
                     globe.attr('r', projection.scale());
+                    updatePin(geoData.find((d: any) => d.properties.name === selectedCountry))
                 })
             // .on('zoom', (event) => {
             //     if (event.transform.k > 0.3) {
@@ -103,9 +104,34 @@ const Globe = (props: Props) => {
             //.style('stroke', 'black')
             //.style('stroke-width', 0.3)
             .style('opacity', 0.8)
-            .on('click', (_, d: any) => {
-                setCountryName(d.properties.name)
-            });
+
+        svg.append("image")
+            .attr('class', 'map-pin')
+            .attr("xlink:href", `${process.env.PUBLIC_URL}/map-pin.svg`)
+            .attr('width', 48)
+            .attr("height", 48)
+
+        const pin = svg.select('.map-pin')
+
+        const updatePin = (country: any) => {
+            const { label_x, label_y } = country.properties
+            if (!label_x || !label_y) {
+                return
+            }
+
+            // add pin for small countries at country label coordinates
+            const projectedLabel = projection([label_x, label_y])
+            const area = d3.geoArea(country)
+            if (country && area < .00025) {
+                if (projectedLabel) {
+                    d3.select('.map-pin')
+                        .attr('transform', `translate(${projectedLabel[0] - 24},${projectedLabel[1] - 48})`)
+                        .style('display', 'block');
+                }
+            } else {
+                pin.style('display', 'none')
+            }
+        }
 
         if (rotationSpeed) {
             d3.timer(function (elapsed) {
@@ -117,6 +143,7 @@ const Globe = (props: Props) => {
                 ]);
                 path = d3.geoPath().projection(projection);
                 svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
+                updatePin(geoData.find((d: any) => d.properties.name === selectedCountry))
             }, rotationSpeed);
         }
 
@@ -127,6 +154,7 @@ const Globe = (props: Props) => {
                 projection.rotate([-centroid[0], -centroid[1]]);
                 path = d3.geoPath().projection(projection);
                 svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string);
+                updatePin(selected)
             }
         }
 

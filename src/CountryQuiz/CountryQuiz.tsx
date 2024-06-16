@@ -1,5 +1,5 @@
-import { GeoPermissibleObjects, max } from "d3"
-import { useState, useEffect, useMemo } from "react"
+import { GeoPermissibleObjects } from "d3"
+import { useState, useEffect } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
