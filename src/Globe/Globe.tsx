@@ -114,15 +114,15 @@ const Globe = (props: Props) => {
         const pin = svg.select('.map-pin')
 
         const updatePin = (country: any) => {
-            const { label_x, label_y } = country.properties
-            if (!label_x || !label_y) {
-                return
-            }
 
-            // add pin for small countries at country label coordinates
-            const projectedLabel = projection([label_x, label_y])
             const area = d3.geoArea(country)
             if (country && area < .00025) {
+                // add pin for small countries at country label coordinates
+                const { label_x, label_y } = country.properties
+                if (!label_x || !label_y) {
+                    return
+                }
+                const projectedLabel = projection([label_x, label_y])
                 if (projectedLabel) {
                     d3.select('.map-pin')
                         .attr('transform', `translate(${projectedLabel[0] - 24},${projectedLabel[1] - 48})`)
