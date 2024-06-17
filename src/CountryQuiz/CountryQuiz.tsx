@@ -16,7 +16,7 @@ const CountryQuiz = () => {
     //const [countries, setCountries] = useState<string[]>([])
     const [options, setOptions] = useState<string[]>([])
     const [correctOption, setCorrectOption] = useState<string>('')
-    const [regionType, setRegionType] = useState<RegionType>('subregion')
+    const [regionType, setRegionType] = useState<RegionType>('continent')
 
     useEffect(() => {
         const fetchData = async () => {
@@ -50,8 +50,15 @@ const CountryQuiz = () => {
 
         const randomRegion = randomElement(regions)
 
+        // const types = Array.from(new Set(geoData.map((obj: any) => obj.properties['type'] as string)))
+        // const subunits = Array.from(new Set(geoData.map((obj: any) => obj.properties['subunit'] as string)))
+        // const geounits = Array.from(new Set(geoData.map((obj: any) => obj.properties['geounit'] as string)))
+        // const sovereignts = Array.from(new Set(geoData.map((obj: any) => obj.properties['sovereignt'] as string)))
+        // const brk_groups = Array.from(new Set(geoData.map((obj: any) => obj.properties['brk_group'] as string)))
+
         const countries = geoData
-            .filter((obj: any) => obj.properties[regionType] === randomRegion)
+            .filter((obj: any) => ['Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
+            //.filter((obj: any) => obj.properties[regionType] === randomRegion)
             .map((country: any) => country.properties.name)
 
         const optionsSet = new Set<string>();
@@ -73,7 +80,7 @@ const CountryQuiz = () => {
         }
         setTimeout(() => {
             startGame()
-        }, 1000);
+        }, 2000);
     }
 
     if (geoData && options.length) {

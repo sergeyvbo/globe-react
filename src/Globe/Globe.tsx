@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { GeoPermissibleObjects } from 'd3-geo'
+import { Button, IconButton } from '@mui/material'
+import { ZoomIn, ZoomInMap, ZoomOut, ZoomOutMap } from '@mui/icons-material'
 
 interface Props {
     geoData: GeoPermissibleObjects[],
@@ -109,8 +111,8 @@ const Globe = (props: Props) => {
             .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
             .attr('d', d => path(d as GeoPermissibleObjects) as string)
             .attr('fill', (d: any) => d.properties.name === selectedCountry ? SELECTED_COUNTRY_FILL : GROUND_FILL)
-            //.style('stroke', 'black')
-            //.style('stroke-width', 0.3)
+            .style('stroke', 'black')
+            .style('stroke-width', 0.3)
             .style('opacity', 0.8)
 
         // pin
@@ -188,8 +190,12 @@ const Globe = (props: Props) => {
         <>
             <div id="map" ref={mapRef} />
             <div className='Globe-zoom'>
-                <button type='button' className='Globe-zoom-button' onClick={() => zoomIn()}>+</button>
-                <button type='button' className='Globe-zoom-button' onClick={() => zoomOut()}>-</button>
+                <Button variant='outlined' type='button' className='Globe-zoom-button' onClick={() => zoomIn()}>
+                    <ZoomIn />
+                </Button>
+                <Button variant='outlined' type='button' className='Globe-zoom-button' onClick={() => zoomOut()}>
+                    <ZoomOut />
+                </Button>
             </div>
         </>
     )

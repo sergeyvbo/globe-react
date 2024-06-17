@@ -1,0 +1,29 @@
+:root {
+    --bg: #282c34;
+    --bg-half: #282c3450;
+    --blue: #6CBAE9;
+    --green: #B8DEBD;
+    --red: #FF6347;
+}
+
+.Quiz-container {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+}
+
+.Quiz-button {
+    margin: 5px !important;
+    max-width: 30%;
+    min-height: 50px;
+    background-color: var(--blue) !important;
+    text-transform: none !important;
+}
+
+.Quiz-button-success {
+    background-color: var(--green) !important;
+}
+
+.Quiz-button-failure {
+    background-color: var(--red) !important;
+}
