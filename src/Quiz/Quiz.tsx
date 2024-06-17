@@ -5,6 +5,7 @@ import { blue } from '@mui/material/colors'
 
 
 interface Props {
+    disabled: boolean
     question: string
     options: string[]
     correctOption: string
@@ -12,7 +13,7 @@ interface Props {
 }
 
 const Quiz = (props: Props) => {
-    const { question, options, correctOption, onSubmit } = props
+    const { disabled, question, options, correctOption, onSubmit } = props
     const [showResult, setShowResult] = useState(false)
 
     const onBtnClick = (option: string) => {
@@ -37,6 +38,7 @@ const Quiz = (props: Props) => {
                 return (
                     // <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>
                     <Button
+                        disabled={disabled}
                         key={index}
                         variant="contained"
                         className={`Quiz-button ${buttonResultClass(option)}`}

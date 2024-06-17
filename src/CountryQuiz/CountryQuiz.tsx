@@ -17,6 +17,7 @@ const CountryQuiz = () => {
     const [options, setOptions] = useState<string[]>([])
     const [correctOption, setCorrectOption] = useState<string>('')
     const [regionType, setRegionType] = useState<RegionType>('continent')
+    const [disabled, setDisabled] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -43,7 +44,7 @@ const CountryQuiz = () => {
             return
         }
         const random = (max: number) => Math.floor(Math.random() * max)
-        const randomElement = (arr: any[]) => arr[random(arr.length - 1)]
+        const randomElement = (arr: any[]) => arr[random(arr.length)]
 
         // get distinct regions by regionType
         const regions = Array.from(new Set(geoData.map((obj: any) => obj.properties[regionType] as string)))
@@ -69,6 +70,7 @@ const CountryQuiz = () => {
         const optionsArray = Array.from(optionsSet)
         setOptions(optionsArray)
         setCorrectOption(randomElement(optionsArray))
+
     }
 
     const onSubmit = (isCorrect: boolean) => {
@@ -78,8 +80,10 @@ const CountryQuiz = () => {
         else {
             setWrongScore(wrongScore + 1)
         }
+        setDisabled(true)
         setTimeout(() => {
             startGame()
+            setDisabled(false)
         }, 2000);
     }
 
@@ -91,6 +95,7 @@ const CountryQuiz = () => {
                     selectedCountry={correctOption}
                 />
                 <Quiz
+                    disabled={disabled}
                     question={''}
                     options={options}
                     correctOption={correctOption}
