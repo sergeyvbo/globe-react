@@ -47,9 +47,7 @@ const CountryQuiz = () => {
         const randomElement = (arr: any[]) => arr[random(arr.length)]
 
         // get distinct regions by regionType
-        const regions = Array.from(new Set(geoData.map((obj: any) => obj.properties[regionType] as string)))
 
-        const randomRegion = randomElement(regions)
 
         // const types = Array.from(new Set(geoData.map((obj: any) => obj.properties['type'] as string)))
         // const subunits = Array.from(new Set(geoData.map((obj: any) => obj.properties['subunit'] as string)))
@@ -57,9 +55,14 @@ const CountryQuiz = () => {
         // const sovereignts = Array.from(new Set(geoData.map((obj: any) => obj.properties['sovereignt'] as string)))
         // const brk_groups = Array.from(new Set(geoData.map((obj: any) => obj.properties['brk_group'] as string)))
 
-        const countries = geoData
+        const countryData = geoData
             .filter((obj: any) => ['Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
-            //.filter((obj: any) => obj.properties[regionType] === randomRegion)
+
+        const regions = Array.from(new Set(countryData.map((obj: any) => obj.properties[regionType] as string)))
+        const randomRegion = randomElement(regions)
+
+        const countries = countryData
+            .filter((obj: any) => obj.properties[regionType] === randomRegion)
             .map((country: any) => country.properties.name)
 
         const optionsSet = new Set<string>();
