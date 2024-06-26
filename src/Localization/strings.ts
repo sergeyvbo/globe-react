@@ -1,6 +1,10 @@
+type Language = 'en' | 'ru';
+type Path = keyof typeof strings['en']['settings'];
+
 const strings = {
     en: {
         settings: {
+            settings: "Settings",
             language: "Language",
             showPin: "Show pin for small countries",
             difficulty: "Options difficulty",
@@ -14,10 +18,13 @@ const strings = {
             showSovereignCountries: "Sovereign countries",
             showDisputed: "Disputed",
             showOthers: "Islands and dependencies",
+            correct: "Correct",
+            wrong: "Wrong",
         } as const,
     } as const,
     ru: {
         settings: {
+            settings: "Настройки",
             language: "Язык",
             showPin: "Показывать метку для маленьких стран",
             difficulty: "Уровень сложности",
@@ -31,8 +38,16 @@ const strings = {
             showSovereignCountries: "Независимые государства",
             showDisputed: "Непризнанные государства",
             showOthers: "Владения, заморские территории и прочее",
+            correct: "Правильно",
+            wrong: "Ошибок",
         } as const,
     } as const,
 } as const
 
-export { strings }
+const getString = (key: Path): string => {
+    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    const language: Language = settings.language || 'en';
+    return strings[language].settings[key];
+};
+
+export { getString }

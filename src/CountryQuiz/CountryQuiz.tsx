@@ -6,6 +6,11 @@ import { Score } from "./Score"
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb'
 
+type CountryOption = {
+    name: string,
+    translatedName: string,
+}
+
 const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
@@ -14,10 +19,11 @@ const CountryQuiz = () => {
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
     //const [countries, setCountries] = useState<string[]>([])
-    const [options, setOptions] = useState<string[]>([])
-    const [correctOption, setCorrectOption] = useState<string>('')
+    const [options, setOptions] = useState<CountryOption[]>([])
+    const [correctOption, setCorrectOption] = useState<CountryOption>()
     const [regionType, setRegionType] = useState<RegionType>('continent')
     const [disabled, setDisabled] = useState(false)
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -40,6 +46,8 @@ const CountryQuiz = () => {
     }, [geoData])
 
     const startGame = () => {
+        const settings = JSON.parse(localStorage.getItem('settings') || '{}')
+        const language = settings && settings.language
         if (!geoData) {
             return
         }
@@ -61,11 +69,12 @@ const CountryQuiz = () => {
         const regions = Array.from(new Set(countryData.map((obj: any) => obj.properties[regionType] as string)))
         const randomRegion = randomElement(regions)
 
+        const countryNameField = language ? 'name_' + language : 'name'
         const countries = countryData
             .filter((obj: any) => obj.properties[regionType] === randomRegion)
-            .map((country: any) => country.properties.name)
+            .map((country: any) => ({ name: country.properties.name, translatedName: country.properties[countryNameField] }))
 
-        const optionsSet = new Set<string>();
+        const optionsSet = new Set<CountryOption>();
         while (optionsSet.size < OPTIONS_SIZE) {
             const randomCountry = randomElement(countries)
             optionsSet.add(randomCountry)
@@ -95,13 +104,13 @@ const CountryQuiz = () => {
             <div >
                 <Globe
                     geoData={geoData}
-                    selectedCountry={correctOption}
+                    selectedCountry={correctOption?.name ?? ''}
                 />
                 <Quiz
                     disabled={disabled}
                     question={''}
-                    options={options}
-                    correctOption={correctOption}
+                    options={options.map(x => x.translatedName)}
+                    correctOption={correctOption?.translatedName ?? ''}
                     onSubmit={onSubmit} />
                 <Score correctScore={correctScore} wrongScore={wrongScore} />
             </div>

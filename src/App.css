@@ -25,6 +25,10 @@ body {
   font-size: calc(10px + 2vmin);
 }
 
+.App-appbar {
+  justify-content: start !important;
+}
+
 .App-article {
   background-color: var(--bg);
 }

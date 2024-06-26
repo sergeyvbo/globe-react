@@ -1,7 +1,6 @@
 import { useState } from "react"
 import './Quiz.css'
 import { Button } from "@mui/material"
-import { blue } from '@mui/material/colors'
 
 
 interface Props {
