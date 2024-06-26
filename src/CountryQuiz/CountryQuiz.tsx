@@ -66,7 +66,8 @@ const CountryQuiz = () => {
         const countryData = geoData
             .filter((obj: any) => ['Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
 
-        const regions = Array.from(new Set(countryData.map((obj: any) => obj.properties[regionType] as string)))
+        let regions = Array.from(new Set(countryData.map((obj: any) => obj.properties[regionType] as string)))
+        regions = regions.filter(x => x != 'Seven seas (open ocean)')
         const randomRegion = randomElement(regions)
 
         const countryNameField = language ? 'name_' + language : 'name'
