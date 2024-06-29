@@ -5,14 +5,17 @@ import { Button } from "@mui/material"
 
 interface Props {
     disabled: boolean
-    question: string
     options: string[]
     correctOption: string
     onSubmit: (isCorrect: boolean) => void
 }
 
 const Quiz = (props: Props) => {
-    const { disabled, question, options, correctOption, onSubmit } = props
+    const {
+        disabled,
+        options,
+        correctOption,
+        onSubmit, } = props
     const [showResult, setShowResult] = useState(false)
 
     const onBtnClick = (option: string) => {
@@ -32,7 +35,6 @@ const Quiz = (props: Props) => {
 
     return (
         <div className="Quiz-container">
-            {question && <h3>{question}</h3>}
             {options.map((option, index) => {
                 return (
                     // <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>

@@ -6,7 +6,6 @@ function App() {
 
     return (
         <>
-            <MainMenu />
             <div className="App">
                 <article className="App-article">
                     <CountryQuiz />

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
+import { CountryQuizSettings, MainMenu } from "../MainMenu/MainMenu"
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb'
 
@@ -15,6 +16,17 @@ const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
+    const defaultSettings: CountryQuizSettings = {
+        language: 'en',
+        showPin: false,
+        difficulty: 'medium',
+        showZoomButtons: true,
+        showBorders: true,
+        showSovereignCountries: true,
+        showDisputed: true,
+        showOthers: true,
+    }
+
     const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null)
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
@@ -24,6 +36,7 @@ const CountryQuiz = () => {
     const [regionType, setRegionType] = useState<RegionType>('continent')
     const [disabled, setDisabled] = useState(false)
 
+    const [settings, setSettings] = useState(defaultSettings)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,14 +52,19 @@ const CountryQuiz = () => {
         }
 
         fetchData()
+
+        const savedSettings = localStorage.getItem('countryQuizSettings')
+        if (savedSettings) {
+            setSettings(JSON.parse(savedSettings))
+        }
+
     }, [])
 
     useEffect(() => {
         startGame()
-    }, [geoData])
+    }, [geoData, settings])
 
     const startGame = () => {
-        const settings = JSON.parse(localStorage.getItem('settings') || '{}')
         const language = settings && settings.language
         if (!geoData) {
             return
@@ -103,13 +121,16 @@ const CountryQuiz = () => {
     if (geoData && options.length) {
         return (
             <div >
+                <MainMenu settings={settings} setSettings={setSettings} /> { }
                 <Globe
                     geoData={geoData}
                     selectedCountry={correctOption?.name ?? ''}
+                    showPin={settings.showPin}
+                    showZoomButtons={settings.showZoomButtons}
+                    showBorders={settings.showBorders}
                 />
                 <Quiz
                     disabled={disabled}
-                    question={''}
                     options={options.map(x => x.translatedName)}
                     correctOption={correctOption?.translatedName ?? ''}
                     onSubmit={onSubmit} />

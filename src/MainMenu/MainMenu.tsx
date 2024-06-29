@@ -1,43 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box } from '@mui/material';
-import { Settings } from '@mui/icons-material';
-import { getString } from '../Localization/strings';
+import React, { useState, useEffect, Dispatch } from 'react'
+import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box } from '@mui/material'
+import { Settings } from '@mui/icons-material'
+import { getString } from '../Localization/strings'
 
-const defaultSettings = {
-    language: 'en',
-    showPin: false,
-    difficulty: 'medium',
-    showZoomButtons: true,
-    showBorders: true,
-    countrySet: 'showAll',
-};
+type CountryQuizSettings = {
+    language: 'en' | 'ru',
+    showPin: boolean,
+    difficulty: 'easy' | 'medium' | 'hard',
+    showZoomButtons: boolean,
+    showBorders: boolean,
+    showSovereignCountries: boolean,
+    showDisputed: boolean,
+    showOthers: boolean,
+}
 
-const MainMenu = () => {
-    const [open, setOpen] = useState(false);
-    const [settings, setSettings] = useState(defaultSettings);
+interface Props {
+    settings: CountryQuizSettings
+    setSettings: Dispatch<React.SetStateAction<CountryQuizSettings>>
+}
 
-    useEffect(() => {
-        const savedSettings = localStorage.getItem('settings');
-        if (savedSettings) {
-            setSettings(JSON.parse(savedSettings));
-        }
-    }, []);
+const MainMenu = (props: Props) => {
+    const { settings, setSettings } = props
+    const [open, setOpen] = useState(false)
 
     const handleSettingsChange = (key: string, value: string | boolean) => {
-        const newSettings = { ...settings, [key]: value };
-        setSettings(newSettings);
-        localStorage.setItem('settings', JSON.stringify(newSettings));
-    };
+        const newSettings = { ...settings, [key]: value }
+        setSettings(newSettings)
+        localStorage.setItem('settings', JSON.stringify(newSettings))
+    }
 
     return (
         <>
             <AppBar color='transparent' elevation={0}>
                 <Toolbar>
                     <IconButton
-                        size="large"
-                        edge="start"
-                        color="primary"
-                        aria-label="menu"
+                        size='large'
+                        edge='start'
+                        color='primary'
+                        aria-label='menu'
                         onClick={() => setOpen(!open)}
                     >
                         <Settings />
@@ -48,50 +48,46 @@ const MainMenu = () => {
                 className='MainMenu-Dialog'
                 open={open}
                 onClose={() => setOpen(false)}>
-                <DialogTitle>{getString("settings")}</DialogTitle>
-                <DialogContent sx={{ margin: "5px" }}>
-                    <FormControl component="fieldset">
+                <DialogTitle>{getString('settings')}</DialogTitle>
+                <DialogContent sx={{ margin: '5px' }}>
+                    <FormControl component='fieldset'>
                         <FormGroup>
                             <FormControlLabel
                                 control={
                                     <Switch
                                         checked={settings.showPin}
                                         onChange={(e) => handleSettingsChange('showPin', e.target.checked)}
-                                        disabled
                                     />
                                 }
-                                label={getString("showPin")}
+                                label={getString('showPin')}
                             />
                             <FormControlLabel
                                 control={
                                     <Switch
                                         checked={settings.showZoomButtons}
                                         onChange={(e) => handleSettingsChange('showZoomButtons', e.target.checked)}
-                                        disabled
                                     />
                                 }
-                                label={getString("showZoomButtons")}
+                                label={getString('showZoomButtons')}
                             />
                             <FormControlLabel
                                 control={
                                     <Switch
                                         checked={settings.showBorders}
                                         onChange={(e) => handleSettingsChange('showBorders', e.target.checked)}
-                                        disabled
                                     />
                                 }
-                                label={getString("showBorders")}
+                                label={getString('showBorders')}
                             />
                             <FormControl>
                                 <Box mt={2}>
                                     <Select
-                                        label={getString("language")}
+                                        label={getString('language')}
                                         value={settings.language}
                                         onChange={(e) => handleSettingsChange('language', e.target.value)}
                                     >
                                         <MenuItem value='ru'>Русский</MenuItem>
                                         <MenuItem value='en'>English</MenuItem>
-                                        {/* Добавьте дополнительные языки по мере необходимости */}
                                     </Select>
                                 </Box>
                             </FormControl>
@@ -100,35 +96,33 @@ const MainMenu = () => {
                                     <Select
                                         value={settings.difficulty}
                                         onChange={(e) => handleSettingsChange('difficulty', e.target.value)}
-                                        disabled
                                     >
-                                        <MenuItem value='easy'>{getString("easy")}</MenuItem>
-                                        <MenuItem value='medium'>{getString("medium")}</MenuItem>
-                                        <MenuItem value='hard'>{getString("hard")}</MenuItem>
+                                        <MenuItem value='easy'>{getString('easy')}</MenuItem>
+                                        <MenuItem value='medium'>{getString('medium')}</MenuItem>
+                                        <MenuItem value='hard'>{getString('hard')}</MenuItem>
                                     </Select>
                                 </Box>
                             </FormControl>
                             <FormControl>
-                                <Box mt={2}>
+                                {/* <Box mt={2}>
                                     <Select
                                         label={getString('countrySet')}
                                         value={settings.countrySet}
                                         onChange={(e) => handleSettingsChange('countrySet', e.target.value)}
-                                        disabled
                                     >
-                                        <MenuItem value='showAll'>{getString("showAll")}</MenuItem>
-                                        <MenuItem value='showSovereignCountries'>{getString("showSovereignCountries")}</MenuItem>
-                                        <MenuItem value='showDisputed'>{getString("showDisputed")}</MenuItem>
-                                        <MenuItem value='showOthers'>{getString("showOthers")}</MenuItem>
+                                        <MenuItem value='showAll'>{getString('showAll')}</MenuItem>
+                                        <MenuItem value='showSovereignCountries'>{getString('showSovereignCountries')}</MenuItem>
+                                        <MenuItem value='showDisputed'>{getString('showDisputed')}</MenuItem>
+                                        <MenuItem value='showOthers'>{getString('showOthers')}</MenuItem>
                                     </Select>
-                                </Box>
+                                </Box> */}
                             </FormControl>
                         </FormGroup>
                     </FormControl>
                 </DialogContent>
             </Dialog>
         </>
-    );
+    )
 }
 
-export { MainMenu }
+export { MainMenu, type CountryQuizSettings }

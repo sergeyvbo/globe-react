@@ -9,6 +9,9 @@ interface Props {
     selectedCountry: string,
     rotationSpeed?: number,
     rotationDirection?: 1 | -1,
+    showPin: boolean,
+    showZoomButtons: boolean,
+    showBorders: boolean,
 }
 
 const Globe = (props: Props) => {
@@ -18,6 +21,9 @@ const Globe = (props: Props) => {
         selectedCountry,
         rotationSpeed,
         rotationDirection,
+        showPin,
+        showZoomButtons,
+        showBorders,
     } = props
 
     const mapRef = useRef<HTMLDivElement | null>(null)
@@ -111,18 +117,20 @@ const Globe = (props: Props) => {
             .attr('class', (d: any) => 'country_' + d.properties.name.replace(' ', '_'))
             .attr('d', d => path(d as GeoPermissibleObjects) as string)
             .attr('fill', (d: any) => d.properties.name === selectedCountry ? SELECTED_COUNTRY_FILL : GROUND_FILL)
-            .style('stroke', 'black')
+            .style('stroke', showBorders ? 'black' : 'transparent')
             .style('stroke-width', 0.3)
             .style('opacity', 0.8)
 
         // pin
-        svg.append("image")
-            .attr('class', 'map-pin')
-            .attr("xlink:href", PIN_URL)
-            .attr('width', PIN_WIDTH)
-            .attr("height", PIN_HEIGHT)
-
+        if (showPin) {
+            svg.append("image")
+                .attr('class', 'map-pin')
+                .attr("xlink:href", PIN_URL)
+                .attr('width', PIN_WIDTH)
+                .attr("height", PIN_HEIGHT)
+        }
         const pin = svg.select('.map-pin')
+
         const updatePin = (country: any) => {
             const area = d3.geoArea(country)
             if (country && area < .00025) {
@@ -153,7 +161,7 @@ const Globe = (props: Props) => {
                 ])
                 path = d3.geoPath().projection(projection)
                 svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string)
-                updatePin(geoData.find((d: any) => d.properties.name === selectedCountry))
+                if (showPin) updatePin(geoData.find((d: any) => d.properties.name === selectedCountry))
             }, rotationSpeed)
         }
 
@@ -189,14 +197,14 @@ const Globe = (props: Props) => {
     return (
         <>
             <div id="map" ref={mapRef} />
-            <div className='Globe-zoom'>
+            {showZoomButtons && <div className='Globe-zoom'>
                 <Button variant='outlined' type='button' className='Globe-zoom-button' onClick={() => zoomIn()}>
                     <ZoomIn />
                 </Button>
                 <Button variant='outlined' type='button' className='Globe-zoom-button' onClick={() => zoomOut()}>
                     <ZoomOut />
                 </Button>
-            </div>
+            </div>}
         </>
     )
 }
