@@ -3,10 +3,12 @@ import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormCo
 import { Settings } from '@mui/icons-material'
 import { getString } from '../Localization/strings'
 
+type Difficulty = 'easy' | 'medium' | 'hard'
+
 type CountryQuizSettings = {
     language: 'en' | 'ru',
     showPin: boolean,
-    difficulty: 'easy' | 'medium' | 'hard',
+    difficulty: Difficulty,
     showZoomButtons: boolean,
     showBorders: boolean,
     showSovereignCountries: boolean,
@@ -125,4 +127,4 @@ const MainMenu = (props: Props) => {
     )
 }
 
-export { MainMenu, type CountryQuizSettings }
+export { MainMenu, type CountryQuizSettings, type Difficulty }
