@@ -1,0 +1,15 @@
+.flag-stack {
+    align-items: end;
+}
+
+.flag-button {
+    width: 200px;
+    height: 80px;
+}
+
+.country-button {
+    width: 200px;
+    height: 80px;
+    text-transform: none !important;
+    color: white !important;
+}

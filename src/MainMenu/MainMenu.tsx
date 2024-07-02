@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Dispatch } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box } from '@mui/material'
-import { Settings } from '@mui/icons-material'
+import { Flag, Settings } from '@mui/icons-material'
 import { getString } from '../Localization/strings'
 
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -28,7 +28,7 @@ const MainMenu = (props: Props) => {
     const handleSettingsChange = (key: string, value: string | boolean) => {
         const newSettings = { ...settings, [key]: value }
         setSettings(newSettings)
-        localStorage.setItem('settings', JSON.stringify(newSettings))
+        localStorage.setItem('countryQuizSettings', JSON.stringify(newSettings))
     }
 
     return (
@@ -44,6 +44,16 @@ const MainMenu = (props: Props) => {
                     >
                         <Settings />
                     </IconButton>
+                    <IconButton
+                        size='large'
+                        edge='start'
+                        color='primary'
+                        aria-label='flags'
+                        href='/globe-react/flags'
+                    >
+                        <Flag />
+                    </IconButton>
+
                 </Toolbar>
             </AppBar>
             <Dialog

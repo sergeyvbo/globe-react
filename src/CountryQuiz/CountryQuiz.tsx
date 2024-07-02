@@ -71,7 +71,7 @@ const CountryQuiz = () => {
         }
 
         let countryData = geoData
-            .filter((obj: any) => ['Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
+            .filter((obj: any) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
 
         const optionsArray = getRandomOptions(countryData, settings.difficulty)
 
@@ -108,7 +108,6 @@ const CountryQuiz = () => {
             const randomRegion = randomElement(regions)
 
             const regionCountries = filteredCountries.filter((x: any) => x.properties[regionType] === randomRegion)
-            console.log(`regiontype: ${regionType}, randomRegion: ${randomRegion}, countries: ${regionCountries.length}`)
             if (regionCountries.length >= OPTIONS_SIZE) {
                 filteredCountries = regionCountries
             }
@@ -161,7 +160,7 @@ const CountryQuiz = () => {
                 />
                 <Quiz
                     disabled={disabled}
-                    options={options.map(x => x.translatedName)}
+                    options={options.map(x => (x.translatedName))}
                     correctOption={correctOption?.translatedName ?? ''}
                     onSubmit={onSubmit} />
                 <Score correctScore={correctScore} wrongScore={wrongScore} />
