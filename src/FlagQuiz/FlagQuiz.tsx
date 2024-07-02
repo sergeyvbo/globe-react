@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button, Grid, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
+import { MainMenu } from '../MainMenu/MainMenu';
+import { FlagMainMenu } from './FlagMainMenu';
 
 interface Country {
     code: string
@@ -124,6 +126,7 @@ export const FlagQuiz = () => {
 
     return (
         <>
+            <FlagMainMenu />
             <Box
                 height={'90dvh'}
                 width={'100%'}

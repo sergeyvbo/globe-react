@@ -48,15 +48,6 @@ const MainMenu = (props: Props) => {
                         size='large'
                         edge='start'
                         color='primary'
-                        aria-label='countries'
-                        href='/globe-react/#/countries'
-                    >
-                        <Public />
-                    </IconButton>
-                    <IconButton
-                        size='large'
-                        edge='start'
-                        color='primary'
                         aria-label='flags'
                         href='/globe-react/#/flags'
                     >
