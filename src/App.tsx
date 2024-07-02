@@ -6,7 +6,7 @@ import { FlagQuiz } from './FlagQuiz/FlagQuiz';
 function App() {
 
     return (
-        <Router basename="/globe-react">
+        <Router >
             <div className="App">
                 <article className="App-article">
                     <Routes>

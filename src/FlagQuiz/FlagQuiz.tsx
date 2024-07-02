@@ -56,7 +56,6 @@ export const FlagQuiz = () => {
             setSelectedFlag(null)
             return
         }
-        console.log('flag click: ', code)
         if (selectedCountry) {
             checkMatch({ flag: code, country: selectedCountry })
             setSelectedCountry(null);
@@ -72,7 +71,6 @@ export const FlagQuiz = () => {
             setSelectedCountry(null)
             return
         }
-        console.log('country click: ', name)
         if (selectedFlag) {
             checkMatch({ flag: selectedFlag, country: name })
             setSelectedCountry(null);
@@ -84,11 +82,9 @@ export const FlagQuiz = () => {
 
     const checkMatch = (match: Match) => {
         if (countries.find(x => x.code === match.flag && x.name === match.country)) {
-            console.log('add match: ', match)
             setMatches([...matches, match])
         }
         else {
-            console.log('set error:', match)
             setError(match)
             setTimeout(() => {
                 console.log('reset error')

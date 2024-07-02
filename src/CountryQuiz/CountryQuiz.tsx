@@ -150,7 +150,7 @@ const CountryQuiz = () => {
     if (geoData && options.length) {
         return (
             <div >
-                <MainMenu settings={settings} setSettings={setSettings} /> { }
+                <MainMenu settings={settings} setSettings={setSettings} />
                 <Globe
                     geoData={geoData}
                     selectedCountry={correctOption?.name ?? ''}
