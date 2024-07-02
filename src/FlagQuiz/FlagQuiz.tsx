@@ -4,8 +4,9 @@ import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
 
 interface Country {
-    code: string;
-    name: string;
+    code: string
+    name: string
+    name_ru?: string
 }
 
 type Match = {
@@ -30,11 +31,11 @@ export const FlagQuiz = () => {
 
         const fetchData = async () => {
             try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/countryCodes.json`)
+                const response = await fetch(`${process.env.PUBLIC_URL}/countryCodes2.json`)
                 const countryCodes = await response.json()
-                const countryList = Object.keys(countryCodes).map(code => ({ code, name: countryCodes[code] }))
-                setData(countryList)
-                startGame(countryList)
+                // const countryList = countryCodes.map(code => ({ code, name: countryCodes[code] }))
+                setData(countryCodes)
+                startGame(countryCodes)
             } catch (error) {
                 console.error('Error fetching country data:', error)
             }
@@ -156,7 +157,7 @@ export const FlagQuiz = () => {
                                     onClick={() => handleCountryClick(country.name)}
                                     disableElevation={isMatch(country.code)}
                                 >
-                                    <h3>{country.name}</h3>
+                                    <h3>{country.name_ru}</h3>
                                 </Button>
                             ))}
                         </Stack>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Dispatch } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box } from '@mui/material'
-import { Flag, Settings } from '@mui/icons-material'
+import { Flag, Public, Settings } from '@mui/icons-material'
 import { getString } from '../Localization/strings'
 
 type Difficulty = 'easy' | 'medium' | 'hard'
@@ -48,8 +48,17 @@ const MainMenu = (props: Props) => {
                         size='large'
                         edge='start'
                         color='primary'
+                        aria-label='countries'
+                        href='/globe-react/#/countries'
+                    >
+                        <Public />
+                    </IconButton>
+                    <IconButton
+                        size='large'
+                        edge='start'
+                        color='primary'
                         aria-label='flags'
-                        href='/globe-react/flags'
+                        href='/globe-react/#/flags'
                     >
                         <Flag />
                     </IconButton>

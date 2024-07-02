@@ -1,22 +1,22 @@
 import './App.css';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { HashRouter, Route, Routes } from 'react-router-dom';
 import { CountryQuiz } from './CountryQuiz/CountryQuiz';
 import { FlagQuiz } from './FlagQuiz/FlagQuiz';
 
 function App() {
 
     return (
-        <Router >
+        <HashRouter>
             <div className="App">
                 <article className="App-article">
                     <Routes>
-                        <Route path="/" element={<CountryQuiz />} />
+                        <Route path="/*" element={<CountryQuiz />} />
                         <Route path="/countries" element={<CountryQuiz />} />
                         <Route path="/flags" element={<FlagQuiz />} />
                     </Routes>
                 </article>
             </div>
-        </Router>
+        </HashRouter>
     )
 }
 
