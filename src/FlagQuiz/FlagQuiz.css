@@ -4,12 +4,18 @@
 
 .flag-button {
     width: 200px;
+    max-width: 90%;
     height: 80px;
 }
 
 .country-button {
     width: 200px;
+    max-width: 90%;
     height: 80px;
     text-transform: none !important;
     color: white !important;
+}
+
+.continue-button {
+    bottom: 100px;
 }

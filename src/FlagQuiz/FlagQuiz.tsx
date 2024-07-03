@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button, Grid, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
-import { MainMenu } from '../MainMenu/MainMenu';
 import { FlagMainMenu } from './FlagMainMenu';
+import { Score } from '../CountryQuiz/Score';
 
 interface Country {
     code: string
@@ -28,6 +28,8 @@ export const FlagQuiz = () => {
     const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
     const [matches, setMatches] = useState<Match[]>([])
     const [error, setError] = useState<Match>()
+    const [correctScore, setCorrectScore] = useState(0)
+    const [wrongScore, setWrongScore] = useState(0)
 
     useEffect(() => {
 
@@ -86,8 +88,10 @@ export const FlagQuiz = () => {
     const checkMatch = (match: Match) => {
         if (countries.find(x => x.code === match.flag && x.name === match.country)) {
             setMatches([...matches, match])
+            setCorrectScore(correctScore + 1)
         }
         else {
+            setWrongScore(wrongScore + 1)
             setError(match)
             setTimeout(() => {
                 console.log('reset error')
@@ -167,8 +171,9 @@ export const FlagQuiz = () => {
                     </Grid>
                 </Grid>
             </Box>
+            <Score correctScore={correctScore} wrongScore={wrongScore}></Score>
             {OPTIONS_LENGTH === matches.length && (
-                <Button onClick={handleContinue} variant="contained">
+                <Button className='continue-button' onClick={handleContinue} variant="contained">
                     Продолжить
                 </Button>
             )}</>
