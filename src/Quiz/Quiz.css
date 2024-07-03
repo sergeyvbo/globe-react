@@ -10,12 +10,17 @@
     position: absolute;
     bottom: 10px;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .Quiz-button {
     margin: 5px !important;
     max-width: 30%;
     min-height: 50px;
+    max-height: 80%;
+    object-fit: contain;
     background-color: var(--blue) !important;
     text-transform: none !important;
 }
