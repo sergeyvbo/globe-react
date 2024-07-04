@@ -4,6 +4,7 @@ import { Button, Grid, Typography } from "@mui/material"
 
 
 interface Props {
+    showFlags?: boolean
     disabled: boolean
     options: { code: string, name: string }[]
     correctOption: string
@@ -12,6 +13,7 @@ interface Props {
 
 const Quiz = (props: Props) => {
     const {
+        showFlags,
         disabled,
         options,
         correctOption,
@@ -43,7 +45,7 @@ const Quiz = (props: Props) => {
                             variant="contained"
                             className={`Quiz-button ${buttonResultClass(option.name)}`}
                             onClick={() => onBtnClick(option.name)}
-                            startIcon={<img alt={option.code} src={`https://flagcdn.com/20x15/${option.code}.png`} />}
+                            startIcon={showFlags ? <img alt={option.code} src={`https://flagcdn.com/20x15/${option.code}.png`} /> : null}
 
                         >
                             <Typography>

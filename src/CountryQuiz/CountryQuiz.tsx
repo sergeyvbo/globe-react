@@ -5,29 +5,14 @@ import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { CountryQuizSettings, Difficulty, MainMenu } from "../MainMenu/MainMenu"
 import { randomElement, shuffleArray } from "../Common/utils"
+import { defaultSettings } from "../Common/defaults"
+import { CountryOption } from "../Common/types"
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb' | 'world'
-
-type CountryOption = {
-    code: string
-    name: string,
-    translatedName: string,
-}
 
 const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
-
-    const defaultSettings: CountryQuizSettings = {
-        language: 'en',
-        showPin: true,
-        difficulty: 'medium',
-        showZoomButtons: true,
-        showBorders: true,
-        showSovereignCountries: true,
-        showDisputed: true,
-        showOthers: true,
-    }
 
     interface Country {
         code: string
@@ -96,11 +81,11 @@ const CountryQuiz = () => {
         let countryData = geoData
             .filter((obj: any) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
 
-        const optionsArray = getRandomOptions(countryData, settings.difficulty)
+        const randomOptions = getRandomOptions(countryData, settings.difficulty)
 
 
-        setOptions(optionsArray)
-        setCorrectOption(randomElement(optionsArray))
+        setOptions(randomOptions)
+        setCorrectOption(randomElement(randomOptions))
 
     }
 

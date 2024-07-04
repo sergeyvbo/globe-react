@@ -1,5 +1,5 @@
-import { Settings, Public, Flag } from "@mui/icons-material"
-import { AppBar, Toolbar, IconButton } from "@mui/material"
+import { Settings, Public } from "@mui/icons-material"
+import { AppBar, Toolbar, IconButton, Button } from "@mui/material"
 
 const FlagMainMenu = () => {
     return (
@@ -23,6 +23,13 @@ const FlagMainMenu = () => {
                 >
                     <Public />
                 </IconButton>
+                <Button
+                    size='large'
+                    color='primary'
+                    aria-label='states'
+                    href='/globe-react/#/states'>
+                    USA
+                </Button>
             </Toolbar>
         </AppBar>
     )

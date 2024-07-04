@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Dispatch } from 'react'
-import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box } from '@mui/material'
+import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button } from '@mui/material'
 import { Flag, Public, Settings } from '@mui/icons-material'
 import { getString } from '../Localization/strings'
 
@@ -53,6 +53,13 @@ const MainMenu = (props: Props) => {
                     >
                         <Flag />
                     </IconButton>
+                    <Button
+                        size='large'
+                        color='primary'
+                        aria-label='states'
+                        href='/globe-react/#/states'>
+                        USA
+                    </Button>
 
                 </Toolbar>
             </AppBar>
