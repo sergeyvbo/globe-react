@@ -33,26 +33,7 @@ body {
   background-color: var(--bg);
 }
 
-.Quiz-container {
-  position: absolute;
-  bottom: 10px;
-  width: 100%;
-}
 
-.Quiz-button {
-  margin: 5px;
-  max-width: 30%;
-  min-height: 50px;
-  background-color: var(--blue);
-}
-
-.Quiz-button-success {
-  background-color: var(--green);
-}
-
-.Quiz-button-failure {
-  background-color: var(--red);
-}
 
 .CountryQuiz-score {
   position: absolute;

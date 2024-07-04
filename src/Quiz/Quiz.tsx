@@ -1,6 +1,6 @@
 import { useState } from "react"
 import './Quiz.css'
-import { Button, styled } from "@mui/material"
+import { Button, Grid, Typography } from "@mui/material"
 
 
 interface Props {
@@ -34,41 +34,29 @@ const Quiz = (props: Props) => {
     }
 
     return (
-        <div className="Quiz-container">
+        <Grid container className="Quiz-container" spacing={1} >
             {options.map((option, index) => {
                 return (
-                    // <button key={index} className={`Quiz-button ${buttonResultClass(option)}`} onClick={() => onBtnClick(option)}>{option}</button>
-                    <StyledButton
-                        disabled={disabled}
-                        key={index}
-                        variant="contained"
-                        className={`Quiz-button ${buttonResultClass(option.name)}`}
-                        onClick={() => onBtnClick(option.name)}
-                        startIcon={<img alt={option.code} src={`https://flagcdn.com/20x15/${option.code}.png`} />}
+                    <Grid item xs={4} key={index}>
+                        <Button
+                            disabled={disabled}
+                            variant="contained"
+                            className={`Quiz-button ${buttonResultClass(option.name)}`}
+                            onClick={() => onBtnClick(option.name)}
+                            startIcon={<img alt={option.code} src={`https://flagcdn.com/20x15/${option.code}.png`} />}
 
-                    >
-                        {option.name}
-                    </StyledButton>
+                        >
+                            <Typography>
+                                {option.name}
+                            </Typography>
+                        </Button>
+                    </Grid>
                 )
             })}
-        </div>
+        </Grid>
     )
 }
 
-const StyledButton = styled(Button)({
-    width: '33%',
-    height: '60px',
-    overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    fontSize: 'clamp(.8rem, 3vw, 2rem)',
-    lineHeight: '1',
-    overflowWrap: 'break-word',
-    whiteSpace: 'normal',
-    textOverflow: 'ellipsis',
-})
+
 
 export { Quiz }

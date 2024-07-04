@@ -7,4 +7,4 @@ const shuffleArray = (array: any[]) => {
 
 const kebabize = (str: string) => str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? "-" : "") + $.toLowerCase())
 
-export { randomElement, shuffleArray, kebabize }
+export { random, randomElement, shuffleArray, kebabize }

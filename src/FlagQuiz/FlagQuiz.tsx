@@ -37,7 +37,6 @@ export const FlagQuiz = () => {
             try {
                 const response = await fetch(`${process.env.PUBLIC_URL}/countryCodes2.json`)
                 const countryCodes = await response.json()
-                // const countryList = countryCodes.map(code => ({ code, name: countryCodes[code] }))
                 setData(countryCodes)
                 startGame(countryCodes)
             } catch (error) {

@@ -16,13 +16,13 @@
 }
 
 .Quiz-button {
-    margin: 5px !important;
-    max-width: 30%;
-    min-height: 50px;
-    max-height: 80%;
-    object-fit: contain;
+    width: 100%;
+    height: 70px;
     background-color: var(--blue) !important;
     text-transform: none !important;
+    line-height: 1;
+    overflow: hidden;
+
 }
 
 .Quiz-button-success {
@@ -31,4 +31,12 @@
 
 .Quiz-button-failure {
     background-color: var(--red) !important;
+}
+
+.Quiz-button-success {
+    background-color: var(--green);
+}
+
+.Quiz-button-failure {
+    background-color: var(--red);
 }
