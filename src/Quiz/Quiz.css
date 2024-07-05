@@ -18,10 +18,13 @@
 .Quiz-button {
     width: 100%;
     height: 70px;
+    min-width: moz-fit-content;
+    min-width: -webkit-fill-available;
+    min-width: fit-content;
     background-color: var(--blue) !important;
     text-transform: none !important;
-    line-height: 1;
-    overflow: hidden;
+    /*line-height: 1;
+    overflow: hidden; */
 
 }
 

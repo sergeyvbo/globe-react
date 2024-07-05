@@ -1,4 +1,4 @@
-import { CountryQuizSettings } from "../MainMenu/MainMenu"
+import { CountryQuizSettings } from "./types"
 
 const defaultSettings: CountryQuizSettings = {
     language: 'en',

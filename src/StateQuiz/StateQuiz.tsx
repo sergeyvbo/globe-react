@@ -1,49 +1,29 @@
 import { useEffect, useState } from "react"
-import { defaultSettings } from "../Common/defaults"
-import { GeoPermissibleObjects, shuffle } from "d3"
+import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
 import { Map } from "./Map"
 import { CountryOption } from "../Common/types"
 import { Score } from "../CountryQuiz/Score"
 import { Quiz } from "../Quiz/Quiz"
-import { randomElement, shuffleArray } from "../Common/utils"
+import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryMainMenu } from "../CountryQuiz/CountryMainMenu"
+import geoJson from '../Common/GeoData/us.json'
 
 const StateQuiz = () => {
 
     const OPTIONS_SIZE = 3
-    const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null)
-    const [settings, setSettings] = useState(defaultSettings)
+
     const [disabled, setDisabled] = useState(false)
     const [options, setOptions] = useState<CountryOption[]>([])
     const [correctOption, setCorrectOption] = useState<CountryOption>()
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
 
-    useEffect(() => {
-
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/us.json`)
-                const data = await response.json()
-                setGeoData(data.features)
-
-                //setCountries(data.features.map((f: ExtendedFeature) => f.properties!.name))
-            } catch (error) {
-                console.error('Error fetching country data:', error)
-            }
-        }
-        fetchData()
-
-        const savedSettings = localStorage.getItem('countryQuizSettings')
-        if (savedSettings) {
-            setSettings(JSON.parse(savedSettings))
-        }
-
-    }, [])
+    const geoData = geoJson as ExtendedFeatureCollection
+    const settings = getSettings()
 
     useEffect(() => {
         startGame()
-    }, [geoData, settings])
+    }, [])
 
     const getRandomOptions = (data: GeoPermissibleObjects[]) => {
         const states = data.map((state: any) => ({
@@ -55,10 +35,7 @@ const StateQuiz = () => {
     }
 
     const startGame = () => {
-        if (!geoData) {
-            return
-        }
-        const randomOptions = getRandomOptions(geoData!)
+        const randomOptions = getRandomOptions(geoData.features!)
         setOptions(randomOptions)
         setCorrectOption(randomElement(randomOptions))
     }
@@ -82,7 +59,7 @@ const StateQuiz = () => {
             <>
                 <CountryMainMenu />
                 <Map
-                    geoData={geoData}
+                    geoData={geoData.features}
                     selected={correctOption?.name ?? ''}
                 />
                 <Quiz

@@ -2,27 +2,12 @@ import React, { useState, useEffect, Dispatch } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button } from '@mui/material'
 import { Flag, Public, Settings } from '@mui/icons-material'
 import { getString } from '../Localization/strings'
+import { getSettings } from '../Common/utils'
+import { CountryQuizSettings } from '../Common/types'
 
-type Difficulty = 'easy' | 'medium' | 'hard'
 
-type CountryQuizSettings = {
-    language: 'en' | 'ru',
-    showPin: boolean,
-    difficulty: Difficulty,
-    showZoomButtons: boolean,
-    showBorders: boolean,
-    showSovereignCountries: boolean,
-    showDisputed: boolean,
-    showOthers: boolean,
-}
-
-interface Props {
-    settings: CountryQuizSettings
-    setSettings: Dispatch<React.SetStateAction<CountryQuizSettings>>
-}
-
-const MainMenu = (props: Props) => {
-    const { settings, setSettings } = props
+const MainMenu = () => {
+    const [settings, setSettings] = useState<CountryQuizSettings>(getSettings())
     const [open, setOpen] = useState(false)
 
     const handleSettingsChange = (key: string, value: string | boolean) => {
@@ -144,4 +129,4 @@ const MainMenu = (props: Props) => {
     )
 }
 
-export { MainMenu, type CountryQuizSettings, type Difficulty }
+export { MainMenu }

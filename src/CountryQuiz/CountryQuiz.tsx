@@ -1,12 +1,13 @@
-import { GeoPermissibleObjects } from "d3"
+import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
 import { useState, useEffect } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
-import { CountryQuizSettings, Difficulty, MainMenu } from "../MainMenu/MainMenu"
-import { randomElement, shuffleArray } from "../Common/utils"
-import { defaultSettings } from "../Common/defaults"
-import { CountryOption } from "../Common/types"
+import { MainMenu } from "../MainMenu/MainMenu"
+import { getSettings, randomElement, shuffleArray } from "../Common/utils"
+import { CountryOption, Difficulty } from "../Common/types"
+import geoJson from '../Common/GeoData/geo.json'
+import flagJson from '../Common/GeoData/countryCodes2.json'
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb' | 'world'
 
@@ -14,79 +15,37 @@ const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
-    interface Country {
+    interface CountryFlagData {
         code: string
         name: string
         name_ru?: string
     }
 
-    const [geoData, setGeoData] = useState<GeoPermissibleObjects[] | null>(null)
-    const [flags, setFlags] = useState<Country[]>([])
+    const geoData = geoJson as ExtendedFeatureCollection
+    const flags = flagJson as CountryFlagData[]
+
+    const settings = getSettings()
+
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
-    //const [countries, setCountries] = useState<string[]>([])
     const [options, setOptions] = useState<CountryOption[]>([])
     const [correctOption, setCorrectOption] = useState<CountryOption>()
     const [disabled, setDisabled] = useState(false)
 
-    const [settings, setSettings] = useState(defaultSettings)
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/geo.json`)
-                const data = await response.json()
-                setGeoData(data.features)
-
-                //setCountries(data.features.map((f: ExtendedFeature) => f.properties!.name))
-            } catch (error) {
-                console.error('Error fetching country data:', error)
-            }
-        }
-
-        fetchData()
-
-        const savedSettings = localStorage.getItem('countryQuizSettings')
-        if (savedSettings) {
-            setSettings(JSON.parse(savedSettings))
-        }
-
-    }, [])
-
-    useEffect(() => {
-
-        const fetchFlags = async () => {
-            try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/countryCodes2.json`)
-                const countryCodes = await response.json()
-                // const countryList = countryCodes.map(code => ({ code, name: countryCodes[code] }))
-                setFlags(countryCodes)
-            } catch (error) {
-                console.error('Error fetching flag data:', error)
-            }
-        }
-        fetchFlags()
-    }, []);
 
     useEffect(() => {
         startGame()
-    }, [geoData, settings])
+    }, [])
 
     const startGame = () => {
 
-        if (!geoData) {
-            return
-        }
-
-        let countryData = geoData
+        let countryData = geoData.features
             .filter((obj: any) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
 
         const randomOptions = getRandomOptions(countryData, settings.difficulty)
 
-
         setOptions(randomOptions)
         setCorrectOption(randomElement(randomOptions))
-
     }
 
     const getFlag = (country: any): string => {
@@ -137,12 +96,6 @@ const CountryQuiz = () => {
         const countries = filteredCountries
             .map((country: any) => ({ code: getFlag(country), name: country.properties.name, translatedName: country.properties[countryNameField] }))
 
-        // const optionsSet = new Set<CountryOption>();
-        // while (optionsSet.size < OPTIONS_SIZE && countries.length >= OPTIONS_SIZE) {
-        //     const randomCountry = randomElement(countries)
-        //     optionsSet.add(randomCountry)
-        // }
-        //const optionsArray = Array.from(optionsSet)
         const optionsArray = shuffleArray(countries).slice(0, OPTIONS_SIZE)
 
         return optionsArray
@@ -165,15 +118,16 @@ const CountryQuiz = () => {
     if (geoData && options.length) {
         return (
             <div >
-                <MainMenu settings={settings} setSettings={setSettings} />
+                <MainMenu />
                 <Globe
-                    geoData={geoData}
+                    geoData={geoData.features}
                     selectedCountry={correctOption?.name ?? ''}
                     showPin={settings.showPin}
                     showZoomButtons={settings.showZoomButtons}
                     showBorders={settings.showBorders}
                 />
                 <Quiz
+                    showFlags
                     disabled={disabled}
                     options={options.map(x => ({ code: x.code, name: x.translatedName }))}
                     correctOption={correctOption?.translatedName ?? ''}

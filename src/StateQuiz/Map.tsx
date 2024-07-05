@@ -29,9 +29,9 @@ const Map = (props: Props) => {
 
         const projection = d3.geoAlbersUsa()
             .translate([width / 2, height / 2])
-            .scale(1000);
+            .scale(600);
 
-        const path = d3.geoPath().projection(projection);
+        let path = d3.geoPath().projection(projection);
 
         const svg = d3.select(mapRef.current)
             .append('svg')
@@ -57,6 +57,24 @@ const Map = (props: Props) => {
 
         svg.call(zoom)
         zoomRef.current = zoom
+
+        if (selected) {
+            const selectedState = geoData.find((d: any) => d.properties.NAME === selected);
+            if (selectedState) {
+                const bounds = path.bounds(selectedState);
+                const dx = bounds[1][0] - bounds[0][0];
+                const dy = bounds[1][1] - bounds[0][1];
+                const x = (bounds[0][0] + bounds[1][0]) / 2;
+                const y = (bounds[0][1] + bounds[1][1]) / 2;
+                const scale = Math.max(1, Math.min(2, 0.9 / Math.max(dx / width, dy / height)));
+                const translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+                svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale)
+                );
+            }
+        }
 
         return () => {
             svg.remove();
