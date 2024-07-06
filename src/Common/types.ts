@@ -16,3 +16,9 @@ export type CountryQuizSettings = {
     showDisputed: boolean,
     showOthers: boolean,
 }
+
+export type CountryFlagData = {
+    code: string
+    name: string
+    name_ru?: string
+}

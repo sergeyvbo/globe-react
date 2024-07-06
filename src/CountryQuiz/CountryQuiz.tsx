@@ -5,7 +5,7 @@ import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { MainMenu } from "../MainMenu/MainMenu"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
-import { CountryOption, Difficulty } from "../Common/types"
+import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
@@ -15,11 +15,7 @@ const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
-    interface CountryFlagData {
-        code: string
-        name: string
-        name_ru?: string
-    }
+
 
     const geoData = geoJson as ExtendedFeatureCollection
     const flags = flagJson as CountryFlagData[]

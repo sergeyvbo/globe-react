@@ -4,12 +4,8 @@ import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
 import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
-
-interface Country {
-    code: string
-    name: string
-    name_ru?: string
-}
+import flagJson from '../Common/GeoData/countryCodes2.json'
+import { CountryFlagData } from '../Common/types';
 
 type Match = {
     flag: string;
@@ -21,8 +17,8 @@ type ButtonColor = "inherit" | "success" | "primary" | "secondary" | "error" | "
 export const FlagQuiz = () => {
     const OPTIONS_LENGTH = 5
 
-    const [data, setData] = useState<Country[]>([])
-    const [countries, setCountries] = useState<Country[]>([])
+    //const [data, setData] = useState<Country[]>([])
+    const [countries, setCountries] = useState<CountryFlagData[]>([])
     const [flags, setFlags] = useState<string[]>([])
     const [selectedFlag, setSelectedFlag] = useState<string | null>(null)
     const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
@@ -31,22 +27,13 @@ export const FlagQuiz = () => {
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
 
+    const data = flagJson as CountryFlagData[]
+
     useEffect(() => {
+        startGame(data)
+    }, [])
 
-        const fetchData = async () => {
-            try {
-                const response = await fetch(`${process.env.PUBLIC_URL}/countryCodes2.json`)
-                const countryCodes = await response.json()
-                setData(countryCodes)
-                startGame(countryCodes)
-            } catch (error) {
-                console.error('Error fetching country data:', error)
-            }
-        }
-        fetchData()
-    }, []);
-
-    const startGame = (countryList: Country[]) => {
+    const startGame = (countryList: CountryFlagData[]) => {
         setMatches([])
         setError(undefined)
         const randomCountries = shuffleArray(countryList).slice(0, OPTIONS_LENGTH)
