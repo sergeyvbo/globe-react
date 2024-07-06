@@ -45,6 +45,13 @@ const MainMenu = () => {
                         href='/globe-react/#/states'>
                         USA
                     </Button>
+                    <Button
+                        size='large'
+                        color='primary'
+                        aria-label='states'
+                        href='/globe-react/#/russia'>
+                        Регионы РФ
+                    </Button>
 
                 </Toolbar>
             </AppBar>
