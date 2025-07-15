@@ -39,7 +39,7 @@ const Globe = (props: Props) => {
     const PIN_HEIGHT = 48
     const PIN_OFFSET_X = -24
     const PIN_OFFSET_Y = -48
-    const PIN_URL = `/map-pin.svg`
+    const PIN_URL = `${import.meta.env.BASE_URL}map-pin.svg`
 
     const SCALE_MIN = 0.5
     const SCALE_MAX = 200
