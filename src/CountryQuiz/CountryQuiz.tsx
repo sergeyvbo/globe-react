@@ -1,6 +1,6 @@
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
 import { useState, useEffect } from "react"
-import { Globe } from "../Globe/Globe"
+import { DeckGlGlobe as Globe } from "../Globe/DeckGlGlobe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { MainMenu } from "../MainMenu/MainMenu"

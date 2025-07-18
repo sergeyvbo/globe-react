@@ -4,6 +4,10 @@
   "private": true,
   "homepage": "https://sergeyvbo.github.io/globe-react/",
   "dependencies": {
+    "@deck.gl/core": "^8.9.0",
+    "@deck.gl/layers": "^8.9.0",
+    "@deck.gl/react": "^8.9.0",
+    "@deck.gl/geo-layers": "^8.9.0",
     "@emotion/react": "^11.13.5",
     "@emotion/styled": "^11.13.5",
     "@mui/icons-material": "^6.3.0",
