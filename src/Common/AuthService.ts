@@ -2,8 +2,10 @@ import {
   AuthResponse, 
   User, 
   AuthErrorType,
-  AuthSession 
+  AuthSession,
+  OAuthProvider 
 } from './types'
+import { oauth2Service } from './OAuth2Service'
 
 // API configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
@@ -505,6 +507,54 @@ export class AuthService {
     }
   }
   
+  // OAuth2 login method
+  async loginWithOAuth(provider: OAuthProvider): Promise<AuthResponse> {
+    try {
+      // Use OAuth2Service to handle the authentication flow
+      const response = await oauth2Service.loginWithPopup(provider)
+      
+      // Tokens are already saved by OAuth2Service
+      return response
+    } catch (error) {
+      if (error instanceof AuthServiceError) {
+        throw error
+      }
+      
+      throw new AuthServiceError({
+        type: AuthErrorType.OAUTH_ERROR,
+        message: `OAuth2 login failed for ${provider}`,
+        details: error
+      })
+    }
+  }
+
+  // OAuth2 callback handling method
+  async handleOAuthCallback(url?: string): Promise<AuthResponse> {
+    try {
+      return await oauth2Service.processCallback(url)
+    } catch (error) {
+      if (error instanceof AuthServiceError) {
+        throw error
+      }
+      
+      throw new AuthServiceError({
+        type: AuthErrorType.OAUTH_ERROR,
+        message: 'OAuth2 callback handling failed',
+        details: error
+      })
+    }
+  }
+
+  // Check if current URL is OAuth2 callback
+  isOAuthCallback(url?: string): boolean {
+    return oauth2Service.isCallbackUrl(url)
+  }
+
+  // Get configured OAuth2 providers
+  getAvailableOAuthProviders(): OAuthProvider[] {
+    return oauth2Service.getConfiguredProviders()
+  }
+
   // Logout method
   async logout(): Promise<void> {
     const accessToken = TokenManager.getAccessToken()
