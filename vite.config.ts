@@ -17,4 +17,9 @@ export default defineConfig({
     // Replace process.env with import.meta.env for compatibility
     'process.env': 'import.meta.env',
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
+  },
 })
