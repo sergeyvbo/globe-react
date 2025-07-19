@@ -326,4 +326,111 @@ describe('OAuth2Service', () => {
       expect(providers).toEqual(['google', 'yandex'])
     })
   })
+
+  describe('initiateLogin', () => {
+    it('should redirect to OAuth provider URL', async () => {
+      const originalLocation = window.location
+      delete (window as any).location
+      window.location = { ...originalLocation, href: '' } as any
+
+      await service.initiateLogin('google')
+
+      expect(window.location.href).toContain('https://accounts.google.com/o/oauth2/v2/auth')
+      expect(mockSessionStorage.setItem).toHaveBeenCalledWith('oauth2_provider', 'google')
+    })
+
+    it('should throw error for unconfigured provider', async () => {
+      delete process.env.REACT_APP_GOOGLE_CLIENT_ID
+
+      await expect(service.initiateLogin('google')).rejects.toThrow(AuthServiceError)
+      await expect(service.initiateLogin('google')).rejects.toThrow('OAuth2 client ID not configured for google')
+    })
+  })
+
+
+
+  describe('Error Handling', () => {
+    it('should handle network errors during callback', async () => {
+      mockSessionStorage.store['oauth2_state'] = 'test-state'
+      mockSessionStorage.store['oauth2_state_expiry'] = (Date.now() + 600000).toString()
+
+      mockFetch.mockRejectedValue(new Error('Network error'))
+
+      await expect(service.handleCallback('test-code', 'google', 'test-state')).rejects.toThrow(AuthServiceError)
+
+      try {
+        await service.handleCallback('test-code', 'google', 'test-state')
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthServiceError)
+        expect((error as AuthServiceError).type).toBe(AuthErrorType.NETWORK_ERROR)
+      }
+    })
+
+    it('should handle malformed API response', async () => {
+      mockSessionStorage.store['oauth2_state'] = 'test-state'
+      mockSessionStorage.store['oauth2_state_expiry'] = (Date.now() + 600000).toString()
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockRejectedValue(new Error('Invalid JSON'))
+      })
+
+      await expect(service.handleCallback('test-code', 'google', 'test-state')).rejects.toThrow(AuthServiceError)
+    })
+
+    it('should handle sessionStorage access errors', () => {
+      mockSessionStorage.getItem.mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+
+      expect(() => service.getAuthUrl('google')).toThrow()
+    })
+  })
+
+  describe('URL Generation Edge Cases', () => {
+    it('should handle special characters in redirect URI', () => {
+      const originalLocation = window.location
+      Object.defineProperty(window, 'location', {
+        value: { ...originalLocation, origin: 'http://localhost:3000/special-path' },
+        writable: true
+      })
+
+      const url = service.getAuthUrl('google')
+      expect(url).toContain(encodeURIComponent('http://localhost:3000/special-path/auth/callback/google'))
+    })
+
+    it('should generate unique state parameters', () => {
+      const url1 = service.getAuthUrl('google')
+      const url2 = service.getAuthUrl('google')
+
+      const state1 = new URL(url1).searchParams.get('state')
+      const state2 = new URL(url2).searchParams.get('state')
+
+      expect(state1).not.toBe(state2)
+      expect(state1).toBeTruthy()
+      expect(state2).toBeTruthy()
+    })
+  })
+
+  describe('Provider-Specific Configurations', () => {
+    it('should handle Google-specific parameters', () => {
+      const url = service.getAuthUrl('google')
+      
+      expect(url).toContain('access_type=offline')
+      expect(url).toContain('prompt=consent')
+    })
+
+    it('should handle VK-specific parameters', () => {
+      const url = service.getAuthUrl('vk')
+      
+      expect(url).toContain('v=5.131')
+      expect(url).toContain('display=popup')
+    })
+
+    it('should handle Yandex-specific scopes', () => {
+      const url = service.getAuthUrl('yandex')
+      
+      expect(url).toMatch(/scope=.*login%3Aemail.*login%3Ainfo/)
+    })
+  })
 })

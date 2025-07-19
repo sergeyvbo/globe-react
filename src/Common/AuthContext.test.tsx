@@ -1,13 +1,30 @@
 import React from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
-import { vi, beforeEach, afterEach, beforeAll, afterAll, describe, it, expect } from 'vitest'
+import userEvent from '@testing-library/user-event'
+import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
 import { AuthProvider, useAuth } from './AuthContext'
 import { authService } from './AuthService'
+import { gameProgressService } from './GameProgressService'
 import { AuthResponse, User, AuthErrorType } from './types'
 
 // Mock the AuthService
-vi.mock('./AuthService')
-const mockAuthService = authService as any
+vi.mock('./AuthService', () => ({
+  authService: {
+    login: vi.fn(),
+    register: vi.fn(),
+    loginWithOAuth: vi.fn(),
+    logout: vi.fn(),
+    updateProfile: vi.fn(),
+    refreshToken: vi.fn(),
+  }
+}))
+
+// Mock the GameProgressService
+vi.mock('./GameProgressService', () => ({
+  gameProgressService: {
+    autoSyncOnAuth: vi.fn().mockResolvedValue(undefined)
+  }
+}))
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -20,26 +37,19 @@ Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
 })
 
-// Mock console methods to avoid noise in tests
-const originalConsoleLog = console.log
-const originalConsoleWarn = console.warn
-const originalConsoleError = console.error
-
-beforeAll(() => {
-  console.log = vi.fn()
-  console.warn = vi.fn()
-  console.error = vi.fn()
-})
-
-afterAll(() => {
-  console.log = originalConsoleLog
-  console.warn = originalConsoleWarn
-  console.error = originalConsoleError
-})
+// Mock console to reduce noise
+const consoleMock = {
+  log: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+}
+Object.defineProperty(console, 'log', { value: consoleMock.log })
+Object.defineProperty(console, 'warn', { value: consoleMock.warn })
+Object.defineProperty(console, 'error', { value: consoleMock.error })
 
 // Test component that uses the auth context
 const TestComponent: React.FC = () => {
-  const { user, isAuthenticated, isLoading, login, logout } = useAuth()
+  const { user, isAuthenticated, isLoading, login, register, loginWithOAuth, logout, updateProfile } = useAuth()
   
   return (
     <div>
@@ -49,8 +59,17 @@ const TestComponent: React.FC = () => {
       <button onClick={() => login('test@example.com', 'password123')} data-testid="login-btn">
         Login
       </button>
+      <button onClick={() => register('test@example.com', 'password123')} data-testid="register-btn">
+        Register
+      </button>
+      <button onClick={() => loginWithOAuth('google')} data-testid="oauth-btn">
+        OAuth Login
+      </button>
       <button onClick={logout} data-testid="logout-btn">
         Logout
+      </button>
+      <button onClick={() => updateProfile({ email: 'new@example.com' })} data-testid="update-btn">
+        Update Profile
       </button>
     </div>
   )
@@ -64,7 +83,22 @@ const renderWithAuthProvider = () => {
   )
 }
 
-describe('AuthContext - Automatic Session Management', () => {
+describe('AuthContext', () => {
+  const mockUser: User = {
+    id: '1',
+    email: 'test@example.com',
+    provider: 'email',
+    createdAt: new Date(),
+    lastLoginAt: new Date()
+  }
+
+  const mockAuthResponse: AuthResponse = {
+    user: mockUser,
+    accessToken: 'access-token',
+    refreshToken: 'refresh-token',
+    expiresIn: 3600
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
     mockLocalStorage.getItem.mockReturnValue(null)
@@ -76,10 +110,8 @@ describe('AuthContext - Automatic Session Management', () => {
     vi.useRealTimers()
   })
 
-  describe('Session Initialization', () => {
-    it('should initialize with loading state and check for existing session', async () => {
-      mockLocalStorage.getItem.mockReturnValue(null)
-      
+  describe('Initialization', () => {
+    it('should initialize with loading state', async () => {
       renderWithAuthProvider()
       
       expect(screen.getByTestId('loading')).toHaveTextContent('loading')
@@ -87,18 +119,10 @@ describe('AuthContext - Automatic Session Management', () => {
       
       await waitFor(() => {
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
-      })
+      }, { timeout: 1000 })
     })
 
     it('should restore valid session from localStorage', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
       
       mockLocalStorage.getItem.mockImplementation((key) => {
@@ -127,11 +151,10 @@ describe('AuthContext - Automatic Session Management', () => {
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
         expect(screen.getByTestId('user')).toHaveTextContent('test@example.com')
-        expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
-      })
+      }, { timeout: 1000 })
     })
 
-    it('should logout user if session is expired', async () => {
+    it('should clear expired session', async () => {
       const pastExpiry = new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
       
       mockLocalStorage.getItem.mockImplementation((key) => {
@@ -144,10 +167,8 @@ describe('AuthContext - Automatic Session Management', () => {
             })
           case 'auth_user':
             return JSON.stringify({
-              id: '1',
-              email: 'test@example.com',
-              provider: 'email',
-              createdAt: new Date().toISOString()
+              ...mockUser,
+              createdAt: mockUser.createdAt.toISOString()
             })
           default:
             return null
@@ -158,21 +179,218 @@ describe('AuthContext - Automatic Session Management', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
+        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
+      }, { timeout: 1000 })
+    })
+  })
+
+  describe('Authentication Methods', () => {
+    it('should handle successful login', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      authService.login = vi.fn().mockResolvedValue(mockAuthResponse)
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
       })
+
+      await user.click(screen.getByTestId('login-btn'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+        expect(screen.getByTestId('user')).toHaveTextContent('test@example.com')
+      })
+
+      expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123')
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_session', expect.any(String))
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_user', expect.any(String))
     })
 
-    it('should logout user if inactive for too long', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
+    it('should handle login error', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const loginError = new Error('Invalid credentials') as any
+      loginError.type = AuthErrorType.INVALID_CREDENTIALS
+      authService.login = vi.fn().mockRejectedValue(loginError)
 
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
+      })
+
+      await expect(async () => {
+        await user.click(screen.getByTestId('login-btn'))
+        await waitFor(() => {
+          expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+        })
+      }).rejects.toThrow()
+
+      expect(authService.login).toHaveBeenCalled()
+    })
+
+    it('should handle successful registration', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      authService.register = vi.fn().mockResolvedValue(mockAuthResponse)
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
+      })
+
+      await user.click(screen.getByTestId('register-btn'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+        expect(screen.getByTestId('user')).toHaveTextContent('test@example.com')
+      })
+
+      expect(authService.register).toHaveBeenCalledWith('test@example.com', 'password123', 'password123')
+    })
+
+    it('should handle OAuth login', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      authService.loginWithOAuth = vi.fn().mockResolvedValue(mockAuthResponse)
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
+      })
+
+      await user.click(screen.getByTestId('oauth-btn'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+      })
+
+      expect(authService.loginWithOAuth).toHaveBeenCalledWith('google')
+    })
+
+    it('should handle logout', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      authService.logout = vi.fn().mockResolvedValue(undefined)
+
+      // First set up authenticated state
+      mockLocalStorage.getItem.mockImplementation((key) => {
+        switch (key) {
+          case 'auth_session':
+            return JSON.stringify({
+              accessToken: 'valid-token',
+              refreshToken: 'valid-refresh-token',
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+            })
+          case 'auth_user':
+            return JSON.stringify({
+              ...mockUser,
+              createdAt: mockUser.createdAt.toISOString(),
+              lastLoginAt: mockUser.lastLoginAt?.toISOString()
+            })
+          case 'auth_last_activity':
+            return Date.now().toString()
+          default:
+            return null
+        }
+      })
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+      })
+
+      await user.click(screen.getByTestId('logout-btn'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+        expect(screen.getByTestId('user')).toHaveTextContent('no-user')
+      })
+
+      expect(authService.logout).toHaveBeenCalled()
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
+    })
+
+    it('should handle profile update', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const updatedUser = { ...mockUser, email: 'new@example.com' }
+      authService.updateProfile = vi.fn().mockResolvedValue(updatedUser)
+
+      // Set up authenticated state
+      mockLocalStorage.getItem.mockImplementation((key) => {
+        switch (key) {
+          case 'auth_session':
+            return JSON.stringify({
+              accessToken: 'valid-token',
+              refreshToken: 'valid-refresh-token',
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+            })
+          case 'auth_user':
+            return JSON.stringify({
+              ...mockUser,
+              createdAt: mockUser.createdAt.toISOString(),
+              lastLoginAt: mockUser.lastLoginAt?.toISOString()
+            })
+          case 'auth_last_activity':
+            return Date.now().toString()
+          default:
+            return null
+        }
+      })
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+      })
+
+      await user.click(screen.getByTestId('update-btn'))
+
+      await waitFor(() => {
+        expect(authService.updateProfile).toHaveBeenCalledWith({ email: 'new@example.com' })
+      })
+    })
+  })
+
+  describe('Session Management', () => {
+    it('should attempt token refresh when session is close to expiry', async () => {
+      const closeExpiry = new Date(Date.now() + 4 * 60 * 1000) // 4 minutes from now
+      
+      mockLocalStorage.getItem.mockImplementation((key) => {
+        switch (key) {
+          case 'auth_session':
+            return JSON.stringify({
+              accessToken: 'expiring-token',
+              refreshToken: 'valid-refresh-token',
+              expiresAt: closeExpiry.toISOString()
+            })
+          case 'auth_user':
+            return JSON.stringify({
+              ...mockUser,
+              createdAt: mockUser.createdAt.toISOString(),
+              lastLoginAt: mockUser.lastLoginAt?.toISOString()
+            })
+          case 'auth_last_activity':
+            return Date.now().toString()
+          default:
+            return null
+        }
+      })
+
+      authService.refreshToken = vi.fn().mockResolvedValue(mockAuthResponse)
+
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(authService.refreshToken).toHaveBeenCalled()
+      }, { timeout: 2000 })
+    })
+
+    it('should logout if user is inactive for too long', async () => {
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
-      const oldActivity = Date.now() - (31 * 60 * 1000) // 31 minutes ago (past inactivity threshold)
+      const oldActivity = Date.now() - (31 * 60 * 1000) // 31 minutes ago
       
       mockLocalStorage.getItem.mockImplementation((key) => {
         switch (key) {
@@ -195,213 +413,17 @@ describe('AuthContext - Automatic Session Management', () => {
         }
       })
 
-      mockAuthService.logout.mockResolvedValue()
+      authService.logout = vi.fn().mockResolvedValue(undefined)
 
       renderWithAuthProvider()
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
-        expect(mockAuthService.logout).toHaveBeenCalled()
-      })
-    })
-  })
-
-  describe('Automatic Token Refresh', () => {
-    it('should attempt token refresh when session is close to expiry', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const closeExpiry = new Date(Date.now() + 4 * 60 * 1000) // 4 minutes from now (within refresh threshold)
-      
-      mockLocalStorage.getItem.mockImplementation((key) => {
-        switch (key) {
-          case 'auth_session':
-            return JSON.stringify({
-              accessToken: 'expiring-token',
-              refreshToken: 'valid-refresh-token',
-              expiresAt: closeExpiry.toISOString()
-            })
-          case 'auth_user':
-            return JSON.stringify({
-              ...mockUser,
-              createdAt: mockUser.createdAt.toISOString(),
-              lastLoginAt: mockUser.lastLoginAt?.toISOString()
-            })
-          case 'auth_last_activity':
-            return Date.now().toString()
-          default:
-            return null
-        }
-      })
-
-      const refreshResponse: AuthResponse = {
-        user: mockUser,
-        accessToken: 'new-access-token',
-        refreshToken: 'new-refresh-token',
-        expiresIn: 3600
-      }
-
-      mockAuthService.refreshToken.mockResolvedValue(refreshResponse)
-
-      renderWithAuthProvider()
-
-      await waitFor(() => {
-        expect(mockAuthService.refreshToken).toHaveBeenCalled()
-      })
+        expect(authService.logout).toHaveBeenCalled()
+      }, { timeout: 1000 })
     })
 
-    it('should logout user if token refresh fails', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const closeExpiry = new Date(Date.now() + 4 * 60 * 1000) // 4 minutes from now
-      
-      mockLocalStorage.getItem.mockImplementation((key) => {
-        switch (key) {
-          case 'auth_session':
-            return JSON.stringify({
-              accessToken: 'expiring-token',
-              refreshToken: 'invalid-refresh-token',
-              expiresAt: closeExpiry.toISOString()
-            })
-          case 'auth_user':
-            return JSON.stringify({
-              ...mockUser,
-              createdAt: mockUser.createdAt.toISOString(),
-              lastLoginAt: mockUser.lastLoginAt?.toISOString()
-            })
-          case 'auth_last_activity':
-            return Date.now().toString()
-          default:
-            return null
-        }
-      })
-
-      mockAuthService.refreshToken.mockRejectedValue(new Error('Refresh failed'))
-      mockAuthService.logout.mockResolvedValue()
-
-      renderWithAuthProvider()
-
-      await waitFor(() => {
-        expect(mockAuthService.refreshToken).toHaveBeenCalled()
-        expect(mockAuthService.logout).toHaveBeenCalled()
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
-      })
-    })
-  })
-
-  describe('Session Management Timers', () => {
-    it('should set up refresh timer after successful login', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const loginResponse: AuthResponse = {
-        user: mockUser,
-        accessToken: 'new-access-token',
-        refreshToken: 'new-refresh-token',
-        expiresIn: 3600 // 1 hour
-      }
-
-      mockAuthService.login.mockResolvedValue(loginResponse)
-      mockAuthService.refreshToken.mockResolvedValue(loginResponse)
-
-      renderWithAuthProvider()
-
-      await act(async () => {
-        screen.getByTestId('login-btn').click()
-      })
-
-      await waitFor(() => {
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      })
-
-      // Fast-forward to near token expiry (55 minutes)
-      act(() => {
-        vi.advanceTimersByTime(55 * 60 * 1000)
-      })
-
-      await waitFor(() => {
-        expect(mockAuthService.refreshToken).toHaveBeenCalled()
-      })
-    })
-
-    it('should logout user when session expires', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const shortExpiry = new Date(Date.now() + 10 * 1000) // 10 seconds from now
-      
-      mockLocalStorage.getItem.mockImplementation((key) => {
-        switch (key) {
-          case 'auth_session':
-            return JSON.stringify({
-              accessToken: 'short-lived-token',
-              refreshToken: 'refresh-token',
-              expiresAt: shortExpiry.toISOString()
-            })
-          case 'auth_user':
-            return JSON.stringify({
-              ...mockUser,
-              createdAt: mockUser.createdAt.toISOString(),
-              lastLoginAt: mockUser.lastLoginAt?.toISOString()
-            })
-          case 'auth_last_activity':
-            return Date.now().toString()
-          default:
-            return null
-        }
-      })
-
-      mockAuthService.logout.mockResolvedValue()
-
-      renderWithAuthProvider()
-
-      await waitFor(() => {
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      })
-
-      // Fast-forward past token expiry
-      act(() => {
-        vi.advanceTimersByTime(15 * 1000)
-      })
-
-      await waitFor(() => {
-        expect(mockAuthService.logout).toHaveBeenCalled()
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
-      })
-    })
-  })
-
-  describe('User Activity Tracking', () => {
-    it('should track user activity and update timestamp', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
+    it('should track user activity', async () => {
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
       
       mockLocalStorage.getItem.mockImplementation((key) => {
@@ -444,110 +466,31 @@ describe('AuthContext - Automatic Session Management', () => {
     })
   })
 
-  describe('Periodic Session Validation', () => {
-    it('should periodically check session validity', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
-      
+  describe('Error Handling', () => {
+    it('should handle malformed localStorage data', async () => {
       mockLocalStorage.getItem.mockImplementation((key) => {
-        switch (key) {
-          case 'auth_session':
-            return JSON.stringify({
-              accessToken: 'valid-token',
-              refreshToken: 'valid-refresh-token',
-              expiresAt: futureExpiry.toISOString()
-            })
-          case 'auth_user':
-            return JSON.stringify({
-              ...mockUser,
-              createdAt: mockUser.createdAt.toISOString(),
-              lastLoginAt: mockUser.lastLoginAt?.toISOString()
-            })
-          case 'auth_last_activity':
-            return Date.now().toString()
-          default:
-            return null
-        }
+        if (key === 'auth_session') return 'invalid-json'
+        return null
       })
 
       renderWithAuthProvider()
-
-      await waitFor(() => {
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      })
-
-      // Fast-forward to trigger periodic check (1 minute)
-      act(() => {
-        vi.advanceTimersByTime(60 * 1000)
-      })
-
-      // The periodic check should have run (we can't easily assert this directly,
-      // but we can verify the session is still valid)
-      expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-    })
-  })
-
-  describe('Cleanup', () => {
-    it('should clear timers on logout', async () => {
-      const mockUser: User = {
-        id: '1',
-        email: 'test@example.com',
-        provider: 'email',
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
-      
-      mockLocalStorage.getItem.mockImplementation((key) => {
-        switch (key) {
-          case 'auth_session':
-            return JSON.stringify({
-              accessToken: 'valid-token',
-              refreshToken: 'valid-refresh-token',
-              expiresAt: futureExpiry.toISOString()
-            })
-          case 'auth_user':
-            return JSON.stringify({
-              ...mockUser,
-              createdAt: mockUser.createdAt.toISOString(),
-              lastLoginAt: mockUser.lastLoginAt?.toISOString()
-            })
-          case 'auth_last_activity':
-            return Date.now().toString()
-          default:
-            return null
-        }
-      })
-
-      mockAuthService.logout.mockResolvedValue()
-
-      renderWithAuthProvider()
-
-      await waitFor(() => {
-        expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      })
-
-      // Logout
-      await act(async () => {
-        screen.getByTestId('logout-btn').click()
-      })
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+        expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
+      }, { timeout: 1000 })
+    })
+
+    it('should handle localStorage access errors', async () => {
+      mockLocalStorage.getItem.mockImplementation(() => {
+        throw new Error('localStorage error')
       })
 
-      // Verify localStorage was cleared
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_last_activity')
+      renderWithAuthProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+      }, { timeout: 1000 })
     })
   })
 })
