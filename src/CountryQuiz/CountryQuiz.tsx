@@ -4,6 +4,8 @@ import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { MainMenu } from "../MainMenu/MainMenu"
+import { AuthModal } from "../Common/AuthModal"
+import { useAuth } from "../Common/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
 import geoJson from '../Common/GeoData/geo.json'
@@ -15,7 +17,7 @@ const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
-
+    const { isAuthenticated, isLoading: authLoading } = useAuth()
 
     const geoData = geoJson as ExtendedFeatureCollection
     const flags = flagJson as CountryFlagData[]
@@ -27,11 +29,61 @@ const CountryQuiz = () => {
     const [options, setOptions] = useState<CountryOption[]>([])
     const [correctOption, setCorrectOption] = useState<CountryOption>()
     const [disabled, setDisabled] = useState(false)
+    
+    // Auth modal state
+    const [showAuthModal, setShowAuthModal] = useState(false)
+    const [hasDeclinedAuth, setHasDeclinedAuth] = useState(false)
+    
+    // Game progress state for saving when user authenticates during game
+    const [gameProgress, setGameProgress] = useState<{
+        correctScore: number
+        wrongScore: number
+        hasStartedGame: boolean
+        sessionStartTime: Date | null
+    }>({
+        correctScore: 0,
+        wrongScore: 0,
+        hasStartedGame: false,
+        sessionStartTime: null
+    })
 
 
     useEffect(() => {
         startGame()
+        // Initialize session start time when game begins
+        setGameProgress(prev => ({
+            ...prev,
+            sessionStartTime: new Date()
+        }))
     }, [])
+
+    // Show auth modal for unauthenticated users when auth loading is complete
+    useEffect(() => {
+        if (!authLoading && !isAuthenticated && !hasDeclinedAuth) {
+            setShowAuthModal(true)
+        }
+    }, [authLoading, isAuthenticated, hasDeclinedAuth])
+
+    // Update game progress when scores change
+    useEffect(() => {
+        setGameProgress(prev => ({
+            ...prev,
+            correctScore,
+            wrongScore,
+            hasStartedGame: correctScore > 0 || wrongScore > 0
+        }))
+    }, [correctScore, wrongScore])
+
+    // Hide auth modal when user becomes authenticated and save progress
+    useEffect(() => {
+        if (isAuthenticated && showAuthModal) {
+            setShowAuthModal(false)
+            // Save current game progress when user authenticates during game
+            if (gameProgress.hasStartedGame) {
+                handleAuthSuccess()
+            }
+        }
+    }, [isAuthenticated, showAuthModal, gameProgress.hasStartedGame])
 
     const startGame = () => {
 
@@ -111,6 +163,41 @@ const CountryQuiz = () => {
         }, 2000);
     }
 
+    // Handle auth modal close (when user clicks "Continue without login")
+    const handleAuthModalClose = () => {
+        setShowAuthModal(false)
+        setHasDeclinedAuth(true)
+    }
+
+    // Handle when user authenticates during game - preserve current progress
+    const handleAuthSuccess = () => {
+        // The modal will be automatically closed by the useEffect
+        // Current game progress is already tracked in state
+        // In a real implementation, we would save the progress to the backend here
+        const sessionData = {
+            ...gameProgress,
+            gameType: 'countries' as const,
+            sessionDuration: gameProgress.sessionStartTime 
+                ? Date.now() - gameProgress.sessionStartTime.getTime() 
+                : 0,
+            timestamp: new Date().toISOString()
+        }
+        
+        console.log('User authenticated during game, preserving progress:', sessionData)
+        
+        // TODO: In a real implementation, send this data to the backend
+        // await gameProgressService.saveProgress(sessionData)
+        
+        // For now, we can store it in localStorage as a backup
+        try {
+            const existingProgress = JSON.parse(localStorage.getItem('temp_game_progress') || '[]')
+            existingProgress.push(sessionData)
+            localStorage.setItem('temp_game_progress', JSON.stringify(existingProgress))
+        } catch (error) {
+            console.warn('Failed to save temporary game progress:', error)
+        }
+    }
+
     if (geoData && options.length) {
         return (
             <div >
@@ -129,6 +216,13 @@ const CountryQuiz = () => {
                     correctOption={correctOption?.translatedName ?? ''}
                     onSubmit={onSubmit} />
                 <Score correctScore={correctScore} wrongScore={wrongScore} />
+                
+                {/* Auth Modal for unauthenticated users */}
+                <AuthModal
+                    open={showAuthModal}
+                    onClose={handleAuthModalClose}
+                    initialMode="welcome"
+                />
             </div>
         )
     }
