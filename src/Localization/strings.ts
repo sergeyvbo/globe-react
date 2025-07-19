@@ -46,6 +46,8 @@ const strings = {
             passwordChangeFailed: "Failed to change password. Please try again.",
             changing: "Changing...",
             cancel: "Cancel",
+            loading: "Loading...",
+            backToHome: "Back to Home",
         } as const,
     } as const,
     ru: {
@@ -91,6 +93,8 @@ const strings = {
             passwordChangeFailed: "Не удалось изменить пароль. Попробуйте еще раз.",
             changing: "Изменение...",
             cancel: "Отмена",
+            loading: "Загрузка...",
+            backToHome: "Вернуться на главную",
         } as const,
     } as const,
 } as const
