@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Card,
@@ -10,16 +10,26 @@ import {
   Avatar,
   Chip,
   CircularProgress,
-  Stack
+  Stack,
+  Grid,
+  LinearProgress,
+  Divider
 } from '@mui/material'
 import {
   Person as PersonIcon,
   Email as EmailIcon,
   Lock as LockIcon,
-  Security as SecurityIcon
+  Security as SecurityIcon,
+  TrendingUp as TrendingUpIcon,
+  EmojiEvents as TrophyIcon,
+  Quiz as QuizIcon,
+  Flag as FlagIcon,
+  Public as PublicIcon,
+  LocationOn as LocationIcon
 } from '@mui/icons-material'
 import { useAuth } from './AuthContext'
 import { authService, ValidationUtils } from './AuthService'
+import { gameProgressService, GameStats } from './GameProgressService'
 import { getAuthString } from '../Localization/strings'
 
 interface PasswordChangeForm {
@@ -46,6 +56,29 @@ export const UserProfile: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({})
   const [successMessage, setSuccessMessage] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Game statistics state
+  const [gameStats, setGameStats] = useState<GameStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(true)
+
+  // Load game statistics when component mounts
+  useEffect(() => {
+    const loadGameStats = async () => {
+      if (!user) return
+      
+      try {
+        setStatsLoading(true)
+        const stats = await gameProgressService.getGameStats(user.id)
+        setGameStats(stats)
+      } catch (error) {
+        console.error('Failed to load game statistics:', error)
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    loadGameStats()
+  }, [user])
 
   // If no user is logged in, show error
   if (!user) {
@@ -264,6 +297,186 @@ export const UserProfile: React.FC = () => {
               </Box>
             )}
           </Stack>
+        </CardContent>
+      </Card>
+
+      {/* Game Statistics Section */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <TrendingUpIcon sx={{ mr: 2, color: 'text.secondary' }} />
+            <Typography variant="h6" component="h3">
+              Game Statistics
+            </Typography>
+          </Box>
+
+          {statsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : gameStats && gameStats.totalGames > 0 ? (
+            <Box>
+              {/* Overall Statistics */}
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={6} sm={3}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="primary">
+                      {gameStats.totalGames}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Games
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="success.main">
+                      {Math.round(gameStats.averageAccuracy)}%
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Accuracy
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="warning.main">
+                      {gameStats.bestStreak}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Best Streak
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h4" color="info.main">
+                      {gameStats.totalCorrectAnswers}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Correct Answers
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Game Type Statistics */}
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                By Game Type
+              </Typography>
+              
+              <Stack spacing={2}>
+                {/* Countries Quiz */}
+                {gameStats.gameTypeStats.countries.games > 0 && (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <PublicIcon sx={{ mr: 1, color: 'primary.main' }} />
+                      <Typography variant="subtitle1">
+                        Countries Quiz
+                      </Typography>
+                      <Chip 
+                        label={`${gameStats.gameTypeStats.countries.games} games`}
+                        size="small"
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" sx={{ minWidth: 80 }}>
+                        Accuracy: {Math.round(gameStats.gameTypeStats.countries.accuracy)}%
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={gameStats.gameTypeStats.countries.accuracy}
+                        sx={{ flexGrow: 1, mx: 2 }}
+                      />
+                      <Typography variant="body2">
+                        Best: {gameStats.gameTypeStats.countries.bestStreak}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Flags Quiz */}
+                {gameStats.gameTypeStats.flags.games > 0 && (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <FlagIcon sx={{ mr: 1, color: 'success.main' }} />
+                      <Typography variant="subtitle1">
+                        Flags Quiz
+                      </Typography>
+                      <Chip 
+                        label={`${gameStats.gameTypeStats.flags.games} games`}
+                        size="small"
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" sx={{ minWidth: 80 }}>
+                        Accuracy: {Math.round(gameStats.gameTypeStats.flags.accuracy)}%
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={gameStats.gameTypeStats.flags.accuracy}
+                        sx={{ flexGrow: 1, mx: 2 }}
+                      />
+                      <Typography variant="body2">
+                        Best: {gameStats.gameTypeStats.flags.bestStreak}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+
+                {/* States Quiz */}
+                {gameStats.gameTypeStats.states.games > 0 && (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <LocationIcon sx={{ mr: 1, color: 'warning.main' }} />
+                      <Typography variant="subtitle1">
+                        States Quiz
+                      </Typography>
+                      <Chip 
+                        label={`${gameStats.gameTypeStats.states.games} games`}
+                        size="small"
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" sx={{ minWidth: 80 }}>
+                        Accuracy: {Math.round(gameStats.gameTypeStats.states.accuracy)}%
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={gameStats.gameTypeStats.states.accuracy}
+                        sx={{ flexGrow: 1, mx: 2 }}
+                      />
+                      <Typography variant="body2">
+                        Best: {gameStats.gameTypeStats.states.bestStreak}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+              </Stack>
+
+              {/* Last Played */}
+              <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Last played: {gameStats.lastPlayedAt.toLocaleString()}
+                </Typography>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 3 }}>
+              <QuizIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No Game History Yet
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Start playing quizzes to see your statistics here!
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
 

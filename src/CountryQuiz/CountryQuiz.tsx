@@ -8,6 +8,7 @@ import { AuthModal } from "../Common/AuthModal"
 import { useAuth } from "../Common/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
+import { gameProgressService, GameSession } from "../Common/GameProgressService"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
@@ -17,7 +18,7 @@ const CountryQuiz = () => {
 
     const OPTIONS_SIZE = 3
 
-    const { isAuthenticated, isLoading: authLoading } = useAuth()
+    const { user, isAuthenticated, isLoading: authLoading } = useAuth()
 
     const geoData = geoJson as ExtendedFeatureCollection
     const flags = flagJson as CountryFlagData[]
@@ -34,24 +35,19 @@ const CountryQuiz = () => {
     const [showAuthModal, setShowAuthModal] = useState(false)
     const [hasDeclinedAuth, setHasDeclinedAuth] = useState(false)
     
-    // Game progress state for saving when user authenticates during game
-    const [gameProgress, setGameProgress] = useState<{
-        correctScore: number
-        wrongScore: number
-        hasStartedGame: boolean
-        sessionStartTime: Date | null
-    }>({
-        correctScore: 0,
-        wrongScore: 0,
-        hasStartedGame: false,
-        sessionStartTime: null
+    // Game session state for progress tracking
+    const [gameSession, setGameSession] = useState<GameSession>({
+        gameType: 'countries',
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        sessionStartTime: new Date()
     })
 
 
     useEffect(() => {
         startGame()
         // Initialize session start time when game begins
-        setGameProgress(prev => ({
+        setGameSession(prev => ({
             ...prev,
             sessionStartTime: new Date()
         }))
@@ -64,26 +60,49 @@ const CountryQuiz = () => {
         }
     }, [authLoading, isAuthenticated, hasDeclinedAuth])
 
-    // Update game progress when scores change
+    // Update game session when scores change
     useEffect(() => {
-        setGameProgress(prev => ({
+        setGameSession(prev => ({
             ...prev,
-            correctScore,
-            wrongScore,
-            hasStartedGame: correctScore > 0 || wrongScore > 0
+            correctAnswers: correctScore,
+            wrongAnswers: wrongScore
         }))
     }, [correctScore, wrongScore])
 
-    // Hide auth modal when user becomes authenticated and save progress
+    // Hide auth modal when user becomes authenticated and migrate progress
     useEffect(() => {
-        if (isAuthenticated && showAuthModal) {
+        if (isAuthenticated && showAuthModal && user) {
             setShowAuthModal(false)
-            // Save current game progress when user authenticates during game
-            if (gameProgress.hasStartedGame) {
+            // Migrate current game progress when user authenticates during game
+            if (correctScore > 0 || wrongScore > 0) {
                 handleAuthSuccess()
             }
         }
-    }, [isAuthenticated, showAuthModal, gameProgress.hasStartedGame])
+    }, [isAuthenticated, showAuthModal, user, correctScore, wrongScore])
+
+    // Save progress when authenticated user finishes a game session
+    useEffect(() => {
+        if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
+            // Save progress periodically for authenticated users
+            const saveProgress = async () => {
+                try {
+                    const currentSession = {
+                        ...gameSession,
+                        correctAnswers: correctScore,
+                        wrongAnswers: wrongScore,
+                        sessionEndTime: new Date()
+                    }
+                    
+                    // Save to temporary storage for unauthenticated users
+                    gameProgressService.saveTempSession(currentSession)
+                } catch (error) {
+                    console.error('Failed to save temporary progress:', error)
+                }
+            }
+            
+            saveProgress()
+        }
+    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
 
     const startGame = () => {
 
@@ -169,34 +188,62 @@ const CountryQuiz = () => {
         setHasDeclinedAuth(true)
     }
 
-    // Handle when user authenticates during game - preserve current progress
-    const handleAuthSuccess = () => {
-        // The modal will be automatically closed by the useEffect
-        // Current game progress is already tracked in state
-        // In a real implementation, we would save the progress to the backend here
-        const sessionData = {
-            ...gameProgress,
-            gameType: 'countries' as const,
-            sessionDuration: gameProgress.sessionStartTime 
-                ? Date.now() - gameProgress.sessionStartTime.getTime() 
-                : 0,
-            timestamp: new Date().toISOString()
-        }
+    // Handle when user authenticates during game - migrate current progress
+    const handleAuthSuccess = async () => {
+        if (!user) return
         
-        console.log('User authenticated during game, preserving progress:', sessionData)
-        
-        // TODO: In a real implementation, send this data to the backend
-        // await gameProgressService.saveProgress(sessionData)
-        
-        // For now, we can store it in localStorage as a backup
         try {
-            const existingProgress = JSON.parse(localStorage.getItem('temp_game_progress') || '[]')
-            existingProgress.push(sessionData)
-            localStorage.setItem('temp_game_progress', JSON.stringify(existingProgress))
+            // Create current session data
+            const currentSession: GameSession = {
+                gameType: 'countries',
+                correctAnswers: correctScore,
+                wrongAnswers: wrongScore,
+                sessionStartTime: gameSession.sessionStartTime,
+                sessionEndTime: new Date()
+            }
+            
+            // Save current session progress
+            await gameProgressService.saveGameProgress(user.id, 'countries', currentSession)
+            
+            // Also migrate any temporary progress that might exist
+            await gameProgressService.migrateTempProgress(user)
+            
+            console.log('User authenticated during game, progress saved:', currentSession)
         } catch (error) {
-            console.warn('Failed to save temporary game progress:', error)
+            console.error('Failed to save progress after authentication:', error)
         }
     }
+
+    // Save progress when game session ends (for authenticated users)
+    const saveGameSession = async () => {
+        if (!isAuthenticated || !user) return
+        
+        try {
+            const sessionToSave: GameSession = {
+                ...gameSession,
+                correctAnswers: correctScore,
+                wrongAnswers: wrongScore,
+                sessionEndTime: new Date()
+            }
+            
+            await gameProgressService.saveGameProgress(user.id, 'countries', sessionToSave)
+            console.log('Game session saved:', sessionToSave)
+        } catch (error) {
+            console.error('Failed to save game session:', error)
+        }
+    }
+
+    // Save progress when user leaves or session ends
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
+                saveGameSession()
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
 
     if (geoData && options.length) {
         return (

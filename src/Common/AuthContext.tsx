@@ -8,6 +8,7 @@ import {
   AuthErrorType 
 } from './types'
 import { authService } from './AuthService'
+import { gameProgressService } from './GameProgressService'
 
 // Auth state interface
 interface AuthState {
@@ -362,6 +363,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Setup automatic session management
       setupSessionManagement(session)
+      
+      // Auto-sync game progress after successful login
+      gameProgressService.autoSyncOnAuth(session.user.id).catch(error => {
+        console.warn('Failed to auto-sync progress after login:', error)
+      })
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.INVALID_CREDENTIALS,
@@ -385,6 +391,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Setup automatic session management
       setupSessionManagement(session)
+      
+      // Auto-sync game progress after successful registration
+      gameProgressService.autoSyncOnAuth(session.user.id).catch(error => {
+        console.warn('Failed to auto-sync progress after registration:', error)
+      })
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.VALIDATION_ERROR,
@@ -408,6 +419,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Setup automatic session management
       setupSessionManagement(session)
+      
+      // Auto-sync game progress after successful OAuth login
+      gameProgressService.autoSyncOnAuth(session.user.id).catch(error => {
+        console.warn('Failed to auto-sync progress after OAuth login:', error)
+      })
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.OAUTH_ERROR,

@@ -4,6 +4,8 @@ import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
 import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
+import { useAuth } from '../Common/AuthContext';
+import { gameProgressService, GameSession } from '../Common/GameProgressService';
 import flagJson from '../Common/GeoData/countryCodes2.json'
 import { CountryFlagData } from '../Common/types';
 
@@ -17,6 +19,8 @@ type ButtonColor = "inherit" | "success" | "primary" | "secondary" | "error" | "
 export const FlagQuiz = () => {
     const OPTIONS_LENGTH = 5
 
+    const { user, isAuthenticated } = useAuth()
+
     //const [data, setData] = useState<Country[]>([])
     const [countries, setCountries] = useState<CountryFlagData[]>([])
     const [flags, setFlags] = useState<string[]>([])
@@ -27,11 +31,71 @@ export const FlagQuiz = () => {
     const [correctScore, setCorrectScore] = useState(0)
     const [wrongScore, setWrongScore] = useState(0)
 
+    // Game session state for progress tracking
+    const [gameSession, setGameSession] = useState<GameSession>({
+        gameType: 'flags',
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        sessionStartTime: new Date()
+    })
+
     const data = flagJson as CountryFlagData[]
 
     useEffect(() => {
         startGame(data)
+        // Initialize session start time when game begins
+        setGameSession(prev => ({
+            ...prev,
+            sessionStartTime: new Date()
+        }))
     }, [])
+
+    // Update game session when scores change
+    useEffect(() => {
+        setGameSession(prev => ({
+            ...prev,
+            correctAnswers: correctScore,
+            wrongAnswers: wrongScore
+        }))
+    }, [correctScore, wrongScore])
+
+    // Save progress when authenticated user finishes a round
+    useEffect(() => {
+        if (isAuthenticated && user && OPTIONS_LENGTH === matches.length) {
+            saveGameSession()
+        }
+    }, [isAuthenticated, user, matches.length])
+
+    // Save progress when user leaves
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
+                saveGameSession()
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
+
+    // Save progress when game session ends (for authenticated users)
+    const saveGameSession = async () => {
+        if (!isAuthenticated || !user) return
+        
+        try {
+            const sessionToSave: GameSession = {
+                ...gameSession,
+                correctAnswers: correctScore,
+                wrongAnswers: wrongScore,
+                sessionEndTime: new Date()
+            }
+            
+            await gameProgressService.saveGameProgress(user.id, 'flags', sessionToSave)
+            console.log('Flag quiz session saved:', sessionToSave)
+        } catch (error) {
+            console.error('Failed to save flag quiz session:', error)
+        }
+    }
 
     const startGame = (countryList: CountryFlagData[]) => {
         setMatches([])
