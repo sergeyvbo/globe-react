@@ -4,9 +4,9 @@ import {
   AuthErrorType,
   AuthSession,
   OAuthProvider 
-} from './types'
+} from '../types'
 import { oauth2Service } from './OAuth2Service'
-import { getAuthString } from '../Localization/strings'
+import { getAuthString } from '../../Localization/strings'
 
 // API configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'

@@ -20,8 +20,8 @@ import {
   Facebook as VKIcon
 } from '@mui/icons-material'
 import { useAuth } from './AuthContext'
-import { OAuthProvider, AuthError, ValidationErrors } from './types'
-import { getAuthString } from '../Localization/strings'
+import { OAuthProvider, AuthError, ValidationErrors } from '../types'
+import { getAuthString } from '../../Localization/strings'
 
 // Modal modes
 type AuthModalMode = 'welcome' | 'login' | 'register'

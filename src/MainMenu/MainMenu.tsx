@@ -4,8 +4,8 @@ import { Flag, Public, Settings, AccountCircle, Logout, Person } from '@mui/icon
 import { getString, getAuthString } from '../Localization/strings'
 import { getSettings } from '../Common/utils'
 import { CountryQuizSettings } from '../Common/types'
-import { useAuth } from '../Common/AuthContext'
-import { AuthModal } from '../Common/AuthModal'
+import { useAuth } from '../Common/Auth/AuthContext'
+import { AuthModal } from '../Common/Auth/AuthModal'
 
 
 const MainMenu = () => {

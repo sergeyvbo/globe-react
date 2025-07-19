@@ -1,9 +1,9 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { UserProfile } from './UserProfile'
-import { AuthProvider } from './AuthContext'
-import { authService } from './AuthService'
+import { UserProfile } from '.'
+import { AuthProvider } from '../Auth/AuthContext'
+import { authService } from '../Auth/AuthService'
 
 // Mock the auth service
 vi.mock('./AuthService', () => ({
@@ -163,7 +163,7 @@ describe('UserProfile', () => {
     mockAuthContext.isAuthenticated = true
 
     // Mock validation functions
-    const { ValidationUtils } = await import('./AuthService')
+    const { ValidationUtils } = await import('../Auth/AuthService')
     vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ isValid: true })
     vi.mocked(ValidationUtils.validatePasswordConfirmation).mockReturnValue({ isValid: true })
     vi.mocked(authService.changePassword).mockResolvedValue()
@@ -215,7 +215,7 @@ describe('UserProfile', () => {
     mockAuthContext.isAuthenticated = true
 
     // Mock validation functions to return errors
-    const { ValidationUtils } = await import('./AuthService')
+    const { ValidationUtils } = await import('../Auth/AuthService')
     vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ 
       isValid: false, 
       message: 'Password must be at least 8 characters long' 
@@ -323,7 +323,7 @@ describe('UserProfile', () => {
     mockAuthContext.isAuthenticated = true
 
     // Mock validation functions
-    const { ValidationUtils } = await import('./AuthService')
+    const { ValidationUtils } = await import('../Auth/AuthService')
     vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ isValid: true })
     vi.mocked(ValidationUtils.validatePasswordConfirmation).mockReturnValue({ isValid: true })
     

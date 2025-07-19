@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react'
 import { useAuth } from './AuthContext'
 import { Box, Alert, Button } from '@mui/material'
-import { getAuthString } from '../Localization/strings'
+import { getAuthString } from '../../Localization/strings'
 
 interface ProtectedRouteProps {
   children: ReactElement

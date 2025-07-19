@@ -2,7 +2,7 @@ import {
   AuthResponse, 
   OAuthProvider,
   AuthErrorType 
-} from './types'
+} from '../types'
 import { AuthServiceError } from './AuthService'
 
 // OAuth2 configuration for different providers

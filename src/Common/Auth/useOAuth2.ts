@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { OAuthProvider } from './types'
+import { OAuthProvider } from '../types'
 import { oauth2Service } from './OAuth2Service'
 import { authService, AuthServiceError } from './AuthService'
 

@@ -4,8 +4,8 @@ import { CountryQuiz } from './CountryQuiz/CountryQuiz';
 import { FlagQuiz } from './FlagQuiz/FlagQuiz';
 import { StateQuiz } from './StateQuiz/StateQuiz';
 import { UserProfile } from './Common/UserProfile';
-import { ProtectedRoute } from './Common/ProtectedRoute';
-import { AuthProvider } from './Common/AuthContext';
+import { ProtectedRoute } from './Common/Auth/ProtectedRoute';
+import { AuthProvider } from './Common/Auth/AuthContext';
 import { SessionDemo } from './Common/SessionDemo';
 
 function App() {

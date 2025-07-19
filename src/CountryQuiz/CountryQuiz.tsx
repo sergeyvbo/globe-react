@@ -4,11 +4,11 @@ import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { MainMenu } from "../MainMenu/MainMenu"
-import { AuthModal } from "../Common/AuthModal"
-import { useAuth } from "../Common/AuthContext"
+import { AuthModal } from "../Common/Auth/AuthModal"
+import { useAuth } from "../Common/Auth/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
-import { gameProgressService, GameSession } from "../Common/GameProgressService"
+import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 

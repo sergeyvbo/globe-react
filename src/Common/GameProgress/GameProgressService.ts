@@ -1,4 +1,4 @@
-import { GameProgress, GameType, User } from './types'
+import { GameProgress, GameType, User } from '../types'
 
 export interface GameSession {
   gameType: GameType

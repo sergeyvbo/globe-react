@@ -27,10 +27,10 @@ import {
   Public as PublicIcon,
   LocationOn as LocationIcon
 } from '@mui/icons-material'
-import { useAuth } from './AuthContext'
-import { authService, ValidationUtils } from './AuthService'
-import { gameProgressService, GameStats } from './GameProgressService'
-import { getAuthString } from '../Localization/strings'
+import { useAuth } from '../Auth'
+import { authService, ValidationUtils } from '../Auth'
+import { gameProgressService, GameStats } from '../GameProgress'
+import { getAuthString } from '../../Localization/strings'
 
 interface PasswordChangeForm {
   currentPassword: string

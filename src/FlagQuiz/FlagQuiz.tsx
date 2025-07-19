@@ -4,8 +4,8 @@ import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
 import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
-import { useAuth } from '../Common/AuthContext';
-import { gameProgressService, GameSession } from '../Common/GameProgressService';
+import { useAuth } from '../Common/Auth/AuthContext';
+import { gameProgressService, GameSession } from '../Common/GameProgress/GameProgressService';
 import flagJson from '../Common/GeoData/countryCodes2.json'
 import { CountryFlagData } from '../Common/types';
 

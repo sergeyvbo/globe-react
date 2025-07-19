@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ValidationUtils, AuthService, AuthServiceError } from './AuthService'
-import { AuthErrorType, AuthResponse, User } from './types'
+import { AuthErrorType, AuthResponse, User } from '../types'
 
 // Mock localStorage
 const localStorageMock = {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth } from './Auth/AuthContext'
 import { Box, Typography, Button, Paper, Alert } from '@mui/material'
 
 export const SessionDemo: React.FC = () => {

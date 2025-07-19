@@ -6,8 +6,8 @@ import { Score } from "../CountryQuiz/Score"
 import { Quiz } from "../Quiz/Quiz"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryMainMenu } from "../CountryQuiz/CountryMainMenu"
-import { useAuth } from "../Common/AuthContext"
-import { gameProgressService, GameSession } from "../Common/GameProgressService"
+import { useAuth } from "../Common/Auth/AuthContext"
+import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
 import geoJson from '../Common/GeoData/us.json'
 
 const StateQuiz = () => {

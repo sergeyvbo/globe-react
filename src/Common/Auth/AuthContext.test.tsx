@@ -4,8 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
 import { AuthProvider, useAuth } from './AuthContext'
 import { authService } from './AuthService'
-import { gameProgressService } from './GameProgressService'
-import { AuthResponse, User, AuthErrorType } from './types'
+import { gameProgressService } from '../GameProgress'
+import { AuthResponse, User, AuthErrorType } from '../types'
 
 // Mock the AuthService
 vi.mock('./AuthService', () => ({

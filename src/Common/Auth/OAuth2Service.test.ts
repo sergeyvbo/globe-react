@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { OAuth2Service, oauth2Service } from './OAuth2Service'
 import { AuthServiceError } from './AuthService'
-import { AuthErrorType, OAuthProvider } from './types'
+import { AuthErrorType, OAuthProvider } from '../types'
 
 // Mock window.location
 const mockLocation = {
