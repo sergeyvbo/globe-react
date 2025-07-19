@@ -1,19 +1,52 @@
 import React, { useState, useEffect, Dispatch } from 'react'
-import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button } from '@mui/material'
-import { Flag, Public, Settings } from '@mui/icons-material'
-import { getString } from '../Localization/strings'
+import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button, Avatar, Menu, ListItemIcon, ListItemText } from '@mui/material'
+import { Flag, Public, Settings, AccountCircle, Logout, Person } from '@mui/icons-material'
+import { getString, getAuthString } from '../Localization/strings'
 import { getSettings } from '../Common/utils'
 import { CountryQuizSettings } from '../Common/types'
+import { useAuth } from '../Common/AuthContext'
+import { AuthModal } from '../Common/AuthModal'
 
 
 const MainMenu = () => {
     const [settings, setSettings] = useState<CountryQuizSettings>(getSettings())
     const [open, setOpen] = useState(false)
+    const [authModalOpen, setAuthModalOpen] = useState(false)
+    const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
+    
+    const { user, isAuthenticated, logout } = useAuth()
 
     const handleSettingsChange = (key: string, value: string | boolean) => {
         const newSettings = { ...settings, [key]: value }
         setSettings(newSettings)
         localStorage.setItem('countryQuizSettings', JSON.stringify(newSettings))
+    }
+
+    const handleLoginClick = () => {
+        setAuthModalOpen(true)
+    }
+
+    const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+        setProfileMenuAnchor(event.currentTarget)
+    }
+
+    const handleProfileMenuClose = () => {
+        setProfileMenuAnchor(null)
+    }
+
+    const handleLogout = async () => {
+        try {
+            await logout()
+            handleProfileMenuClose()
+        } catch (error) {
+            console.error('Logout failed:', error)
+        }
+    }
+
+    const handleProfileNavigation = () => {
+        // Navigate to profile page
+        window.location.hash = '/profile'
+        handleProfileMenuClose()
     }
 
     return (
@@ -45,6 +78,54 @@ const MainMenu = () => {
                         href='/globe-react/#/states'>
                         USA
                     </Button>
+
+                    {/* Authentication UI */}
+                    <Box sx={{ flexGrow: 1 }} />
+                    {isAuthenticated ? (
+                        <>
+                            <IconButton
+                                size='large'
+                                color='primary'
+                                onClick={handleProfileClick}
+                                aria-label='profile'
+                            >
+                                {user?.avatar ? (
+                                    <Avatar src={user.avatar} sx={{ width: 32, height: 32 }} />
+                                ) : (
+                                    <AccountCircle />
+                                )}
+                            </IconButton>
+                            <Menu
+                                anchorEl={profileMenuAnchor}
+                                open={Boolean(profileMenuAnchor)}
+                                onClose={handleProfileMenuClose}
+                                onClick={handleProfileMenuClose}
+                                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                            >
+                                <MenuItem onClick={handleProfileNavigation}>
+                                    <ListItemIcon>
+                                        <Person fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>{getAuthString('profile')}</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleLogout}>
+                                    <ListItemIcon>
+                                        <Logout fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>{getAuthString('logout')}</ListItemText>
+                                </MenuItem>
+                            </Menu>
+                        </>
+                    ) : (
+                        <Button
+                            color='primary'
+                            onClick={handleLoginClick}
+                            aria-label='login'
+                        >
+                            {getAuthString('login')}
+                        </Button>
+                    )}
 
                 </Toolbar>
             </AppBar>
@@ -125,6 +206,13 @@ const MainMenu = () => {
                     </FormControl>
                 </DialogContent>
             </Dialog>
+            
+            {/* Authentication Modal */}
+            <AuthModal 
+                open={authModalOpen} 
+                onClose={() => setAuthModalOpen(false)} 
+                initialMode="welcome"
+            />
         </>
     )
 }

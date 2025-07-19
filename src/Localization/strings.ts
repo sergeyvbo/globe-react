@@ -1,5 +1,6 @@
 type Language = 'en' | 'ru';
 type Path = keyof typeof strings['en']['settings'];
+type AuthPath = keyof typeof strings['en']['auth'];
 
 const strings = {
     en: {
@@ -21,6 +22,11 @@ const strings = {
             correct: "Correct",
             wrong: "Wrong",
         } as const,
+        auth: {
+            login: "Login",
+            logout: "Logout",
+            profile: "Profile",
+        } as const,
     } as const,
     ru: {
         settings: {
@@ -41,6 +47,11 @@ const strings = {
             correct: "Правильно",
             wrong: "Ошибок",
         } as const,
+        auth: {
+            login: "Войти",
+            logout: "Выйти",
+            profile: "Профиль",
+        } as const,
     } as const,
 } as const
 
@@ -50,4 +61,10 @@ const getString = (key: Path): string => {
     return strings[language].settings[key];
 };
 
-export { getString }
+const getAuthString = (key: AuthPath): string => {
+    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+    const language: Language = settings.language || 'en';
+    return strings[language].auth[key];
+};
+
+export { getString, getAuthString }
