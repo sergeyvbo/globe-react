@@ -324,7 +324,7 @@ export const UserProfile: React.FC = () => {
                     value={passwordForm.newPassword}
                     onChange={handlePasswordFormChange('newPassword')}
                     error={!!errors.newPassword}
-                    helperText={errors.newPassword || 'Password must be at least 8 characters with letters and numbers'}
+                    helperText={errors.newPassword || getAuthString('passwordHelperText')}
                     fullWidth
                     required
                     disabled={isLoading}

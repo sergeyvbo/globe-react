@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from './AuthContext'
 import { OAuthProvider, AuthError, ValidationErrors } from './types'
+import { getAuthString } from '../Localization/strings'
 
 // Modal modes
 type AuthModalMode = 'welcome' | 'login' | 'register'
@@ -35,98 +36,35 @@ interface AuthModalProps {
 const validateEmail = (email: string): { isValid: boolean; message?: string } => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!email) {
-    return { isValid: false, message: 'Email is required' }
+    return { isValid: false, message: getAuthString('emailRequired') }
   }
   if (!emailRegex.test(email)) {
-    return { isValid: false, message: 'Please enter a valid email address' }
+    return { isValid: false, message: getAuthString('emailInvalid') }
   }
   return { isValid: true }
 }
 
 const validatePassword = (password: string): { isValid: boolean; message?: string } => {
   if (!password) {
-    return { isValid: false, message: 'Password is required' }
+    return { isValid: false, message: getAuthString('passwordRequired') }
   }
   if (password.length < 8) {
-    return { isValid: false, message: 'Password must be at least 8 characters long' }
+    return { isValid: false, message: getAuthString('passwordTooShort') }
   }
   return { isValid: true }
 }
 
 const validateConfirmPassword = (password: string, confirmPassword: string): { isValid: boolean; message?: string } => {
   if (!confirmPassword) {
-    return { isValid: false, message: 'Please confirm your password' }
+    return { isValid: false, message: getAuthString('confirmPasswordRequired') }
   }
   if (password !== confirmPassword) {
-    return { isValid: false, message: 'Passwords do not match' }
+    return { isValid: false, message: getAuthString('passwordsDoNotMatch') }
   }
   return { isValid: true }
 }
 
-// Localization strings
-const getAuthStrings = () => {
-  const settings = JSON.parse(localStorage.getItem('settings') || '{}')
-  const language = settings.language || 'en'
 
-  const strings = {
-    en: {
-      welcome: 'Welcome!',
-      welcomeMessage: 'Choose how you want to continue',
-      login: 'Login',
-      register: 'Register',
-      continueWithoutLogin: 'Continue without login',
-      loginWithGoogle: 'Login with Google',
-      loginWithYandex: 'Login with Yandex',
-      loginWithVK: 'Login with VK',
-      email: 'Email',
-      password: 'Password',
-      confirmPassword: 'Confirm Password',
-      loginButton: 'Login',
-      registerButton: 'Register',
-      backToWelcome: 'Back',
-      alreadyHaveAccount: 'Already have an account?',
-      dontHaveAccount: "Don't have an account?",
-      or: 'or',
-      loginTitle: 'Login to your account',
-      registerTitle: 'Create new account',
-      loginError: 'Login failed. Please check your credentials.',
-      registerError: 'Registration failed. Please try again.',
-      networkError: 'Network error. Please check your connection.',
-      validationError: 'Please check your input.',
-      userExistsError: 'User with this email already exists.',
-      oauthError: 'OAuth login failed. Please try again.'
-    },
-    ru: {
-      welcome: 'Добро пожаловать!',
-      welcomeMessage: 'Выберите, как вы хотите продолжить',
-      login: 'Войти',
-      register: 'Регистрация',
-      continueWithoutLogin: 'Продолжить без входа',
-      loginWithGoogle: 'Войти через Google',
-      loginWithYandex: 'Войти через Yandex',
-      loginWithVK: 'Войти через VK',
-      email: 'Email',
-      password: 'Пароль',
-      confirmPassword: 'Подтвердите пароль',
-      loginButton: 'Войти',
-      registerButton: 'Зарегистрироваться',
-      backToWelcome: 'Назад',
-      alreadyHaveAccount: 'Уже есть аккаунт?',
-      dontHaveAccount: 'Нет аккаунта?',
-      or: 'или',
-      loginTitle: 'Вход в аккаунт',
-      registerTitle: 'Создание аккаунта',
-      loginError: 'Ошибка входа. Проверьте учетные данные.',
-      registerError: 'Ошибка регистрации. Попробуйте еще раз.',
-      networkError: 'Ошибка сети. Проверьте подключение.',
-      validationError: 'Проверьте введенные данные.',
-      userExistsError: 'Пользователь с таким email уже существует.',
-      oauthError: 'Ошибка OAuth авторизации. Попробуйте еще раз.'
-    }
-  }
-
-  return strings[language as keyof typeof strings]
-}
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   open,
@@ -143,7 +81,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [authError, setAuthError] = useState<string | null>(null)
   const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
-  const strings = getAuthStrings()
 
   // Reset form when modal opens/closes or mode changes
   useEffect(() => {
@@ -244,17 +181,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const getErrorMessage = (error: AuthError): string => {
     switch (error.type) {
       case 'INVALID_CREDENTIALS':
-        return strings.loginError
+        return getAuthString('loginError')
       case 'USER_EXISTS':
-        return strings.userExistsError
+        return getAuthString('userExistsError')
       case 'NETWORK_ERROR':
-        return strings.networkError
+        return getAuthString('networkError')
       case 'VALIDATION_ERROR':
-        return strings.validationError
+        return getAuthString('validationError')
       case 'OAUTH_ERROR':
-        return strings.oauthError
+        return getAuthString('oauthError')
       default:
-        return mode === 'login' ? strings.loginError : strings.registerError
+        return mode === 'login' ? getAuthString('loginError') : getAuthString('registerError')
     }
   }
 
@@ -301,10 +238,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const renderWelcome = () => (
     <Box sx={{ textAlign: 'center', py: 2 }}>
       <Typography variant="h5" gutterBottom>
-        {strings.welcome}
+        {getAuthString('welcome')}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        {strings.welcomeMessage}
+        {getAuthString('welcomeMessage')}
       </Typography>
 
       <Stack spacing={2}>
@@ -314,7 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onClick={() => setMode('login')}
           fullWidth
         >
-          {strings.login}
+          {getAuthString('login')}
         </Button>
 
         <Button
@@ -323,7 +260,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onClick={() => setMode('register')}
           fullWidth
         >
-          {strings.register}
+          {getAuthString('register')}
         </Button>
 
         <Button
@@ -332,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onClick={onClose}
           fullWidth
         >
-          {strings.continueWithoutLogin}
+          {getAuthString('continueWithoutLogin')}
         </Button>
       </Stack>
     </Box>
@@ -343,7 +280,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     <Box sx={{ mt: 2 }}>
       <Divider sx={{ my: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          {strings.or}
+          {getAuthString('or')}
         </Typography>
       </Divider>
 
@@ -374,9 +311,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }
               }}
             >
-              {provider === 'google' && strings.loginWithGoogle}
-              {provider === 'yandex' && strings.loginWithYandex}
-              {provider === 'vk' && strings.loginWithVK}
+              {provider === 'google' && getAuthString('loginWithGoogle')}
+              {provider === 'yandex' && getAuthString('loginWithYandex')}
+              {provider === 'vk' && getAuthString('loginWithVK')}
             </Button>
           )
         })}
@@ -388,7 +325,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const renderLogin = () => (
     <Box sx={{ py: 2 }}>
       <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
-        {strings.loginTitle}
+        {getAuthString('loginTitle')}
       </Typography>
 
       {authError && (
@@ -399,7 +336,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       <Stack spacing={2}>
         <TextField
-          label={strings.email}
+          label={getAuthString('email')}
           type="email"
           value={formData.email}
           onChange={handleInputChange('email')}
@@ -412,7 +349,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         />
 
         <TextField
-          label={strings.password}
+          label={getAuthString('password')}
           type="password"
           value={formData.password}
           onChange={handleInputChange('password')}
@@ -432,7 +369,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           sx={{ mt: 2 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : strings.loginButton}
+          {isLoading ? <CircularProgress size={24} /> : getAuthString('loginButton')}
         </Button>
 
         <Button
@@ -441,7 +378,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           disabled={isLoading}
           fullWidth
         >
-          {strings.backToWelcome}
+          {getAuthString('backToWelcome')}
         </Button>
       </Stack>
 
@@ -449,7 +386,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          {strings.dontHaveAccount}{' '}
+          {getAuthString('dontHaveAccount')}{' '}
           <Button
             variant="text"
             size="small"
@@ -457,7 +394,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             disabled={isLoading}
             sx={{ textTransform: 'none' }}
           >
-            {strings.register}
+            {getAuthString('register')}
           </Button>
         </Typography>
       </Box>
@@ -468,7 +405,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const renderRegister = () => (
     <Box sx={{ py: 2 }}>
       <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
-        {strings.registerTitle}
+        {getAuthString('registerTitle')}
       </Typography>
 
       {authError && (
@@ -479,7 +416,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       <Stack spacing={2}>
         <TextField
-          label={strings.email}
+          label={getAuthString('email')}
           type="email"
           value={formData.email}
           onChange={handleInputChange('email')}
@@ -492,7 +429,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         />
 
         <TextField
-          label={strings.password}
+          label={getAuthString('password')}
           type="password"
           value={formData.password}
           onChange={handleInputChange('password')}
@@ -505,7 +442,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         />
 
         <TextField
-          label={strings.confirmPassword}
+          label={getAuthString('confirmPasswordRegister')}
           type="password"
           value={formData.confirmPassword}
           onChange={handleInputChange('confirmPassword')}
@@ -525,7 +462,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           sx={{ mt: 2 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : strings.registerButton}
+          {isLoading ? <CircularProgress size={24} /> : getAuthString('registerButton')}
         </Button>
 
         <Button
@@ -534,7 +471,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           disabled={isLoading}
           fullWidth
         >
-          {strings.backToWelcome}
+          {getAuthString('backToWelcome')}
         </Button>
       </Stack>
 
@@ -542,7 +479,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          {strings.alreadyHaveAccount}{' '}
+          {getAuthString('alreadyHaveAccount')}{' '}
           <Button
             variant="text"
             size="small"
@@ -550,7 +487,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             disabled={isLoading}
             sx={{ textTransform: 'none' }}
           >
-            {strings.login}
+            {getAuthString('login')}
           </Button>
         </Typography>
       </Box>

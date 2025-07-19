@@ -6,6 +6,7 @@ import {
   OAuthProvider 
 } from './types'
 import { oauth2Service } from './OAuth2Service'
+import { getAuthString } from '../Localization/strings'
 
 // API configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
@@ -27,12 +28,12 @@ export class AuthServiceError extends Error {
 export class ValidationUtils {
   static validateEmail(email: string): { isValid: boolean; message?: string } {
     if (!email) {
-      return { isValid: false, message: 'Email is required' }
+      return { isValid: false, message: getAuthString('emailRequired') }
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      return { isValid: false, message: 'Please enter a valid email address' }
+      return { isValid: false, message: getAuthString('emailInvalid') }
     }
     
     return { isValid: true }
@@ -40,11 +41,11 @@ export class ValidationUtils {
 
   static validatePassword(password: string): { isValid: boolean; message?: string } {
     if (!password) {
-      return { isValid: false, message: 'Password is required' }
+      return { isValid: false, message: getAuthString('passwordRequired') }
     }
     
     if (password.length < 8) {
-      return { isValid: false, message: 'Password must be at least 8 characters long' }
+      return { isValid: false, message: getAuthString('passwordTooShort') }
     }
     
     // Check for at least one letter and one number
@@ -52,7 +53,7 @@ export class ValidationUtils {
     const hasNumber = /\d/.test(password)
     
     if (!hasLetter || !hasNumber) {
-      return { isValid: false, message: 'Password must contain at least one letter and one number' }
+      return { isValid: false, message: getAuthString('passwordMustContainLetterAndNumber') }
     }
     
     return { isValid: true }
@@ -60,7 +61,7 @@ export class ValidationUtils {
 
   static validatePasswordConfirmation(password: string, confirmPassword: string): { isValid: boolean; message?: string } {
     if (password !== confirmPassword) {
-      return { isValid: false, message: 'Passwords do not match' }
+      return { isValid: false, message: getAuthString('passwordsDoNotMatch') }
     }
     
     return { isValid: true }
@@ -99,7 +100,7 @@ export class ValidationUtils {
     }
     
     if (!password) {
-      errors.password = 'Password is required'
+      errors.password = getAuthString('passwordRequired')
     }
     
     return {
