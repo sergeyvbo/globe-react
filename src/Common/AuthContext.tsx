@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef } from 'react'
 import { 
   AuthContextType, 
   User, 
@@ -104,6 +104,17 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState)
+  
+  // Refs for managing timers and preventing memory leaks
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const logoutTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const sessionCheckIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const isRefreshingRef = useRef<boolean>(false)
+
+  // Constants for session management
+  const REFRESH_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes before expiry
+  const SESSION_CHECK_INTERVAL_MS = 60 * 1000 // Check every minute
+  const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes of inactivity
 
   // Helper function to save session to localStorage
   const saveSession = (session: AuthSession) => {
@@ -117,6 +128,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         createdAt: session.user.createdAt.toISOString(),
         lastLoginAt: session.user.lastLoginAt?.toISOString()
       }))
+      
+      // Update last activity timestamp
+      localStorage.setItem('auth_last_activity', Date.now().toString())
     } catch (error) {
       console.error('Failed to save session to localStorage:', error)
     }
@@ -165,6 +179,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       localStorage.removeItem(STORAGE_KEYS.SESSION)
       localStorage.removeItem(STORAGE_KEYS.USER)
+      localStorage.removeItem('auth_last_activity')
     } catch (error) {
       console.error('Failed to clear session from localStorage:', error)
     }
@@ -180,6 +195,160 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
+  // Helper function to clear all timers
+  const clearAllTimers = () => {
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current)
+      refreshTimerRef.current = null
+    }
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current)
+      logoutTimerRef.current = null
+    }
+    if (sessionCheckIntervalRef.current) {
+      clearInterval(sessionCheckIntervalRef.current)
+      sessionCheckIntervalRef.current = null
+    }
+  }
+
+  // Helper function to check if user has been inactive
+  const isUserInactive = (): boolean => {
+    try {
+      const lastActivity = localStorage.getItem('auth_last_activity')
+      if (!lastActivity) return false
+      
+      const lastActivityTime = parseInt(lastActivity)
+      const now = Date.now()
+      
+      return (now - lastActivityTime) > INACTIVITY_TIMEOUT_MS
+    } catch (error) {
+      console.error('Failed to check user activity:', error)
+      return false
+    }
+  }
+
+  // Helper function to update last activity timestamp
+  const updateLastActivity = () => {
+    try {
+      localStorage.setItem('auth_last_activity', Date.now().toString())
+    } catch (error) {
+      console.error('Failed to update last activity:', error)
+    }
+  }
+
+  // Automatic token refresh function
+  const attemptTokenRefresh = async (): Promise<boolean> => {
+    if (isRefreshingRef.current) {
+      return false
+    }
+
+    isRefreshingRef.current = true
+
+    try {
+      console.log('Attempting automatic token refresh...')
+      const authResponse = await authService.refreshToken()
+      const session = createSessionFromAuthResponse(authResponse)
+      saveSession(session)
+      dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+      
+      console.log('Token refresh successful')
+      return true
+    } catch (error: any) {
+      console.warn('Automatic token refresh failed:', error)
+      
+      // If refresh fails, logout the user
+      await performLogout('Session expired. Please log in again.')
+      return false
+    } finally {
+      isRefreshingRef.current = false
+    }
+  }
+
+  // Perform logout with optional reason
+  const performLogout = async (reason?: string) => {
+    console.log('Performing logout:', reason || 'User initiated')
+    
+    clearAllTimers()
+    
+    try {
+      await authService.logout()
+    } catch (error) {
+      console.warn('Failed to logout from server:', error)
+    } finally {
+      clearSession()
+      dispatch({ type: 'AUTH_LOGOUT' })
+      
+      if (reason) {
+        dispatch({ 
+          type: 'AUTH_ERROR', 
+          payload: { 
+            type: AuthErrorType.TOKEN_EXPIRED, 
+            message: reason 
+          } 
+        })
+      }
+    }
+  }
+
+  // Setup session management timers
+  const setupSessionManagement = (session: AuthSession) => {
+    clearAllTimers()
+
+    const now = Date.now()
+    const expiryTime = session.expiresAt.getTime()
+    const timeUntilExpiry = expiryTime - now
+    const timeUntilRefresh = timeUntilExpiry - REFRESH_THRESHOLD_MS
+
+    console.log(`Session expires in ${Math.round(timeUntilExpiry / 1000 / 60)} minutes`)
+
+    // Schedule token refresh before expiry
+    if (timeUntilRefresh > 0) {
+      refreshTimerRef.current = setTimeout(async () => {
+        console.log('Scheduled token refresh triggered')
+        await attemptTokenRefresh()
+      }, timeUntilRefresh)
+      
+      console.log(`Token refresh scheduled in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`)
+    } else {
+      // Token is close to expiry, refresh immediately
+      console.log('Token is close to expiry, refreshing immediately')
+      setTimeout(() => attemptTokenRefresh(), 1000)
+    }
+
+    // Schedule logout at expiry time as fallback
+    if (timeUntilExpiry > 0) {
+      logoutTimerRef.current = setTimeout(async () => {
+        console.log('Session expired, logging out')
+        await performLogout('Your session has expired. Please log in again.')
+      }, timeUntilExpiry)
+    }
+
+    // Set up periodic session validation
+    sessionCheckIntervalRef.current = setInterval(() => {
+      const currentSession = loadSession()
+      
+      if (!currentSession) {
+        console.log('Session not found during periodic check, logging out')
+        performLogout('Session not found')
+        return
+      }
+
+      // Check for inactivity
+      if (isUserInactive()) {
+        console.log('User inactive for too long, logging out')
+        performLogout('You have been logged out due to inactivity.')
+        return
+      }
+
+      // Check if token is close to expiry and needs refresh
+      const timeUntilExpiry = currentSession.expiresAt.getTime() - Date.now()
+      if (timeUntilExpiry <= REFRESH_THRESHOLD_MS && timeUntilExpiry > 0) {
+        console.log('Token close to expiry during periodic check, refreshing')
+        attemptTokenRefresh()
+      }
+    }, SESSION_CHECK_INTERVAL_MS)
+  }
+
   // Auth methods
   const login = async (email: string, password: string): Promise<void> => {
     dispatch({ type: 'AUTH_START' })
@@ -190,6 +359,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const session = createSessionFromAuthResponse(authResponse)
       saveSession(session)
       dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+      
+      // Setup automatic session management
+      setupSessionManagement(session)
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.INVALID_CREDENTIALS,
@@ -210,6 +382,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const session = createSessionFromAuthResponse(authResponse)
       saveSession(session)
       dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+      
+      // Setup automatic session management
+      setupSessionManagement(session)
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.VALIDATION_ERROR,
@@ -230,6 +405,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const session = createSessionFromAuthResponse(authResponse)
       saveSession(session)
       dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+      
+      // Setup automatic session management
+      setupSessionManagement(session)
     } catch (error: any) {
       const authError: AuthError = {
         type: error.type || AuthErrorType.OAUTH_ERROR,
@@ -242,14 +420,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const logout = async (): Promise<void> => {
-    try {
-      await authService.logout()
-    } catch (error) {
-      console.warn('Failed to logout from server:', error)
-    } finally {
-      clearSession()
-      dispatch({ type: 'AUTH_LOGOUT' })
-    }
+    await performLogout()
   }
 
   const updateProfile = async (data: Partial<User>): Promise<void> => {
@@ -283,40 +454,82 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
-  // Check for existing session on mount
+  // Check for existing session on mount and setup session management
   useEffect(() => {
-    const checkExistingSession = () => {
+    const initializeAuth = async () => {
+      console.log('Initializing authentication state...')
+      
       const session = loadSession()
       if (session) {
-        dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+        console.log('Found existing session, checking validity...')
+        
+        // Check if user has been inactive for too long
+        if (isUserInactive()) {
+          console.log('User has been inactive, clearing session')
+          await performLogout('You have been logged out due to inactivity.')
+          return
+        }
+        
+        // Check if session is close to expiry and try to refresh
+        const timeUntilExpiry = session.expiresAt.getTime() - Date.now()
+        if (timeUntilExpiry <= REFRESH_THRESHOLD_MS && timeUntilExpiry > 0) {
+          console.log('Session close to expiry, attempting refresh...')
+          const refreshSuccess = await attemptTokenRefresh()
+          if (!refreshSuccess) {
+            return // performLogout was already called in attemptTokenRefresh
+          }
+          // Get updated session after refresh
+          const refreshedSession = loadSession()
+          if (refreshedSession) {
+            dispatch({ type: 'AUTH_SUCCESS', payload: refreshedSession.user })
+            setupSessionManagement(refreshedSession)
+          }
+        } else {
+          // Session is valid, set up session management
+          dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
+          setupSessionManagement(session)
+        }
       } else {
+        console.log('No existing session found')
         dispatch({ type: 'SET_LOADING', payload: false })
       }
     }
 
-    checkExistingSession()
+    initializeAuth()
   }, [])
 
-  // Auto-logout when token expires
+  // Setup user activity tracking
   useEffect(() => {
     if (!state.isAuthenticated) return
 
-    const session = loadSession()
-    if (!session) return
-
-    const timeUntilExpiry = session.expiresAt.getTime() - Date.now()
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
     
-    if (timeUntilExpiry <= 0) {
-      logout()
-      return
+    const handleUserActivity = () => {
+      updateLastActivity()
     }
 
-    const timeoutId = setTimeout(() => {
-      logout()
-    }, timeUntilExpiry)
+    // Add event listeners for user activity
+    activityEvents.forEach(event => {
+      document.addEventListener(event, handleUserActivity, true)
+    })
 
-    return () => clearTimeout(timeoutId)
+    // Initial activity update
+    updateLastActivity()
+
+    return () => {
+      // Remove event listeners
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, handleUserActivity, true)
+      })
+    }
   }, [state.isAuthenticated])
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearAllTimers()
+    }
+  }, [])
 
   const contextValue: AuthContextType = {
     user: state.user,

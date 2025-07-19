@@ -605,6 +605,23 @@ export class AuthService {
     return accessToken !== null && !TokenManager.isTokenExpired()
   }
   
+  // Check if token needs refresh (within threshold)
+  needsTokenRefresh(thresholdMs: number = 5 * 60 * 1000): boolean {
+    const expiryTime = TokenManager.getTokenExpiryTime()
+    if (!expiryTime) return false
+    
+    const timeUntilExpiry = expiryTime.getTime() - Date.now()
+    return timeUntilExpiry <= thresholdMs && timeUntilExpiry > 0
+  }
+  
+  // Get time until token expiry in milliseconds
+  getTimeUntilExpiry(): number {
+    const expiryTime = TokenManager.getTokenExpiryTime()
+    if (!expiryTime) return 0
+    
+    return Math.max(0, expiryTime.getTime() - Date.now())
+  }
+  
   // Get session information
   getSession(): AuthSession | null {
     const accessToken = TokenManager.getAccessToken()
@@ -623,6 +640,11 @@ export class AuthService {
       expiresAt: expiryTime,
       user: {} as User // This would be populated from a separate call or stored separately
     }
+  }
+  
+  // Clear all authentication data
+  clearAuthData(): void {
+    TokenManager.clearTokens()
   }
 }
 

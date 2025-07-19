@@ -6,6 +6,7 @@ import { StateQuiz } from './StateQuiz/StateQuiz';
 import { UserProfile } from './Common/UserProfile';
 import { ProtectedRoute } from './Common/ProtectedRoute';
 import { AuthProvider } from './Common/AuthContext';
+import { SessionDemo } from './Common/SessionDemo';
 
 function App() {
 
@@ -24,6 +25,7 @@ function App() {
                                     <UserProfile />
                                 </ProtectedRoute>
                             } />
+                            <Route path="/session-demo" element={<SessionDemo />} />
                         </Routes>
                     </article>
                 </div>
