@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { AuthModal } from './AuthModal'
 import { AuthProvider } from './AuthContext'
+import AuthContext from './AuthContext'
 
 // Mock the auth context
 const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -94,6 +95,45 @@ describe('AuthModal', () => {
       expect(screen.getByRole('button', { name: 'Login with Google' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Login with Yandex' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Login with VK' })).toBeInTheDocument()
+    })
+
+    it('shows loading state for OAuth buttons during authentication', async () => {
+      const user = userEvent.setup()
+      
+      // Mock loginWithOAuth to simulate loading state
+      const mockLoginWithOAuth = vi.fn().mockImplementation(() => 
+        new Promise(resolve => setTimeout(resolve, 100))
+      )
+      
+      const mockAuthContext = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: vi.fn(),
+        loginWithOAuth: mockLoginWithOAuth,
+        logout: vi.fn(),
+        updateProfile: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContext}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+        </AuthContext.Provider>
+      )
+
+      const googleButton = screen.getByRole('button', { name: 'Login with Google' })
+      
+      // Click the Google OAuth button
+      await user.click(googleButton)
+      
+      // Check that loading indicator appears
+      expect(screen.getByRole('progressbar')).toBeInTheDocument()
+      
+      // Check that all OAuth buttons are disabled during loading
+      expect(screen.getByRole('button', { name: 'Login with Google' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Login with Yandex' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Login with VK' })).toBeDisabled()
     })
 
     it('validates email field', async () => {

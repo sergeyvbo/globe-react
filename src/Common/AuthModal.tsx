@@ -67,7 +67,7 @@ const validateConfirmPassword = (password: string, confirmPassword: string): { i
 const getAuthStrings = () => {
   const settings = JSON.parse(localStorage.getItem('settings') || '{}')
   const language = settings.language || 'en'
-  
+
   const strings = {
     en: {
       welcome: 'Welcome!',
@@ -124,14 +124,14 @@ const getAuthStrings = () => {
       oauthError: 'Ошибка OAuth авторизации. Попробуйте еще раз.'
     }
   }
-  
+
   return strings[language as keyof typeof strings]
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ 
-  open, 
-  onClose, 
-  initialMode = 'welcome' 
+export const AuthModal: React.FC<AuthModalProps> = ({
+  open,
+  onClose,
+  initialMode = 'welcome'
 }) => {
   const { login, register, loginWithOAuth, isLoading } = useAuth()
   const [mode, setMode] = useState<AuthModalMode>(initialMode)
@@ -142,6 +142,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   })
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [authError, setAuthError] = useState<string | null>(null)
+  const [oauthLoading, setOauthLoading] = useState<OAuthProvider | null>(null)
   const strings = getAuthStrings()
 
   // Reset form when modal opens/closes or mode changes
@@ -151,6 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setFormData({ email: '', password: '', confirmPassword: '' })
       setValidationErrors({})
       setAuthError(null)
+      setOauthLoading(null)
     }
   }, [open, initialMode])
 
@@ -160,12 +162,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   ) => {
     const value = event.target.value
     setFormData(prev => ({ ...prev, [field]: value }))
-    
+
     // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => ({ ...prev, [field]: '' }))
     }
-    
+
     // Clear auth error when user starts typing
     if (authError) {
       setAuthError(null)
@@ -175,27 +177,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Validate form
   const validateForm = (isRegister: boolean = false): boolean => {
     const errors: ValidationErrors = {}
-    
+
     const emailValidation = validateEmail(formData.email)
     if (!emailValidation.isValid) {
       errors.email = emailValidation.message || ''
     }
-    
+
     const passwordValidation = validatePassword(formData.password)
     if (!passwordValidation.isValid) {
       errors.password = passwordValidation.message || ''
     }
-    
+
     if (isRegister) {
       const confirmPasswordValidation = validateConfirmPassword(
-        formData.password, 
+        formData.password,
         formData.confirmPassword
       )
       if (!confirmPasswordValidation.isValid) {
         errors.confirmPassword = confirmPasswordValidation.message || ''
       }
     }
-    
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -203,7 +205,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Handle login
   const handleLogin = async () => {
     if (!validateForm()) return
-    
+
     try {
       await login(formData.email, formData.password)
       onClose()
@@ -215,7 +217,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Handle register
   const handleRegister = async () => {
     if (!validateForm(true)) return
-    
+
     try {
       await register(formData.email, formData.password, formData.confirmPassword)
       onClose()
@@ -227,10 +229,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Handle OAuth login
   const handleOAuthLogin = async (provider: OAuthProvider) => {
     try {
+      setOauthLoading(provider)
+      setAuthError(null)
       await loginWithOAuth(provider)
       onClose()
     } catch (error: any) {
       setAuthError(getErrorMessage(error))
+    } finally {
+      setOauthLoading(null)
     }
   }
 
@@ -300,7 +306,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
         {strings.welcomeMessage}
       </Typography>
-      
+
       <Stack spacing={2}>
         <Button
           variant="contained"
@@ -310,7 +316,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         >
           {strings.login}
         </Button>
-        
+
         <Button
           variant="outlined"
           size="large"
@@ -319,7 +325,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         >
           {strings.register}
         </Button>
-        
+
         <Button
           variant="text"
           size="large"
@@ -340,30 +346,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {strings.or}
         </Typography>
       </Divider>
-      
+
       <Stack spacing={1}>
-        {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => (
-          <Button
-            key={provider}
-            variant="outlined"
-            startIcon={getOAuthIcon(provider)}
-            onClick={() => handleOAuthLogin(provider)}
-            disabled={isLoading}
-            fullWidth
-            sx={{
-              borderColor: getOAuthColor(provider),
-              color: getOAuthColor(provider),
-              '&:hover': {
+        {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
+          const isProviderLoading = oauthLoading === provider
+          const isAnyLoading = isLoading || oauthLoading !== null
+
+          return (
+            <Button
+              key={provider}
+              variant="outlined"
+              startIcon={isProviderLoading ? <CircularProgress size={20} /> : getOAuthIcon(provider)}
+              onClick={() => handleOAuthLogin(provider)}
+              disabled={isAnyLoading}
+              fullWidth
+              sx={{
                 borderColor: getOAuthColor(provider),
-                backgroundColor: `${getOAuthColor(provider)}10`
-              }
-            }}
-          >
-            {provider === 'google' && strings.loginWithGoogle}
-            {provider === 'yandex' && strings.loginWithYandex}
-            {provider === 'vk' && strings.loginWithVK}
-          </Button>
-        ))}
+                color: getOAuthColor(provider),
+                '&:hover': {
+                  borderColor: getOAuthColor(provider),
+                  backgroundColor: `${getOAuthColor(provider)}10`
+                },
+                '&:disabled': {
+                  borderColor: isProviderLoading ? getOAuthColor(provider) : undefined,
+                  color: isProviderLoading ? getOAuthColor(provider) : undefined,
+                  opacity: isProviderLoading ? 0.8 : 0.5
+                }
+              }}
+            >
+              {provider === 'google' && strings.loginWithGoogle}
+              {provider === 'yandex' && strings.loginWithYandex}
+              {provider === 'vk' && strings.loginWithVK}
+            </Button>
+          )
+        })}
       </Stack>
     </Box>
   )
@@ -374,13 +390,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
         {strings.loginTitle}
       </Typography>
-      
+
       {authError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {authError}
         </Alert>
       )}
-      
+
       <Stack spacing={2}>
         <TextField
           label={strings.email}
@@ -394,7 +410,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           autoComplete="email"
         />
-        
+
         <TextField
           label={strings.password}
           type="password"
@@ -407,7 +423,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           autoComplete="current-password"
         />
-        
+
         <Button
           variant="contained"
           size="large"
@@ -418,7 +434,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         >
           {isLoading ? <CircularProgress size={24} /> : strings.loginButton}
         </Button>
-        
+
         <Button
           variant="text"
           onClick={() => setMode('welcome')}
@@ -428,9 +444,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {strings.backToWelcome}
         </Button>
       </Stack>
-      
+
       {renderOAuthButtons()}
-      
+
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
           {strings.dontHaveAccount}{' '}
@@ -454,13 +470,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
         {strings.registerTitle}
       </Typography>
-      
+
       {authError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {authError}
         </Alert>
       )}
-      
+
       <Stack spacing={2}>
         <TextField
           label={strings.email}
@@ -474,7 +490,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           autoComplete="email"
         />
-        
+
         <TextField
           label={strings.password}
           type="password"
@@ -487,7 +503,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           autoComplete="new-password"
         />
-        
+
         <TextField
           label={strings.confirmPassword}
           type="password"
@@ -500,7 +516,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           autoComplete="new-password"
         />
-        
+
         <Button
           variant="contained"
           size="large"
@@ -511,7 +527,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         >
           {isLoading ? <CircularProgress size={24} /> : strings.registerButton}
         </Button>
-        
+
         <Button
           variant="text"
           onClick={() => setMode('welcome')}
@@ -521,9 +537,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {strings.backToWelcome}
         </Button>
       </Stack>
-      
+
       {renderOAuthButtons()}
-      
+
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
           {strings.alreadyHaveAccount}{' '}
@@ -568,7 +584,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      
+
       <DialogContent sx={{ px: 3, pb: 3 }}>
         {mode === 'welcome' && renderWelcome()}
         {mode === 'login' && renderLogin()}

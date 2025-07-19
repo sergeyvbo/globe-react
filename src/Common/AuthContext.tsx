@@ -226,32 +226,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' })
 
     try {
-      // Mock OAuth login - in real implementation this would redirect to OAuth provider
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const user: User = {
-        id: `mock-${provider}-user-id`,
-        email: `user@${provider}.com`,
-        name: `${provider} User`,
-        provider,
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      }
-
-      const session: AuthSession = {
-        accessToken: `mock-${provider}-access-token`,
-        refreshToken: `mock-${provider}-refresh-token`,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        user
-      }
-
+      const authResponse = await authService.loginWithOAuth(provider)
+      const session = createSessionFromAuthResponse(authResponse)
       saveSession(session)
       dispatch({ type: 'AUTH_SUCCESS', payload: session.user })
-    } catch (error) {
+    } catch (error: any) {
       const authError: AuthError = {
-        type: AuthErrorType.OAUTH_ERROR,
-        message: `OAuth login with ${provider} failed`,
-        details: error
+        type: error.type || AuthErrorType.OAUTH_ERROR,
+        message: error.message || `OAuth login with ${provider} failed`,
+        details: error.details
       }
       dispatch({ type: 'AUTH_ERROR', payload: authError })
       throw authError
