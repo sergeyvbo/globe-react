@@ -193,14 +193,24 @@
     - Добавить логирование операций аутентификации (без паролей)
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 8. Настроить CORS и безопасность
-  - [ ] 8.1 Настроить CORS для React приложения
+- [x] 8. Настроить CORS и безопасность
+
+
+
+
+
+
+  - [x] 8.1 Настроить CORS для React приложения
+
+
     - Настроить CORS policy для development и production окружений
     - Добавить поддержку preflight OPTIONS запросов
     - Настроить разрешенные headers и methods для API
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 8.2 Добавить дополнительные меры безопасности
+
+  - [x] 8.2 Добавить дополнительные меры безопасности
+
     - Настроить HTTPS redirect middleware для production
     - Добавить security headers (HSTS, X-Frame-Options, etc.)
     - Настроить rate limiting для authentication endpoints

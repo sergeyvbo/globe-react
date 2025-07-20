@@ -27,6 +27,12 @@ builder.Services.AddDbContext<GeoQuizDbContext>(options =>
 // Configure JWT Settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 
+// Configure CORS Settings
+builder.Services.Configure<CorsSettings>(builder.Configuration.GetSection(CorsSettings.SectionName));
+
+// Configure Security Settings
+builder.Services.Configure<SecuritySettings>(builder.Configuration.GetSection(SecuritySettings.SectionName));
+
 // Add JWT Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 
@@ -71,6 +77,52 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Configure CORS
+var corsSettings = builder.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
+if (corsSettings == null)
+{
+    throw new InvalidOperationException("CORS settings are not configured properly");
+}
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("GeoQuizCorsPolicy", policy =>
+    {
+        if (corsSettings.AllowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(corsSettings.AllowedOrigins);
+        }
+        else
+        {
+            // In production, this should be restricted to specific domains
+            policy.AllowAnyOrigin();
+        }
+
+        if (corsSettings.AllowedHeaders.Length > 0)
+        {
+            policy.WithHeaders(corsSettings.AllowedHeaders);
+        }
+        else
+        {
+            policy.AllowAnyHeader();
+        }
+
+        if (corsSettings.AllowedMethods.Length > 0)
+        {
+            policy.WithMethods(corsSettings.AllowedMethods);
+        }
+        else
+        {
+            policy.AllowAnyMethod();
+        }
+
+        if (corsSettings.AllowCredentials && corsSettings.AllowedOrigins.Length > 0)
+        {
+            policy.AllowCredentials();
+        }
+    });
+});
+
 var app = builder.Build();
 
 // Apply migrations automatically on startup
@@ -99,7 +151,25 @@ app.UseSerilogRequestLogging();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-app.UseHttpsRedirection();
+// Add security middleware
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
+app.UseMiddleware<InputValidationMiddleware>();
+
+// Configure HTTPS and HSTS for production
+var securitySettings = builder.Configuration.GetSection(SecuritySettings.SectionName).Get<SecuritySettings>();
+if (securitySettings?.EnforceHttps == true)
+{
+    app.UseHttpsRedirection();
+}
+
+if (securitySettings?.EnableHsts == true && !app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+// Add CORS middleware
+app.UseCors("GeoQuizCorsPolicy");
 
 // Add Authentication and Authorization middleware
 app.UseAuthentication();
