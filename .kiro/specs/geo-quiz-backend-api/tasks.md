@@ -14,21 +14,32 @@
   - Настроить базовую конфигурацию в Program.cs
   - _Requirements: 6.1, 7.3_
 
-- [ ] 2. Настроить Entity Framework и модели данных
-  - [ ] 2.1 Создать DbContext и настроить подключение к SQLite
+- [x] 2. Настроить Entity Framework и модели данных
+
+
+
+
+
+  - [x] 2.1 Создать DbContext и настроить подключение к SQLite
+
+
     - Создать GeoQuizDbContext класс с настройкой SQLite
     - Настроить connection string в appsettings.json
     - Добавить DbContext в DI контейнер
     - _Requirements: 6.1, 6.2_
 
-  - [ ] 2.2 Создать entity модели для базы данных
+  - [x] 2.2 Создать entity модели для базы данных
+
+
     - Создать User entity с необходимыми свойствами и навигацией
     - Создать GameSession entity для хранения игровых сессий
     - Создать RefreshToken entity для управления токенами
     - Настроить relationships между entities в DbContext
     - _Requirements: 2.1, 4.1, 3.1_
 
-  - [ ] 2.3 Создать и применить первоначальные миграции
+  - [x] 2.3 Создать и применить первоначальные миграции
+
+
     - Создать initial migration для всех entities
     - Настроить автоматическое применение миграций при запуске
     - Добавить seed data для тестирования (опционально)

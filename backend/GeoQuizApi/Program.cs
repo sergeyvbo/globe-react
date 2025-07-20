@@ -1,10 +1,30 @@
+using Microsoft.EntityFrameworkCore;
+using GeoQuizApi.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+// Add Entity Framework
+builder.Services.AddDbContext<GeoQuizDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
+
+// Apply migrations automatically on startup
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+    context.Database.Migrate();
+    
+    // Seed database with test data in development
+    if (app.Environment.IsDevelopment())
+    {
+        await DbSeeder.SeedAsync(context);
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
