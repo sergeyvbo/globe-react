@@ -45,21 +45,32 @@
     - Добавить seed data для тестирования (опционально)
     - _Requirements: 6.1, 6.3_
 
-- [ ] 3. Реализовать систему аутентификации
-  - [ ] 3.1 Создать JWT конфигурацию и сервисы
+- [x] 3. Реализовать систему аутентификации
+
+
+
+
+
+  - [x] 3.1 Создать JWT конфигурацию и сервисы
+
+
     - Создать JwtSettings класс для конфигурации токенов
     - Реализовать JWT token generation и validation логику
     - Настроить JWT authentication middleware в Program.cs
     - _Requirements: 1.1, 1.2, 3.1_
 
-  - [ ] 3.2 Реализовать AuthService для бизнес-логики аутентификации
+  - [x] 3.2 Реализовать AuthService для бизнес-логики аутентификации
+
+
     - Создать IAuthService интерфейс с методами регистрации и входа
     - Реализовать AuthService с password hashing через BCrypt
     - Добавить методы для работы с refresh токенами
     - Реализовать валидацию email и password
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 6.4_
 
-  - [ ] 3.3 Создать AuthController с endpoints для аутентификации
+  - [x] 3.3 Создать AuthController с endpoints для аутентификации
+
+
     - Реализовать POST /api/auth/register endpoint
     - Реализовать POST /api/auth/login endpoint
     - Реализовать POST /api/auth/refresh endpoint для обновления токенов

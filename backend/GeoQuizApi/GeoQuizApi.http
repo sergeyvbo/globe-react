@@ -1,6 +1,130 @@
 @GeoQuizApi_HostAddress = http://localhost:5051
 
-GET {{GeoQuizApi_HostAddress}}/weatherforecast/
+# Variables for testing
+@testEmail = testhttp@example.com
+@testPassword = TestPassword123
+@testName = Test User
+
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhZGIxMGIwYi1iOTNlLTRmODUtYjFhZi1lZTViOWU2MDJiMGIiLCJlbWFpbCI6InRlc3RodHRwQGV4YW1wbGUuY29tIiwianRpIjoiNWE5YzBjMzAtNDNmOS00MWZkLTljMWUtMTExNzU0ZWFmYmJlIiwidW5pcXVlX25hbWUiOiJUZXN0IFVzZXIiLCJuYmYiOjE3NTMwMDQyMDcsImV4cCI6MTc1MzAwNTEwNywiaWF0IjoxNzUzMDA0MjA3LCJpc3MiOiJHZW9RdWl6QXBpIiwiYXVkIjoiR2VvUXVpekNsaWVudCJ9.gi2x0K7LGwPm2GzHuffLYfFAK858c2tGWM-qGuj7EK8
+@refreshToken = iC6e3lbW2lZT4DehfD62715bDqfo3hKRnnJmkSLt3ZvDWoQunybN5OuZRABszd+VxVQNH5BIs8WL/ePtdxri0w==
+
+### 1. Register a new user
+POST {{GeoQuizApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}",
+  "name": "{{testName}}"
+}
+
+### 2. Login with the registered user
+POST {{GeoQuizApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{testPassword}}"
+}
+
+### 3. Get current user info (requires valid JWT token)
+# Replace YOUR_JWT_TOKEN with the accessToken from login/register response
+GET {{GeoQuizApi_HostAddress}}/api/auth/me
+Authorization: Bearer {{jwtToken}}
 Accept: application/json
 
-###
+### 4. Update user profile (requires valid JWT token)
+PUT {{GeoQuizApi_HostAddress}}/api/auth/profile
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated Test User",
+  "avatar": "https://example.com/avatar.jpg"
+}
+
+### 5. Change password (requires valid JWT token)
+PUT {{GeoQuizApi_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{testPassword}}",
+  "newPassword": "NewPassword123"
+}
+
+### 5.1 Change password back
+PUT {{GeoQuizApi_HostAddress}}/api/auth/change-password
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "NewPassword123",
+  "newPassword": "{{testPassword}}"
+}
+
+### 6. Refresh token
+# Replace YOUR_REFRESH_TOKEN with the refreshToken from login/register response
+POST {{GeoQuizApi_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 7. Logout (requires valid JWT token and refresh token)
+POST {{GeoQuizApi_HostAddress}}/api/auth/logout
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 8. Test invalid login
+POST {{GeoQuizApi_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "invalid@example.com",
+  "password": "wrongpassword"
+}
+
+### 9. Test registration with existing email
+POST {{GeoQuizApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "AnotherPassword123",
+  "name": "Another User"
+}
+
+### 10. Test registration with invalid email
+POST {{GeoQuizApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "{{testPassword}}",
+  "name": "Test User"
+}
+
+### 11. Test registration with weak password
+POST {{GeoQuizApi_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "weak@example.com",
+  "password": "123",
+  "name": "Weak Password User"
+}
+
+### 12. Test accessing protected endpoint without token
+GET {{GeoQuizApi_HostAddress}}/api/auth/me
+Accept: application/json
+
+### 13. Test with expired/invalid token
+GET {{GeoQuizApi_HostAddress}}/api/auth/me
+Authorization: Bearer invalid.jwt.token
+Accept: application/json
