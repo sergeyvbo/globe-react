@@ -30,6 +30,12 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 // Add Game Stats Services
 builder.Services.AddScoped<IGameStatsService, GameStatsService>();
 
+// Add Leaderboard Services
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+
+// Add Memory Cache for leaderboard caching
+builder.Services.AddMemoryCache();
+
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
 if (jwtSettings == null)

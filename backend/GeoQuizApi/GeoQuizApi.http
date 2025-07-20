@@ -233,3 +233,104 @@ Content-Type: application/json
 {
   "anonymousSessions": []
 }
+### =
+== LEADERBOARD ENDPOINTS ===
+
+### 24. Get global leaderboard (all players, all game types, all time)
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard
+Accept: application/json
+
+### 25. Get global leaderboard with pagination
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard?page=1&pageSize=10
+Accept: application/json
+
+### 26. Get global leaderboard with current user position (requires JWT token)
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 27. Get leaderboard filtered by game type - countries
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/game-type/countries
+Accept: application/json
+
+### 28. Get leaderboard filtered by game type - flags
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/game-type/flags
+Accept: application/json
+
+### 29. Get leaderboard filtered by game type - states
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/game-type/states
+Accept: application/json
+
+### 30. Get leaderboard filtered by time period - week
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/period/week
+Accept: application/json
+
+### 31. Get leaderboard filtered by time period - month
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/period/month
+Accept: application/json
+
+### 32. Get leaderboard filtered by time period - year
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/period/year
+Accept: application/json
+
+### 33. Get leaderboard filtered by time period - all-time
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/period/all-time
+Accept: application/json
+
+### 34. Get leaderboard with combined filters (game type + period)
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/filtered?gameType=countries&period=week
+Accept: application/json
+
+### 35. Get leaderboard with combined filters and pagination
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/filtered?gameType=flags&period=month&page=1&pageSize=5
+Accept: application/json
+
+### 36. Get leaderboard with only game type filter using filtered endpoint
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/filtered?gameType=countries
+Accept: application/json
+
+### 37. Get leaderboard with only period filter using filtered endpoint
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/filtered?period=week
+Accept: application/json
+
+### 38. Get leaderboard with current user position using filtered endpoint (requires JWT token)
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/filtered?gameType=countries&period=week
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 39. Get available game types for filtering
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/game-types
+Accept: application/json
+
+### 40. Get available time periods for filtering
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/periods
+Accept: application/json
+
+### 41. Clear leaderboard cache (requires authentication)
+POST {{GeoQuizApi_HostAddress}}/api/leaderboard/clear-cache
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 42. Test invalid game type
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/game-type/invalid
+Accept: application/json
+
+### 43. Test invalid time period
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard/period/invalid
+Accept: application/json
+
+### 44. Test invalid pagination parameters
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard?page=0&pageSize=200
+Accept: application/json
+
+### 45. Test cache clearing without authentication
+POST {{GeoQuizApi_HostAddress}}/api/leaderboard/clear-cache
+Accept: application/json
+
+### 46. Test leaderboard with maximum page size
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard?pageSize=100
+Accept: application/json
+
+### 47. Test leaderboard with minimum page size
+GET {{GeoQuizApi_HostAddress}}/api/leaderboard?pageSize=1
+Accept: application/json

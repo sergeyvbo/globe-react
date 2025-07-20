@@ -136,22 +136,34 @@
     - Создать MigrateProgressRequest DTO для миграции анонимного прогресса
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 6. Реализовать систему списка лидеров
-  - [ ] 6.1 Создать LeaderboardService для бизнес-логики рейтингов
+- [x] 6. Реализовать систему списка лидеров
+
+
+
+
+
+
+  - [x] 6.1 Создать LeaderboardService для бизнес-логики рейтингов
+
+
     - Создать ILeaderboardService интерфейс с методами получения рейтингов
     - Реализовать LeaderboardService с логикой формирования топов
     - Добавить поддержку фильтрации по типу игры и периоду времени
     - Реализовать кэширование результатов рейтинга
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-  - [ ] 6.2 Создать LeaderboardController с endpoints для рейтингов
+  - [x] 6.2 Создать LeaderboardController с endpoints для рейтингов
+
+
     - Реализовать GET /api/leaderboard endpoint для глобального рейтинга
     - Реализовать GET /api/leaderboard/game-type/{type} endpoint для рейтинга по типу игры
     - Реализовать GET /api/leaderboard/period/{period} endpoint для рейтинга по периоду
     - Добавить поддержку pagination для больших списков
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-  - [ ] 6.3 Создать DTOs для системы лидеров
+  - [x] 6.3 Создать DTOs для системы лидеров
+
+
     - Создать LeaderboardEntry DTO для записи в рейтинге
     - Создать LeaderboardResponse DTO для ответа с рейтингом
     - Добавить поддержку отображения позиции текущего пользователя
