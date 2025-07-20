@@ -78,15 +78,25 @@
     - Добавить валидацию входящих данных с помощью Data Annotations
     - _Requirements: 1.1, 1.2, 3.1, 3.2, 3.3_
 
-- [ ] 4. Реализовать управление профилем пользователя
-  - [ ] 4.1 Добавить endpoints для работы с профилем в AuthController
+- [x] 4. Реализовать управление профилем пользователя
+
+
+
+
+
+  - [x] 4.1 Добавить endpoints для работы с профилем в AuthController
+
+
+
     - Реализовать GET /api/auth/me endpoint для получения текущего пользователя
     - Реализовать PUT /api/auth/profile endpoint для обновления профиля
     - Реализовать PUT /api/auth/change-password endpoint для смены пароля
     - Добавить authorization middleware для защищенных endpoints
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ] 4.2 Создать DTOs для запросов и ответов аутентификации
+  - [x] 4.2 Создать DTOs для запросов и ответов аутентификации
+
+
     - Создать LoginRequest, RegisterRequest DTOs
     - Создать AuthResponse, UserDto DTOs
     - Создать UpdateProfileRequest, ChangePasswordRequest DTOs
