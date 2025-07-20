@@ -217,8 +217,13 @@
     - Добавить input validation и sanitization
     - _Requirements: 6.4, 1.3, 1.4, 1.5_
 
-- [ ] 9. Создать конфигурацию и документацию API
+- [-] 9. Создать конфигурацию и документацию API
+
+
+
   - [ ] 9.1 Настроить Swagger/OpenAPI документацию
+
+
     - Добавить Swagger генерацию для всех endpoints
     - Настроить JWT authentication в Swagger UI
     - Добавить описания и примеры для всех DTOs

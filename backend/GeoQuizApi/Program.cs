@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Reflection;
 using Serilog;
 using GeoQuizApi.Data;
 using GeoQuizApi.Configuration;
 using GeoQuizApi.Services;
 using GeoQuizApi.Middleware;
+using Microsoft.OpenApi.Models.References;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +20,59 @@ builder.Host.UseSerilog((context, configuration) =>
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Configure Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+// builder.Services.AddSwaggerGen(c =>
+// {
+//     c.SwaggerDoc("v1", new OpenApiInfo
+//     {
+//         Title = "GeoQuiz API",
+//         Version = "v1",
+//         Description = "Backend API для географической викторины с поддержкой аутентификации, игровой статистики и списков лидеров",
+//         Contact = new OpenApiContact
+//         {
+//             Name = "Sergei Bogachev",
+//             Email = "sergeyvbo@gmail.com"
+//         }
+//     });
+
+//     // Configure JWT Authentication in Swagger
+//     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//     {
+//         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+//         Name = "Authorization",
+//         In = ParameterLocation.Header,
+//         Type = SecuritySchemeType.ApiKey,
+//         Scheme = "Bearer",
+//         BearerFormat = "JWT"
+//     });
+
+//     c.AddSecurityRequirement(new OpenApiSecurityRequirement
+//     {
+//         {
+//             new OpenApiSecuritySchemeReference("Bearer"),
+//             []
+//         }
+//     });
+
+//     // Include XML comments for better documentation
+//     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+//     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+//     if (File.Exists(xmlPath))
+//     {
+//         c.IncludeXmlComments(xmlPath);
+//     }
+
+//     // Group endpoints by controller tags
+//     c.TagActionsBy(api => new[] { api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] });
+//     c.DocInclusionPredicate((name, api) => true);
+
+//     // Configure schema names to avoid conflicts
+//     c.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+    
+//     // Enable annotations
+//     c.EnableAnnotations();
+// });
 
 // Add Entity Framework
 builder.Services.AddDbContext<GeoQuizDbContext>(options =>
@@ -141,7 +195,19 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GeoQuiz API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "GeoQuiz API Documentation";
+        c.DefaultModelsExpandDepth(-1);
+        c.DisplayRequestDuration();
+        c.EnableDeepLinking();
+        c.EnableFilter();
+        c.ShowExtensions();
+        c.EnableValidator();
+    });
 }
 
 // Add Serilog request logging
