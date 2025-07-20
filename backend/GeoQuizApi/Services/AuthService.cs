@@ -5,6 +5,7 @@ using BCrypt.Net;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Configuration;
+using GeoQuizApi.Middleware;
 
 namespace GeoQuizApi.Services;
 
@@ -30,14 +31,21 @@ public class AuthService : IAuthService
     public async Task<(User user, string accessToken, string refreshToken)> RegisterAsync(string email, string password, string? name = null)
     {
         // Validate input
+        var validationErrors = new Dictionary<string, object>();
+        
         if (!ValidateEmail(email))
         {
-            throw new ArgumentException("Invalid email format", nameof(email));
+            validationErrors["email"] = "Invalid email format";
         }
 
         if (!ValidatePassword(password))
         {
-            throw new ArgumentException("Password must be at least 8 characters long and contain letters and numbers", nameof(password));
+            validationErrors["password"] = "Password must be at least 8 characters long and contain letters and numbers";
+        }
+
+        if (validationErrors.Any())
+        {
+            throw new ValidationException(validationErrors);
         }
 
         // Check if user already exists
@@ -59,7 +67,7 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("New user registered with email: {Email}", email);
+        _logger.LogInformation("New user registered successfully. Email: {Email}, UserId: {UserId}", email, user.Id);
 
         // Generate tokens
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -71,27 +79,35 @@ public class AuthService : IAuthService
     public async Task<(User user, string accessToken, string refreshToken)> LoginAsync(string email, string password)
     {
         // Validate input
+        var validationErrors = new Dictionary<string, object>();
+        
         if (!ValidateEmail(email))
         {
-            throw new ArgumentException("Invalid email format", nameof(email));
+            validationErrors["email"] = "Invalid email format";
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            throw new ArgumentException("Password is required", nameof(password));
+            validationErrors["password"] = "Password is required";
+        }
+
+        if (validationErrors.Any())
+        {
+            throw new ValidationException(validationErrors);
         }
 
         // Find user
         var user = await GetUserByEmailAsync(email);
         if (user == null)
         {
+            _logger.LogWarning("Login attempt with non-existent email: {Email}", email);
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
         // Verify password
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
-            _logger.LogWarning("Failed login attempt for email: {Email}", email);
+            _logger.LogWarning("Failed login attempt - incorrect password for email: {Email}, UserId: {UserId}", email, user.Id);
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
@@ -99,7 +115,7 @@ public class AuthService : IAuthService
         user.LastLoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("User logged in: {Email}", email);
+        _logger.LogInformation("User logged in successfully. Email: {Email}, UserId: {UserId}", email, user.Id);
 
         // Generate tokens
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -120,8 +136,15 @@ public class AuthService : IAuthService
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked);
 
-        if (storedToken == null || storedToken.ExpiresAt <= DateTime.UtcNow)
+        if (storedToken == null)
         {
+            _logger.LogWarning("Token refresh attempt with invalid refresh token");
+            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+        }
+
+        if (storedToken.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogWarning("Token refresh attempt with expired refresh token for user: {UserId}", storedToken.UserId);
             throw new UnauthorizedAccessException("Invalid or expired refresh token");
         }
 
@@ -134,7 +157,7 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Tokens refreshed for user: {UserId}", storedToken.UserId);
+        _logger.LogInformation("Tokens refreshed successfully for user: {UserId}", storedToken.UserId);
 
         return (storedToken.User, accessToken, newRefreshToken);
     }
@@ -157,7 +180,7 @@ public class AuthService : IAuthService
         storedToken.IsRevoked = true;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Refresh token revoked for user: {UserId}", storedToken.UserId);
+        _logger.LogInformation("Refresh token revoked successfully for user: {UserId}", storedToken.UserId);
         return true;
     }
 
@@ -219,14 +242,25 @@ public class AuthService : IAuthService
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
     {
-        if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+        var validationErrors = new Dictionary<string, object>();
+        
+        if (string.IsNullOrWhiteSpace(currentPassword))
         {
-            return false;
+            validationErrors["currentPassword"] = "Current password is required";
         }
 
-        if (!ValidatePassword(newPassword))
+        if (string.IsNullOrWhiteSpace(newPassword))
         {
-            throw new ArgumentException("New password must be at least 8 characters long and contain letters and numbers");
+            validationErrors["newPassword"] = "New password is required";
+        }
+        else if (!ValidatePassword(newPassword))
+        {
+            validationErrors["newPassword"] = "New password must be at least 8 characters long and contain letters and numbers";
+        }
+
+        if (validationErrors.Any())
+        {
+            throw new ValidationException(validationErrors);
         }
 
         var user = await GetUserByIdAsync(userId);
@@ -238,6 +272,7 @@ public class AuthService : IAuthService
         // Verify current password
         if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
         {
+            _logger.LogWarning("Failed password change attempt - incorrect current password for user: {UserId}", userId);
             throw new UnauthorizedAccessException("Current password is incorrect");
         }
 
@@ -245,7 +280,7 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Password changed for user: {UserId}", userId);
+        _logger.LogInformation("Password changed successfully for user: {UserId}", userId);
         return true;
     }
 

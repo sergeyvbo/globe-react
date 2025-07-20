@@ -2,11 +2,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
 using GeoQuizApi.Data;
 using GeoQuizApi.Configuration;
 using GeoQuizApi.Services;
+using GeoQuizApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -85,6 +91,13 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+// Add Serilog request logging
+app.UseSerilogRequestLogging();
+
+// Add custom middleware
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 
