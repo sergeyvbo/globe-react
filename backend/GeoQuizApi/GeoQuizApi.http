@@ -128,3 +128,108 @@ Accept: application/json
 GET {{GeoQuizApi_HostAddress}}/api/auth/me
 Authorization: Bearer invalid.jwt.token
 Accept: application/json
+
+### === GAME STATS ENDPOINTS ===
+
+### 14. Save a game session (requires valid JWT token)
+POST {{GeoQuizApi_HostAddress}}/api/game-stats
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "gameType": "countries",
+  "correctAnswers": 8,
+  "wrongAnswers": 2,
+  "sessionStartTime": "2025-01-20T10:00:00Z",
+  "sessionEndTime": "2025-01-20T10:05:30Z"
+}
+
+### 15. Save another game session - flags
+POST {{GeoQuizApi_HostAddress}}/api/game-stats
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "gameType": "flags",
+  "correctAnswers": 15,
+  "wrongAnswers": 5,
+  "sessionStartTime": "2025-01-20T11:00:00Z",
+  "sessionEndTime": "2025-01-20T11:08:45Z"
+}
+
+### 16. Save another game session - states
+POST {{GeoQuizApi_HostAddress}}/api/game-stats
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "gameType": "states",
+  "correctAnswers": 12,
+  "wrongAnswers": 3,
+  "sessionStartTime": "2025-01-20T12:00:00Z",
+  "sessionEndTime": "2025-01-20T12:06:15Z"
+}
+
+### 17. Get user's aggregated statistics (requires valid JWT token)
+GET {{GeoQuizApi_HostAddress}}/api/game-stats/me
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 18. Get user's game history (requires valid JWT token)
+GET {{GeoQuizApi_HostAddress}}/api/game-stats/me/history
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 19. Get user's game history with pagination
+GET {{GeoQuizApi_HostAddress}}/api/game-stats/me/history?page=1&pageSize=5
+Authorization: Bearer {{jwtToken}}
+Accept: application/json
+
+### 20. Migrate anonymous progress (requires valid JWT token)
+POST {{GeoQuizApi_HostAddress}}/api/game-stats/migrate
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "anonymousSessions": [
+    {
+      "gameType": "countries",
+      "correctAnswers": 6,
+      "wrongAnswers": 4,
+      "sessionStartTime": "2025-01-19T15:00:00Z",
+      "sessionEndTime": "2025-01-19T15:04:30Z"
+    },
+    {
+      "gameType": "flags",
+      "correctAnswers": 9,
+      "wrongAnswers": 1,
+      "sessionStartTime": "2025-01-19T16:00:00Z",
+      "sessionEndTime": "2025-01-19T16:03:45Z"
+    }
+  ]
+}
+
+### 21. Test saving game session with invalid data
+POST {{GeoQuizApi_HostAddress}}/api/game-stats
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "gameType": "",
+  "correctAnswers": -1,
+  "wrongAnswers": -2,
+  "sessionStartTime": "2025-01-20T10:00:00Z"
+}
+
+### 22. Test accessing game stats without authentication
+GET {{GeoQuizApi_HostAddress}}/api/game-stats/me
+Accept: application/json
+
+### 23. Test migrating empty anonymous sessions
+POST {{GeoQuizApi_HostAddress}}/api/game-stats/migrate
+Authorization: Bearer {{jwtToken}}
+Content-Type: application/json
+
+{
+  "anonymousSessions": []
+}

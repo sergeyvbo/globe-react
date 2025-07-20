@@ -103,22 +103,33 @@
     - Настроить автоматический mapping между entities и DTOs
     - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
-- [ ] 5. Реализовать систему игровой статистики
-  - [ ] 5.1 Создать GameStatsService для бизнес-логики статистики
+- [x] 5. Реализовать систему игровой статистики
+
+
+
+
+
+  - [x] 5.1 Создать GameStatsService для бизнес-логики статистики
+
+
     - Создать IGameStatsService интерфейс с методами сохранения и получения статистики
     - Реализовать GameStatsService с логикой агрегации данных
     - Добавить методы для расчета accuracy, streaks и других метрик
     - Реализовать логику миграции анонимного прогресса
     - _Requirements: 4.1, 4.2, 4.3, 8.4_
 
-  - [ ] 5.2 Создать GameStatsController с endpoints для статистики
+  - [x] 5.2 Создать GameStatsController с endpoints для статистики
+
+
     - Реализовать POST /api/game-stats endpoint для сохранения игровой сессии
     - Реализовать GET /api/game-stats/me endpoint для получения агрегированной статистики
     - Реализовать GET /api/game-stats/me/history endpoint для истории игр
     - Реализовать POST /api/game-stats/migrate endpoint для миграции анонимного прогресса
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 5.3 Создать DTOs для игровой статистики
+  - [x] 5.3 Создать DTOs для игровой статистики
+
+
     - Создать GameSessionRequest DTO для сохранения игровых сессий
     - Создать GameStatsResponse DTO для агрегированной статистики
     - Создать GameHistoryResponse DTO для истории игр
