@@ -25,23 +25,44 @@ public class RequestLoggingMiddleware
         // Log request start
         await LogRequestAsync(context, requestId);
 
-        var originalBodyStream = context.Response.Body;
-        using var responseBody = new MemoryStream();
-        context.Response.Body = responseBody;
+        // Skip response body interception for Scalar endpoints to avoid conflicts
+        var path = context.Request.Path.Value?.ToLowerInvariant();
+        var isScalarEndpoint = path?.StartsWith("/scalar") == true || path?.StartsWith("/openapi") == true;
 
-        try
+        if (isScalarEndpoint)
         {
-            await _next(context);
+            // For Scalar endpoints, just pass through without intercepting response body
+            try
+            {
+                await _next(context);
+            }
+            finally
+            {
+                stopwatch.Stop();
+                LogSimpleResponse(context, requestId, stopwatch.ElapsedMilliseconds);
+            }
         }
-        finally
+        else
         {
-            stopwatch.Stop();
-            
-            // Log response
-            await LogResponseAsync(context, requestId, stopwatch.ElapsedMilliseconds);
-            
-            // Copy response back to original stream
-            await responseBody.CopyToAsync(originalBodyStream);
+            // For API endpoints, intercept response body for error logging
+            var originalBodyStream = context.Response.Body;
+            using var responseBody = new MemoryStream();
+            context.Response.Body = responseBody;
+
+            try
+            {
+                await _next(context);
+            }
+            finally
+            {
+                stopwatch.Stop();
+                
+                // Log response
+                await LogResponseAsync(context, requestId, stopwatch.ElapsedMilliseconds);
+                
+                // Copy response back to original stream
+                await responseBody.CopyToAsync(originalBodyStream);
+            }
         }
     }
 
@@ -152,6 +173,21 @@ public class RequestLoggingMiddleware
         }
 
         return requestBody;
+    }
+
+    private void LogSimpleResponse(HttpContext context, string requestId, long elapsedMs)
+    {
+        var response = context.Response;
+        
+        _logger.LogInformation(
+            "HTTP {Method} {Path} completed. RequestId: {RequestId}, StatusCode: {StatusCode}, Duration: {Duration}ms, ContentType: {ContentType}, ContentLength: {ContentLength}",
+            context.Request.Method,
+            context.Request.Path + context.Request.QueryString,
+            requestId,
+            response.StatusCode,
+            elapsedMs,
+            response.ContentType,
+            response.ContentLength);
     }
 
     private static string GetClientIpAddress(HttpContext context)

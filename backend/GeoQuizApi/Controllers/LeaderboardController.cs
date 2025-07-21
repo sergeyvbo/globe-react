@@ -1,14 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Swashbuckle.AspNetCore.Annotations;
 using GeoQuizApi.Services;
 using GeoQuizApi.Models.DTOs.Leaderboard;
 
 namespace GeoQuizApi.Controllers;
 
 /// <summary>
-/// Контроллер для управления списками лидеров
+/// Controller for managing leaderboards
 /// </summary>
 [ApiController]
 [Route("api/leaderboard")]
@@ -26,22 +25,14 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение глобального списка лидеров
+    /// Get global leaderboard
     /// </summary>
-    /// <param name="page">Номер страницы (по умолчанию 1)</param>
-    /// <param name="pageSize">Количество записей на странице (по умолчанию 50, максимум 100)</param>
-    /// <returns>Список лидеров с лучшими игроками</returns>
-    /// <response code="200">Список лидеров успешно получен</response>
-    /// <response code="400">Некорректные параметры запроса</response>
+    /// <param name="page">Page number (default 1)</param>
+    /// <param name="pageSize">Number of entries per page (default 50, maximum 100)</param>
+    /// <returns>Leaderboard with top players</returns>
+    /// <response code="200">Leaderboard successfully retrieved</response>
+    /// <response code="400">Invalid request parameters</response>
     [HttpGet]
-    [SwaggerOperation(
-        Summary = "Получение глобального списка лидеров",
-        Description = "Возвращает список лучших игроков по всем типам игр с поддержкой пагинации",
-        OperationId = "GetGlobalLeaderboard",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список лидеров успешно получен", typeof(LeaderboardResponse))]
-    [SwaggerResponse(400, "Некорректные параметры запроса")]
     public async Task<ActionResult<LeaderboardResponse>> GetGlobalLeaderboard(
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50)
@@ -69,23 +60,15 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение списка лидеров по типу игры
+    /// Get leaderboard by game type
     /// </summary>
-    /// <param name="gameType">Тип игры (countries, flags, states)</param>
-    /// <param name="page">Номер страницы (по умолчанию 1)</param>
-    /// <param name="pageSize">Количество записей на странице (по умолчанию 50, максимум 100)</param>
-    /// <returns>Список лидеров, отфильтрованный по типу игры</returns>
-    /// <response code="200">Список лидеров успешно получен</response>
-    /// <response code="400">Некорректные параметры запроса или неизвестный тип игры</response>
+    /// <param name="gameType">Game type (countries, flags, states)</param>
+    /// <param name="page">Page number (default 1)</param>
+    /// <param name="pageSize">Number of entries per page (default 50, maximum 100)</param>
+    /// <returns>Leaderboard filtered by game type</returns>
+    /// <response code="200">Leaderboard successfully retrieved</response>
+    /// <response code="400">Invalid request parameters or unknown game type</response>
     [HttpGet("game-type/{gameType}")]
-    [SwaggerOperation(
-        Summary = "Получение списка лидеров по типу игры",
-        Description = "Возвращает список лучших игроков для конкретного типа игры (countries, flags, states)",
-        OperationId = "GetLeaderboardByGameType",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список лидеров успешно получен", typeof(LeaderboardResponse))]
-    [SwaggerResponse(400, "Некорректные параметры запроса или неизвестный тип игры")]
     public async Task<ActionResult<LeaderboardResponse>> GetLeaderboardByGameType(
         string gameType,
         [FromQuery] int page = 1, 
@@ -114,23 +97,15 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение списка лидеров по временному периоду
+    /// Get leaderboard by time period
     /// </summary>
-    /// <param name="period">Временной период (all-time, week, month, year)</param>
-    /// <param name="page">Номер страницы (по умолчанию 1)</param>
-    /// <param name="pageSize">Количество записей на странице (по умолчанию 50, максимум 100)</param>
-    /// <returns>Список лидеров, отфильтрованный по временному периоду</returns>
-    /// <response code="200">Список лидеров успешно получен</response>
-    /// <response code="400">Некорректные параметры запроса или неизвестный период</response>
+    /// <param name="period">Time period (all-time, week, month, year)</param>
+    /// <param name="page">Page number (default 1)</param>
+    /// <param name="pageSize">Number of entries per page (default 50, maximum 100)</param>
+    /// <returns>Leaderboard filtered by time period</returns>
+    /// <response code="200">Leaderboard successfully retrieved</response>
+    /// <response code="400">Invalid request parameters or unknown period</response>
     [HttpGet("period/{period}")]
-    [SwaggerOperation(
-        Summary = "Получение списка лидеров по временному периоду",
-        Description = "Возвращает список лучших игроков за указанный временной период (all-time, week, month, year)",
-        OperationId = "GetLeaderboardByPeriod",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список лидеров успешно получен", typeof(LeaderboardResponse))]
-    [SwaggerResponse(400, "Некорректные параметры запроса или неизвестный период")]
     public async Task<ActionResult<LeaderboardResponse>> GetLeaderboardByPeriod(
         string period,
         [FromQuery] int page = 1, 
@@ -159,24 +134,16 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение списка лидеров с комбинированными фильтрами
+    /// Get leaderboard with combined filters
     /// </summary>
-    /// <param name="gameType">Фильтр по типу игры (опционально)</param>
-    /// <param name="period">Фильтр по временному периоду (опционально)</param>
-    /// <param name="page">Номер страницы (по умолчанию 1)</param>
-    /// <param name="pageSize">Количество записей на странице (по умолчанию 50, максимум 100)</param>
-    /// <returns>Отфильтрованный список лидеров</returns>
-    /// <response code="200">Список лидеров успешно получен</response>
-    /// <response code="400">Некорректные параметры запроса</response>
+    /// <param name="gameType">Game type filter (optional)</param>
+    /// <param name="period">Time period filter (optional)</param>
+    /// <param name="page">Page number (default 1)</param>
+    /// <param name="pageSize">Number of entries per page (default 50, maximum 100)</param>
+    /// <returns>Filtered leaderboard</returns>
+    /// <response code="200">Leaderboard successfully retrieved</response>
+    /// <response code="400">Invalid request parameters</response>
     [HttpGet("filtered")]
-    [SwaggerOperation(
-        Summary = "Получение списка лидеров с комбинированными фильтрами",
-        Description = "Возвращает список лидеров с возможностью фильтрации по типу игры и временному периоду одновременно",
-        OperationId = "GetFilteredLeaderboard",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список лидеров успешно получен", typeof(LeaderboardResponse))]
-    [SwaggerResponse(400, "Некорректные параметры запроса")]
     public async Task<ActionResult<LeaderboardResponse>> GetFilteredLeaderboard(
         [FromQuery] string? gameType = null,
         [FromQuery] string? period = null,
@@ -206,21 +173,13 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Очистка кэша списка лидеров
+    /// Clear leaderboard cache
     /// </summary>
-    /// <returns>Сообщение об успешной очистке</returns>
-    /// <response code="200">Кэш успешно очищен</response>
-    /// <response code="401">Пользователь не аутентифицирован</response>
+    /// <returns>Success message</returns>
+    /// <response code="200">Cache successfully cleared</response>
+    /// <response code="401">User not authenticated</response>
     [HttpPost("clear-cache")]
     [Authorize]
-    [SwaggerOperation(
-        Summary = "Очистка кэша списка лидеров",
-        Description = "Очищает кэш списка лидеров для принудительного обновления данных",
-        OperationId = "ClearLeaderboardCache",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Кэш успешно очищен")]
-    [SwaggerResponse(401, "Пользователь не аутентифицирован")]
     public ActionResult ClearLeaderboardCache()
     {
         try
@@ -237,18 +196,11 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение доступных типов игр для фильтрации
+    /// Get available game types for filtering
     /// </summary>
-    /// <returns>Список допустимых типов игр</returns>
-    /// <response code="200">Список типов игр успешно получен</response>
+    /// <returns>List of valid game types</returns>
+    /// <response code="200">Game types list successfully retrieved</response>
     [HttpGet("game-types")]
-    [SwaggerOperation(
-        Summary = "Получение доступных типов игр для фильтрации",
-        Description = "Возвращает список всех допустимых типов игр, которые можно использовать для фильтрации списка лидеров",
-        OperationId = "GetGameTypes",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список типов игр успешно получен")]
     public ActionResult<object> GetGameTypes()
     {
         return Ok(new
@@ -259,18 +211,11 @@ public class LeaderboardController : ControllerBase
     }
 
     /// <summary>
-    /// Получение доступных временных периодов для фильтрации
+    /// Get available time periods for filtering
     /// </summary>
-    /// <returns>Список допустимых временных периодов</returns>
-    /// <response code="200">Список временных периодов успешно получен</response>
+    /// <returns>List of valid time periods</returns>
+    /// <response code="200">Time periods list successfully retrieved</response>
     [HttpGet("periods")]
-    [SwaggerOperation(
-        Summary = "Получение доступных временных периодов для фильтрации",
-        Description = "Возвращает список всех допустимых временных периодов, которые можно использовать для фильтрации списка лидеров",
-        OperationId = "GetPeriods",
-        Tags = new[] { "Leaderboard" }
-    )]
-    [SwaggerResponse(200, "Список временных периодов успешно получен")]
     public ActionResult<object> GetPeriods()
     {
         return Ok(new

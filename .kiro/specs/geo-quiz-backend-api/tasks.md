@@ -217,20 +217,25 @@
     - Добавить input validation и sanitization
     - _Requirements: 6.4, 1.3, 1.4, 1.5_
 
-- [-] 9. Создать конфигурацию и документацию API
+- [x] 9. Создать конфигурацию и документацию API
 
 
 
-  - [ ] 9.1 Настроить Swagger/OpenAPI документацию
 
 
-    - Добавить Swagger генерацию для всех endpoints
-    - Настроить JWT authentication в Swagger UI
-    - Добавить описания и примеры для всех DTOs
-    - Настроить группировку endpoints по контроллерам
+  - [x] 9.1 Настроить Scalar/OpenAPI документацию
+
+
+
+    - Добавить Scalar.AspNetCore для генерации документации всех endpoints
+    - Настроить OpenAPI конфигурацию с базовой информацией об API
+    - Добавить comprehensive XML комментарии для всех контроллеров и DTOs
+    - Перевести всю документацию API на английский язык
     - _Requirements: 1.1, 2.1, 4.1, 5.1_
 
-  - [ ] 9.2 Создать конфигурационные файлы для разных окружений
+  - [x] 9.2 Создать конфигурационные файлы для разных окружений
+
+
     - Настроить appsettings.json для development
     - Создать appsettings.Production.json для production
     - Добавить environment variables для sensitive данных

@@ -28,7 +28,7 @@ Backend API для географической викторины постро�
 - **Authentication**: JWT Bearer tokens
 - **Password Hashing**: BCrypt.Net
 - **Logging**: Serilog
-- **API Documentation**: Swagger/OpenAPI
+- **API Documentation**: Scalar/OpenAPI
 - **CORS**: Configured for React frontend
 
 ### Project Structure
