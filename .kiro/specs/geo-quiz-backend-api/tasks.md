@@ -236,6 +236,10 @@
   - [x] 9.2 Создать конфигурационные файлы для разных окружений
 
 
+
+
+
+
     - Настроить appsettings.json для development
     - Создать appsettings.Production.json для production
     - Добавить environment variables для sensitive данных

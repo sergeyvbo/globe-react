@@ -77,6 +77,21 @@ if (jwtSettings == null)
     throw new InvalidOperationException("JWT settings are not configured properly");
 }
 
+// Validate required environment variables in production
+if (builder.Environment.IsProduction())
+{
+    if (string.IsNullOrEmpty(jwtSettings.SecretKey) || jwtSettings.SecretKey.Contains("PLACEHOLDER"))
+    {
+        throw new InvalidOperationException("JWT SecretKey must be set via environment variable 'JwtSettings__SecretKey' in production");
+    }
+    
+    var corsSettingsForValidation = builder.Configuration.GetSection(CorsSettings.SectionName).Get<CorsSettings>();
+    if (corsSettingsForValidation?.AllowedOrigins?.Any(origin => origin.Contains("PLACEHOLDER")) == true)
+    {
+        throw new InvalidOperationException("CORS AllowedOrigins must be set via environment variable 'CorsSettings__AllowedOrigins__0' in production");
+    }
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
