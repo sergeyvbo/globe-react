@@ -263,7 +263,7 @@
 
 
 
-  - [ ] 10.2 Создать integration тесты для API endpoints
+  - [x] 10.2 Создать integration тесты для API endpoints
     - Написать тесты для AuthController endpoints с реальной БД
     - Написать тесты для GameStatsController с проверкой сохранения данных
     - Написать тесты для LeaderboardController с проверкой рейтингов
