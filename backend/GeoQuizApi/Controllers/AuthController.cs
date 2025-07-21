@@ -59,7 +59,7 @@ public class AuthController : ControllerBase
                 ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
             };
 
-            return CreatedAtAction(nameof(GetMe), response);
+            return StatusCode(201, response);
         }
         catch (ArgumentException ex)
         {

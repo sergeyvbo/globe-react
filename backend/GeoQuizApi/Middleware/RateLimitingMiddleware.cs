@@ -9,16 +9,19 @@ public class RateLimitingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly SecuritySettings _securitySettings;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<RateLimitingMiddleware> _logger;
     private static readonly ConcurrentDictionary<string, ClientRequestInfo> _clients = new();
 
     public RateLimitingMiddleware(
         RequestDelegate next,
         IOptions<SecuritySettings> securitySettings,
+        IConfiguration configuration,
         ILogger<RateLimitingMiddleware> logger)
     {
         _next = next;
         _securitySettings = securitySettings.Value;
+        _configuration = configuration;
         _logger = logger;
     }
 

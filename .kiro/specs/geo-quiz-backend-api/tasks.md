@@ -246,13 +246,22 @@
     - Настроить database connection strings для разных окружений
     - _Requirements: 6.1, 7.3, 9.3, 9.4_
 
-- [ ] 10. Написать unit и integration тесты
-  - [ ] 10.1 Создать unit тесты для сервисов
+- [x] 10. Написать unit и integration тесты
+
+
+
+
+
+  - [x] 10.1 Создать unit тесты для сервисов
+
+
     - Написать тесты для AuthService с моками зависимостей
     - Написать тесты для GameStatsService с проверкой бизнес-логики
     - Написать тесты для LeaderboardService с различными сценариями
     - Настроить test fixtures и mock данные
     - _Requirements: 1.1, 1.2, 4.1, 5.1_
+
+
 
   - [ ] 10.2 Создать integration тесты для API endpoints
     - Написать тесты для AuthController endpoints с реальной БД

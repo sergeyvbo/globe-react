@@ -162,11 +162,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Apply migrations automatically on startup
+// Apply migrations automatically on startup (skip for testing)
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
-    context.Database.Migrate();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    
+    // Skip migrations if configured (for testing with InMemory database)
+    if (!configuration.GetValue<bool>("SkipMigrations"))
+    {
+        context.Database.Migrate();
+    }
+    else
+    {
+        // For InMemory database, ensure it's created
+        context.Database.EnsureCreated();
+    }
     
     // Seed database with test data in development
     if (app.Environment.IsDevelopment())
