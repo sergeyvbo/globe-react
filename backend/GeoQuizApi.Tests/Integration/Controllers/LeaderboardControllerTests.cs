@@ -7,6 +7,7 @@ using GeoQuizApi.Models.DTOs.Leaderboard;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
+[Trait("Category", "Integration")]
 public class LeaderboardControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
     private readonly TestWebApplicationFactory<Program> _factory;

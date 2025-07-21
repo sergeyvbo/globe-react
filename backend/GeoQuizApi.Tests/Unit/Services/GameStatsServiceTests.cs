@@ -8,6 +8,7 @@ using Moq;
 
 namespace GeoQuizApi.Tests.Unit.Services;
 
+[Trait("Category", "Unit")]
 public class GameStatsServiceTests : IDisposable
 {
     private readonly GeoQuizDbContext _context;

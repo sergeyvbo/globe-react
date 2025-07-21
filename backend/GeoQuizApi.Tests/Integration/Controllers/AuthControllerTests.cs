@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
+[Trait("Category", "Integration")]
 public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
     private readonly TestWebApplicationFactory<Program> _factory;

@@ -10,6 +10,7 @@ using Moq;
 
 namespace GeoQuizApi.Tests.Unit.Services;
 
+[Trait("Category", "Unit")]
 public class AuthServiceTests : IDisposable
 {
     private readonly GeoQuizDbContext _context;

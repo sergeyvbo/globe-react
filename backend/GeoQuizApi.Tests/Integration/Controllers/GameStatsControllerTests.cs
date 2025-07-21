@@ -7,6 +7,7 @@ using GeoQuizApi.Services;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
+[Trait("Category", "Integration")]
 public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
     private readonly TestWebApplicationFactory<Program> _factory;
