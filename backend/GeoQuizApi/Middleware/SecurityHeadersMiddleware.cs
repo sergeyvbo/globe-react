@@ -39,10 +39,7 @@ public class SecurityHeadersMiddleware
         headers.Append("X-Content-Type-Options", "nosniff");
 
         // X-Frame-Options: Prevent clickjacking (relaxed for Scalar)
-        if (!isScalarEndpoint)
-        {
-            headers.Append("X-Frame-Options", "DENY");
-        }
+        headers.Append("X-Frame-Options", "DENY");
 
         // X-XSS-Protection: Enable XSS filtering
         headers.Append("X-XSS-Protection", "1; mode=block");
@@ -59,7 +56,7 @@ public class SecurityHeadersMiddleware
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
                 "style-src 'self' 'unsafe-inline'; " +
                 "img-src 'self' data:; " +
-                "font-src 'self' data:;");
+                "font-src 'self' https://fonts.scalar.com/ data:;");
         }
         else
         {
