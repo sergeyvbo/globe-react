@@ -14,6 +14,17 @@ if "%COMMAND%"=="" set COMMAND=up
 REM Get script directory
 set SCRIPT_DIR=%~dp0
 
+REM Load environment-specific configuration
+set ENV_CONFIG_FILE=..\environments\%ENVIRONMENT%.env
+if exist "%ENV_CONFIG_FILE%" (
+    call :print_status "Loading environment configuration from %ENV_CONFIG_FILE%"
+    for /f "usebackq tokens=1,2 delims==" %%a in ("%ENV_CONFIG_FILE%") do (
+        if not "%%a"=="" if not "%%a:~0,1%"=="#" (
+            set "%%a=%%b"
+        )
+    )
+)
+
 REM Function to print status messages
 :print_status
 echo [INFO] %~1

@@ -4,7 +4,7 @@ This directory contains the TypeScript-based deployment automation system for th
 
 ## Prerequisites
 
-- Node.js 20.6+ (for native TypeScript support)
+- Node.js 20.6+
 - Docker and Docker Compose
 - npm or yarn package manager
 
@@ -53,7 +53,6 @@ deployment/
 ## Features
 
 ### TypeScript Support
-- Native TypeScript execution with tsx
 - Full type safety and IntelliSense support
 - ES modules support
 - Comprehensive error handling with typed errors

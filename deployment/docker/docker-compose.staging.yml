@@ -1,0 +1,149 @@
+# Staging configuration for Docker Compose
+# Staging environment runs on localhost:6666
+version: '3.8'
+
+services:
+  # Staging database configuration
+  database:
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-geoquiz_staging}
+      POSTGRES_USER: ${DB_USER:-staging_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Expose database port for staging debugging
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with local dev
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+      - ./backups:/backups:rw
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.geoquiz.service=database"
+      - "com.geoquiz.environment=staging"
+
+  # Staging backend configuration
+  backend:
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_URLS: http://+:5000
+      ConnectionStrings__DefaultConnection: "Host=database;Port=5432;Database=${DB_NAME:-geoquiz_staging};Username=${DB_USER:-staging_user};Password=${DB_PASSWORD};SSL Mode=Prefer;Trust Server Certificate=true"
+      JwtSettings__SecretKey: ${JWT_SECRET_KEY}
+      JwtSettings__Issuer: ${JWT_ISSUER:-geoquiz-api-staging}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-geoquiz-app-staging}
+      JwtSettings__ExpirationMinutes: ${JWT_EXPIRATION_MINUTES:-120}
+      CorsSettings__AllowedOrigins__0: http://localhost:6666
+      CorsSettings__AllowedOrigins__1: ${FRONTEND_URL:-http://localhost:6666}
+      SecuritySettings__EnforceHttps: false
+      SecuritySettings__EnableHsts: false
+      Serilog__MinimumLevel__Default: ${LOG_LEVEL:-Information}
+      # Staging specific settings
+      SwaggerSettings__Enabled: true
+      CorsSettings__AllowAllOrigins: false
+      ErrorHandling__ShowDetailedErrors: true
+    ports:
+      - "5001:5000"  # Different port for staging backend
+    volumes:
+      - backend_staging_logs:/app/logs
+      - backend_staging_data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    labels:
+      - "com.geoquiz.service=backend"
+      - "com.geoquiz.environment=staging"
+
+  # Staging frontend configuration
+  frontend:
+    restart: unless-stopped
+    build:
+      args:
+        REACT_APP_API_URL: http://localhost:5001/api
+        NODE_ENV: production
+    environment:
+      NGINX_HOST: localhost
+      NGINX_PORT: 80
+    ports:
+      - "6666:80"  # Staging runs on port 6666 as specified
+    volumes:
+      - nginx_staging_cache:/var/cache/nginx
+      - ./nginx-staging.conf:/etc/nginx/conf.d/default.conf:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.geoquiz.service=frontend"
+      - "com.geoquiz.environment=staging"
+
+# Staging volumes with proper persistence
+volumes:
+  postgres_staging_data:
+    driver: local
+    name: geoquiz_postgres_staging_data
+    labels:
+      - "com.geoquiz.volume=database"
+      - "com.geoquiz.environment=staging"
+  backend_staging_logs:
+    driver: local
+    name: geoquiz_backend_staging_logs
+    labels:
+      - "com.geoquiz.volume=backend-logs"
+      - "com.geoquiz.environment=staging"
+  backend_staging_data:
+    driver: local
+    name: geoquiz_backend_staging_data
+    labels:
+      - "com.geoquiz.volume=backend-data"
+      - "com.geoquiz.environment=staging"
+  nginx_staging_cache:
+    driver: local
+    name: geoquiz_nginx_staging_cache
+    labels:
+      - "com.geoquiz.volume=nginx-cache"
+      - "com.geoquiz.environment=staging"
+
+# Staging network configuration
+networks:
+  geoquiz-network:
+    name: geoquiz-staging-network
+    labels:
+      - "com.geoquiz.network=staging"
+      - "com.geoquiz.environment=staging"

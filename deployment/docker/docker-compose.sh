@@ -42,12 +42,23 @@ check_docker() {
     fi
 }
 
-# Function to check if required files exist
+# Function to check if required files exist and load environment
 check_files() {
     local env_file=".env"
+    local env_config_file="../environments/${ENVIRONMENT}.env"
     
+    # Check if environment-specific config exists
+    if [ -f "$env_config_file" ]; then
+        print_status "Loading environment configuration from $env_config_file"
+        # Load environment variables, handling empty lines and comments
+        set -a
+        source "$env_config_file"
+        set +a
+    fi
+    
+    # Check for local .env file
     if [ ! -f "$env_file" ]; then
-        print_warning "Environment file $env_file not found."
+        print_warning "Local environment file $env_file not found."
         if [ -f ".env.example" ]; then
             print_status "Copying .env.example to $env_file"
             cp .env.example "$env_file"
@@ -57,6 +68,13 @@ check_files() {
             print_error "No environment file template found."
             exit 1
         fi
+    fi
+    
+    # Load local .env file (overrides environment config)
+    if [ -f "$env_file" ]; then
+        set -a
+        source "$env_file"
+        set +a
     fi
 }
 

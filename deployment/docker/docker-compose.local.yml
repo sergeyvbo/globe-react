@@ -1,0 +1,87 @@
+# Local development configuration with hot reloading
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.local.yml up
+version: '3.8'
+
+services:
+  # Local database configuration
+  database:
+    ports:
+      - "5432:5432"  # Always expose for local development
+    environment:
+      POSTGRES_DB: ${DB_NAME:-geoquiz_local}
+      POSTGRES_USER: ${DB_USER:-local_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-local_password_123}
+
+  # Local backend with hot reloading
+  backend:
+    build:
+      target: runtime
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      DOTNET_USE_POLLING_FILE_WATCHER: true
+      DOTNET_WATCH_RESTART_ON_RUDE_EDIT: true
+      SwaggerSettings__Enabled: true
+      CorsSettings__AllowAllOrigins: true
+      ErrorHandling__ShowDetailedErrors: true
+    ports:
+      - "${BACKEND_PORT:-5000}:5000"
+    volumes:
+      # Mount source code for hot reload
+      - ../../backend:/app/source:ro
+      - backend_local_logs:/app/logs
+      - backend_local_data:/app/data
+      # Mount for dotnet watch (if enabled)
+      - /root/.nuget/packages:/root/.nuget/packages:rw
+    command: ["dotnet", "watch", "--project", "/app/source/GeoQuizApi", "run", "--urls", "http://0.0.0.0:5000"]
+
+  # Local frontend with development server (optional)
+  frontend-dev:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.frontend
+      target: builder
+    container_name: ${DOCKER_NAMESPACE:-geoquiz}-frontend-dev
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
+      CHOKIDAR_USEPOLLING: true
+      WATCHPACK_POLLING: true
+    ports:
+      - "3001:3000"  # Development server on different port
+    volumes:
+      # Mount source code for hot reload
+      - ../../src:/app/src:rw
+      - ../../public:/app/public:rw
+      - ../../package.json:/app/package.json:ro
+      - ../../package-lock.json:/app/package-lock.json:ro
+      - frontend_local_node_modules:/app/node_modules
+    command: ["npm", "start"]
+    networks:
+      - geoquiz-network
+    depends_on:
+      - backend
+
+  # Regular frontend with Nginx (for testing production build locally)
+  frontend:
+    build:
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
+        NODE_ENV: development
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    volumes:
+      - frontend_local_cache:/tmp/nginx
+
+# Local development volumes
+volumes:
+  backend_local_logs:
+    driver: local
+    name: ${DOCKER_NAMESPACE:-geoquiz}_backend_local_logs
+  backend_local_data:
+    driver: local
+    name: ${DOCKER_NAMESPACE:-geoquiz}_backend_local_data
+  frontend_local_cache:
+    driver: local
+    name: ${DOCKER_NAMESPACE:-geoquiz}_frontend_local_cache
+  frontend_local_node_modules:
+    driver: local
+    name: ${DOCKER_NAMESPACE:-geoquiz}_frontend_local_node_modules

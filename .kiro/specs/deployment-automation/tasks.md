@@ -30,6 +30,11 @@
 - [-] 2. Implement Docker containerization system
 
 
+
+
+
+
+
   - Create optimized Dockerfile for React frontend with Nginx
   - Create optimized Dockerfile for .NET backend API
   - Configure docker-compose.yml for multi-container orchestration
@@ -51,13 +56,25 @@
   - Implement health check endpoints for container monitoring
   - _Requirements: 2.1, 6.3_
 
-- [ ] 2.3 Configure Docker Compose orchestration
+- [x] 2.3 Configure Docker Compose orchestration
+
+
+
+
+
+
+
+
 
 
 
   - Set up service definitions with proper networking and dependencies
   - Configure volume mounts for database persistence and development
   - Implement environment variable injection and service discovery
+  - The Staging environment is localhost:6666
+  - The Prod environment is 10.66.66.64:6666
+  - There is no dedicated Test Environment
+  - The development environment is Windows, other environments are Docker containers ran in Ubuntu. Therefore, docker-compose scripts must have .bat and .sh versions syncronized.
   - _Requirements: 2.2, 2.4, 3.2_
 
 - [ ] 3. Create environment configuration management system
