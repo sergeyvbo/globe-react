@@ -52,10 +52,7 @@ describe('OAuth2Service', () => {
     mockLocalStorage.clear()
     
     // Setup environment variables
-    process.env.REACT_APP_GOOGLE_CLIENT_ID = 'test-google-client-id'
-    process.env.REACT_APP_YANDEX_CLIENT_ID = 'test-yandex-client-id'
-    process.env.REACT_APP_VK_CLIENT_ID = 'test-vk-client-id'
-    process.env.REACT_APP_API_URL = 'http://localhost:3001/api'
+    // Environment variables are set in vite.config.ts for tests
     
     // Setup global mocks
     Object.defineProperty(window, 'location', {
@@ -256,7 +253,7 @@ describe('OAuth2Service', () => {
       })
       
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:3001/api/auth/oauth2/google',
+        'http://localhost:5000/api/auth/oauth2/google',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

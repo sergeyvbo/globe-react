@@ -1,4 +1,4 @@
-@GeoQuizApi_HostAddress = http://localhost:5051
+@GeoQuizApi_HostAddress = http://localhost:5000
 
 # Variables for testing
 @testEmail = testhttp@example.com
@@ -7,6 +7,10 @@
 
 @jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhZGIxMGIwYi1iOTNlLTRmODUtYjFhZi1lZTViOWU2MDJiMGIiLCJlbWFpbCI6InRlc3RodHRwQGV4YW1wbGUuY29tIiwianRpIjoiNWE5YzBjMzAtNDNmOS00MWZkLTljMWUtMTExNzU0ZWFmYmJlIiwidW5pcXVlX25hbWUiOiJUZXN0IFVzZXIiLCJuYmYiOjE3NTMwMDQyMDcsImV4cCI6MTc1MzAwNTEwNywiaWF0IjoxNzUzMDA0MjA3LCJpc3MiOiJHZW9RdWl6QXBpIiwiYXVkIjoiR2VvUXVpekNsaWVudCJ9.gi2x0K7LGwPm2GzHuffLYfFAK858c2tGWM-qGuj7EK8
 @refreshToken = iC6e3lbW2lZT4DehfD62715bDqfo3hKRnnJmkSLt3ZvDWoQunybN5OuZRABszd+VxVQNH5BIs8WL/ePtdxri0w==
+
+### 0. Test API connectivity
+GET {{GeoQuizApi_HostAddress}}/api/auth/test
+Accept: application/json
 
 ### 1. Register a new user
 POST {{GeoQuizApi_HostAddress}}/api/auth/register

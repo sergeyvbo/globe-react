@@ -20,3 +20,5 @@ const getSettings = (): CountryQuizSettings => {
 
 
 export { random, randomElement, shuffleArray, kebabize, getSettings }
+// Re-export API tester for debugging
+export { ApiTester } from './utils/apiTest'

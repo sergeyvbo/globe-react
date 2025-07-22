@@ -7,9 +7,7 @@ import {
 } from '../types'
 import { oauth2Service } from './OAuth2Service'
 import { getAuthString } from '../../Localization/strings'
-
-// API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+import { API_CONFIG } from '../config/api'
 
 // Custom AuthError class
 export class AuthServiceError extends Error {
@@ -116,7 +114,7 @@ class HttpClient {
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`
     
     const defaultHeaders = {
       'Content-Type': 'application/json',

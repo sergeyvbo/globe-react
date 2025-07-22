@@ -77,6 +77,15 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Test endpoint for debugging
+    /// </summary>
+    [HttpGet("test")]
+    public ActionResult<object> Test()
+    {
+        return Ok(new { message = "API is working", timestamp = DateTime.UtcNow });
+    }
+
+    /// <summary>
     /// User login
     /// </summary>
     /// <param name="request">Login data (email and password)</param>
@@ -89,6 +98,8 @@ public class AuthController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Login attempt for email: {Email}", request.Email);
+            
             var (user, accessToken, refreshToken) = await _authService.LoginAsync(
                 request.Email, 
                 request.Password);
@@ -100,6 +111,9 @@ public class AuthController : ControllerBase
                 RefreshToken = refreshToken,
                 ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
             };
+
+            _logger.LogInformation("Login response created for user: {UserId}, AccessToken length: {TokenLength}", 
+                user.Id, accessToken?.Length ?? 0);
 
             return Ok(response);
         }

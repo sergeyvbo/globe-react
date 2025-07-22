@@ -13,13 +13,15 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
-  define: {
-    // Replace process.env with import.meta.env for compatibility
-    'process.env': 'import.meta.env',
-  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
+    env: {
+      VITE_API_URL: 'http://localhost:5000/api',
+      VITE_GOOGLE_CLIENT_ID: 'test-google-client-id',
+      VITE_YANDEX_CLIENT_ID: 'test-yandex-client-id',
+      VITE_VK_CLIENT_ID: 'test-vk-client-id',
+    },
   },
 })

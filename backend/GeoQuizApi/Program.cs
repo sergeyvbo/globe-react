@@ -19,7 +19,14 @@ builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configure JSON serialization options
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.WriteIndented = false;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // Configure OpenAPI with Scalar
 builder.Services.AddOpenApi(options =>
@@ -197,7 +204,8 @@ if (app.Environment.IsDevelopment())
 app.UseSerilogRequestLogging();
 
 // Add custom middleware
-app.UseMiddleware<RequestLoggingMiddleware>();
+// Temporarily disabled RequestLoggingMiddleware to debug empty response issue
+// app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Add security middleware

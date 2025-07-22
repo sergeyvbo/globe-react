@@ -4,6 +4,7 @@ import {
   AuthErrorType 
 } from '../types'
 import { AuthServiceError } from './AuthService'
+import { API_CONFIG, OAUTH_CONFIG } from '../config/api'
 
 // OAuth2 configuration for different providers
 interface OAuth2Config {
@@ -17,30 +18,29 @@ interface OAuth2Config {
 // Function to get OAuth2 configurations (allows for easier testing)
 const getOAuth2Configs = (): Record<OAuthProvider, OAuth2Config> => ({
   google: {
-    clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID || '',
-    redirectUri: process.env.REACT_APP_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/callback/google`,
+    clientId: OAUTH_CONFIG.GOOGLE_CLIENT_ID,
+    redirectUri: OAUTH_CONFIG.GOOGLE_REDIRECT_URI,
     scope: 'openid email profile',
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     responseType: 'code'
   },
   yandex: {
-    clientId: process.env.REACT_APP_YANDEX_CLIENT_ID || '',
-    redirectUri: process.env.REACT_APP_YANDEX_REDIRECT_URI || `${window.location.origin}/auth/callback/yandex`,
+    clientId: OAUTH_CONFIG.YANDEX_CLIENT_ID,
+    redirectUri: OAUTH_CONFIG.YANDEX_REDIRECT_URI,
     scope: 'login:email login:info',
     authUrl: 'https://oauth.yandex.ru/authorize',
     responseType: 'code'
   },
   vk: {
-    clientId: process.env.REACT_APP_VK_CLIENT_ID || '',
-    redirectUri: process.env.REACT_APP_VK_REDIRECT_URI || `${window.location.origin}/auth/callback/vk`,
+    clientId: OAUTH_CONFIG.VK_CLIENT_ID,
+    redirectUri: OAUTH_CONFIG.VK_REDIRECT_URI,
     scope: 'email',
     authUrl: 'https://oauth.vk.com/authorize',
     responseType: 'code'
   }
 })
 
-// API configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api'
+
 
 // OAuth2 callback data interface
 interface OAuth2CallbackData {
@@ -225,7 +225,7 @@ export class OAuth2Service {
     const config = configs[provider]
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/oauth2/${provider}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/oauth2/${provider}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
