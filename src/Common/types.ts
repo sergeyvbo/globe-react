@@ -104,3 +104,93 @@ export interface GameProgress {
     bestStreak: number
     lastPlayedAt: Date
 }
+
+// Game Stats API Types
+export interface GameSessionRequest {
+    gameType: string
+    correctAnswers: number
+    wrongAnswers: number
+    sessionStartTime: string
+    sessionEndTime: string
+}
+
+export interface GameSessionDto {
+    id: string
+    gameType: string
+    correctAnswers: number
+    wrongAnswers: number
+    accuracy: number
+    sessionStartTime: string
+    sessionEndTime: string
+    sessionDurationMs: number
+    createdAt: string
+}
+
+export interface GameStatsResponse {
+    totalGames: number
+    totalCorrectAnswers: number
+    totalWrongAnswers: number
+    bestStreak: number
+    averageAccuracy: number
+    lastPlayedAt?: string
+    gameTypeStats: Record<string, GameTypeStatsDto>
+}
+
+export interface GameTypeStatsDto {
+    games: number
+    correctAnswers: number
+    wrongAnswers: number
+    accuracy: number
+    bestStreak: number
+}
+
+export interface GameHistoryResponse {
+    sessions: GameSessionDto[]
+    totalCount: number
+    page: number
+    pageSize: number
+    hasNextPage: boolean
+}
+
+export interface AnonymousGameSession {
+    gameType: string
+    correctAnswers: number
+    wrongAnswers: number
+    sessionStartTime: string
+    sessionEndTime: string
+    timestamp: string
+}
+
+export interface MigrateProgressRequest {
+    sessions: AnonymousGameSession[]
+}
+
+// Leaderboard API Types
+export interface LeaderboardResponse {
+    players: LeaderboardEntryDto[]
+    totalPlayers: number
+    page: number
+    pageSize: number
+    hasNextPage: boolean
+    currentUserRank?: number
+}
+
+export interface LeaderboardEntryDto {
+    rank: number
+    userId: string
+    userName: string
+    userAvatar?: string
+    totalScore: number
+    accuracy: number
+    gamesPlayed: number
+    isCurrentUser: boolean
+}
+
+export interface LeaderboardFilter {
+    gameType?: string
+    period?: LeaderboardPeriod
+    page?: number
+    pageSize?: number
+}
+
+export type LeaderboardPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
