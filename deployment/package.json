@@ -6,6 +6,8 @@
   "scripts": {
     "deploy": "tsx scripts/deploy.ts",
     "build": "tsx scripts/build.ts",
+    "config": "tsx scripts/config.ts",
+    "secrets": "tsx scripts/utils/secrets.ts",
     "db:migrate": "tsx scripts/database.ts",
     "health-check": "tsx scripts/health-check.ts",
     "dev": "tsx scripts/deploy.ts --env development",
