@@ -17,7 +17,7 @@ vi.mock('./AuthService', () => ({
 }))
 
 // Mock the localization
-vi.mock('../Localization/strings', () => ({
+vi.mock('../../Localization/strings', () => ({
   getAuthString: vi.fn((key: string) => {
     const strings: Record<string, string> = {
       mustBeLoggedIn: 'You must be logged in to view your profile.',
@@ -57,7 +57,7 @@ const mockAuthContext = {
   updateProfile: vi.fn()
 }
 
-vi.mock('./AuthContext', () => ({
+vi.mock('../Auth/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   useAuth: () => mockAuthContext
 }))

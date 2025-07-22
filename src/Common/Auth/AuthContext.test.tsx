@@ -20,7 +20,7 @@ vi.mock('./AuthService', () => ({
 }))
 
 // Mock the GameProgressService
-vi.mock('./GameProgressService', () => ({
+vi.mock('../GameProgress/GameProgressService', () => ({
   gameProgressService: {
     autoSyncOnAuth: vi.fn().mockResolvedValue(undefined)
   }

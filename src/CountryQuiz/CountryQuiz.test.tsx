@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 import { CountryQuiz } from './CountryQuiz'
-import { AuthProvider } from '../Common/AuthContext'
+import { AuthProvider } from '../Common/Auth/AuthContext'
 
 // Mock the AuthContext
 const mockAuthContext = {
@@ -16,7 +16,7 @@ const mockAuthContext = {
     updateProfile: vi.fn()
 }
 
-vi.mock('../Common/AuthContext', () => ({
+vi.mock('../Common/Auth/AuthContext', () => ({
     AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     useAuth: () => mockAuthContext
 }))
@@ -42,7 +42,7 @@ vi.mock('../MainMenu/MainMenu', () => ({
 }))
 
 // Mock the AuthModal component
-vi.mock('../Common/AuthModal', () => ({
+vi.mock('../Common/Auth/AuthModal', () => ({
     AuthModal: ({ open, onClose }: { open: boolean; onClose: () => void }) => (
         open ? (
             <div data-testid="auth-modal">
