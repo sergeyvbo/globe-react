@@ -1,12 +1,15 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using GeoQuizApi.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace GeoQuizApi.Middleware;
 
 public class InputValidationMiddleware
 {
     private readonly RequestDelegate _next;
+    private readonly SecuritySettings _securitySettings;
     private readonly ILogger<InputValidationMiddleware> _logger;
 
     // Patterns for potentially malicious input
@@ -22,14 +25,25 @@ public class InputValidationMiddleware
         new Regex(@"<meta[^>]*>", RegexOptions.IgnoreCase | RegexOptions.Compiled)
     };
 
-    public InputValidationMiddleware(RequestDelegate next, ILogger<InputValidationMiddleware> logger)
+    public InputValidationMiddleware(
+        RequestDelegate next, 
+        IOptions<SecuritySettings> securitySettings,
+        ILogger<InputValidationMiddleware> logger)
     {
         _next = next;
+        _securitySettings = securitySettings.Value;
         _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Skip validation if disabled in settings
+        if (!_securitySettings.EnableInputValidation)
+        {
+            await _next(context);
+            return;
+        }
+
         // Only validate POST, PUT, PATCH requests with JSON content
         if (ShouldValidateRequest(context.Request))
         {

@@ -8,6 +8,10 @@ public class SecuritySettings
     public bool EnableHsts { get; set; } = true;
     public int HstsMaxAge { get; set; } = 31536000; // 1 year in seconds
     public bool EnableRateLimiting { get; set; } = true;
+    public bool EnableSecurityHeaders { get; set; } = true;
+    public bool EnableInputValidation { get; set; } = true;
+    public long MaxRequestSize { get; set; } = 10485760; // 10MB in bytes
+    public int RequestTimeout { get; set; } = 30; // seconds
     public RateLimitSettings RateLimit { get; set; } = new();
 }
 

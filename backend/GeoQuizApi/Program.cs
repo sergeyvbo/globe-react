@@ -14,6 +14,17 @@ using Microsoft.OpenApi.Models.References;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel server options
+builder.WebHost.ConfigureKestrel(options =>
+{
+    var securitySettings = builder.Configuration.GetSection(SecuritySettings.SectionName).Get<SecuritySettings>();
+    if (securitySettings != null)
+    {
+        options.Limits.MaxRequestBodySize = securitySettings.MaxRequestSize;
+        options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(securitySettings.RequestTimeout);
+    }
+});
+
 // Configure Serilog
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
@@ -169,6 +180,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Get security settings for middleware configuration
+var securitySettings = builder.Configuration.GetSection(SecuritySettings.SectionName).Get<SecuritySettings>();
+
 // Apply migrations automatically on startup (skip for testing)
 using (var scope = app.Services.CreateScope())
 {
@@ -208,13 +222,23 @@ app.UseSerilogRequestLogging();
 // app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-// Add security middleware
-app.UseMiddleware<SecurityHeadersMiddleware>();
-app.UseMiddleware<RateLimitingMiddleware>();
-app.UseMiddleware<InputValidationMiddleware>();
+// Add security middleware conditionally based on settings
+if (securitySettings?.EnableSecurityHeaders == true)
+{
+    app.UseMiddleware<SecurityHeadersMiddleware>();
+}
+
+if (securitySettings?.EnableRateLimiting == true)
+{
+    app.UseMiddleware<RateLimitingMiddleware>();
+}
+
+if (securitySettings?.EnableInputValidation == true)
+{
+    app.UseMiddleware<InputValidationMiddleware>();
+}
 
 // Configure HTTPS and HSTS for production
-var securitySettings = builder.Configuration.GetSection(SecuritySettings.SectionName).Get<SecuritySettings>();
 if (securitySettings?.EnforceHttps == true)
 {
     app.UseHttpsRedirection();

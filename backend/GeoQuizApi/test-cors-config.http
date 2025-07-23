@@ -1,0 +1,30 @@
+# Test CORS Configuration
+# This file contains HTTP requests to test CORS settings
+
+### Test preflight request from development frontend
+OPTIONS http://localhost:5000/api/auth/me
+Origin: http://localhost:3000
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization, Content-Type
+
+### Test preflight request from Vite dev server
+OPTIONS http://localhost:5000/api/auth/me
+Origin: http://localhost:5173
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization, Content-Type
+
+### Test preflight request from production frontend
+OPTIONS http://localhost:5000/api/auth/me
+Origin: http://10.66.66.64:6666
+Access-Control-Request-Method: GET
+Access-Control-Request-Headers: Authorization, Content-Type
+
+### Test actual GET request from development
+GET http://localhost:5000/api/auth/me
+Origin: http://localhost:3000
+Authorization: Bearer test-token
+
+### Test actual GET request from production
+GET http://localhost:5000/api/auth/me
+Origin: http://10.66.66.64:6666
+Authorization: Bearer test-token
