@@ -7,6 +7,7 @@ import { UserProfile } from './Common/UserProfile';
 import { ProtectedRoute } from './Common/Auth/ProtectedRoute';
 import { AuthProvider } from './Common/Auth/AuthContext';
 import { SessionDemo } from './Common/SessionDemo';
+import { StatsPage, LeaderboardPage } from './Statistics';
 
 function App() {
 
@@ -25,6 +26,12 @@ function App() {
                                     <UserProfile />
                                 </ProtectedRoute>
                             } />
+                            <Route path="/stats" element={
+                                <ProtectedRoute>
+                                    <StatsPage />
+                                </ProtectedRoute>
+                            } />
+                            <Route path="/leaderboard" element={<LeaderboardPage />} />
                             <Route path="/session-demo" element={<SessionDemo />} />
                         </Routes>
                     </article>

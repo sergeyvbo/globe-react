@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Dispatch } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button, Avatar, Menu, ListItemIcon, ListItemText } from '@mui/material'
-import { Flag, Public, Settings, AccountCircle, Logout, Person } from '@mui/icons-material'
+import { Flag, Public, Settings, AccountCircle, Logout, Person, TrendingUp, EmojiEvents } from '@mui/icons-material'
 import { getString, getAuthString } from '../Localization/strings'
 import { getSettings } from '../Common/utils'
 import { CountryQuizSettings } from '../Common/types'
@@ -49,6 +49,18 @@ const MainMenu = () => {
         handleProfileMenuClose()
     }
 
+    const handleStatsNavigation = () => {
+        // Navigate to stats page
+        window.location.hash = '/stats'
+        handleProfileMenuClose()
+    }
+
+    const handleLeaderboardNavigation = () => {
+        // Navigate to leaderboard page
+        window.location.hash = '/leaderboard'
+        handleProfileMenuClose()
+    }
+
     return (
         <>
             <AppBar color='transparent' elevation={0}>
@@ -78,6 +90,14 @@ const MainMenu = () => {
                         href='/globe-react/#/states'>
                         USA
                     </Button>
+                    <IconButton
+                        size='large'
+                        color='primary'
+                        aria-label='leaderboard'
+                        href='/globe-react/#/leaderboard'
+                    >
+                        <EmojiEvents />
+                    </IconButton>
 
                     {/* Authentication UI */}
                     <Box sx={{ flexGrow: 1 }} />
@@ -108,6 +128,12 @@ const MainMenu = () => {
                                         <Person fontSize="small" />
                                     </ListItemIcon>
                                     <ListItemText>{getAuthString('profile')}</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleStatsNavigation}>
+                                    <ListItemIcon>
+                                        <TrendingUp fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Statistics</ListItemText>
                                 </MenuItem>
                                 <MenuItem onClick={handleLogout}>
                                     <ListItemIcon>
