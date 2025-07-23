@@ -1,5 +1,5 @@
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
@@ -9,6 +9,8 @@ import { useAuth } from "../Common/Auth/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
 import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
+import { useOfflineDetector } from "../Common/Network/useOfflineDetector"
+import { OfflineIndicator } from "../Common/Network/OfflineIndicator"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
@@ -19,6 +21,7 @@ const CountryQuiz = () => {
     const OPTIONS_SIZE = 3
 
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+    const { isOnline, isOffline } = useOfflineDetector()
 
     const geoData = geoJson as ExtendedFeatureCollection
     const flags = flagJson as CountryFlagData[]
@@ -42,6 +45,10 @@ const CountryQuiz = () => {
         wrongAnswers: 0,
         sessionStartTime: new Date()
     })
+
+    // Saving state
+    const [isSaving, setIsSaving] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
 
 
     useEffect(() => {
@@ -80,29 +87,55 @@ const CountryQuiz = () => {
         }
     }, [isAuthenticated, showAuthModal, user, correctScore, wrongScore])
 
-    // Save progress when authenticated user finishes a game session
-    useEffect(() => {
-        if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
-            // Save progress periodically for authenticated users
-            const saveProgress = async () => {
-                try {
-                    const currentSession = {
-                        ...gameSession,
-                        correctAnswers: correctScore,
-                        wrongAnswers: wrongScore,
-                        sessionEndTime: new Date()
-                    }
-                    
-                    // Save to temporary storage for unauthenticated users
-                    gameProgressService.saveTempSession(currentSession)
-                } catch (error) {
-                    console.error('Failed to save temporary progress:', error)
-                }
+    // Auto-save progress function
+    const autoSaveProgress = useCallback(async () => {
+        if (correctScore === 0 && wrongScore === 0) return
+
+        setIsSaving(true)
+        setSaveError(null)
+
+        try {
+            const currentSession: GameSession = {
+                ...gameSession,
+                correctAnswers: correctScore,
+                wrongAnswers: wrongScore,
+                sessionEndTime: new Date()
             }
-            
-            saveProgress()
+
+            if (isAuthenticated && user) {
+                // Save for authenticated users
+                await gameProgressService.saveGameProgress(user.id, 'countries', currentSession)
+                console.log('Progress auto-saved for authenticated user')
+            } else {
+                // Save temporarily for unauthenticated users
+                gameProgressService.saveTempSession(currentSession)
+                console.log('Progress saved temporarily for unauthenticated user')
+            }
+        } catch (error) {
+            console.error('Failed to auto-save progress:', error)
+            setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
+        } finally {
+            setIsSaving(false)
         }
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
+    }, [isAuthenticated, user, correctScore, wrongScore, gameSession, isOffline])
+
+    // Auto-save progress periodically and on score changes
+    useEffect(() => {
+        if (correctScore > 0 || wrongScore > 0) {
+            autoSaveProgress()
+        }
+    }, [correctScore, wrongScore, autoSaveProgress])
+
+    // Auto-save every 30 seconds during active gameplay
+    useEffect(() => {
+        if (correctScore === 0 && wrongScore === 0) return
+
+        const interval = setInterval(() => {
+            autoSaveProgress()
+        }, 30000) // 30 seconds
+
+        return () => clearInterval(interval)
+    }, [correctScore, wrongScore, autoSaveProgress])
 
     const startGame = () => {
 
@@ -168,7 +201,7 @@ const CountryQuiz = () => {
         return optionsArray
     }
 
-    const onSubmit = (isCorrect: boolean) => {
+    const onSubmit = async (isCorrect: boolean) => {
         if (isCorrect) {
             setCorrectScore(correctScore + 1)
         }
@@ -176,6 +209,14 @@ const CountryQuiz = () => {
             setWrongScore(wrongScore + 1)
         }
         setDisabled(true)
+
+        // Auto-save after each answer
+        try {
+            await autoSaveProgress()
+        } catch (error) {
+            console.error('Failed to save progress after answer:', error)
+        }
+
         setTimeout(() => {
             startGame()
             setDisabled(false)
@@ -233,11 +274,42 @@ const CountryQuiz = () => {
         }
     }
 
+    // Handle online/offline transitions
+    useEffect(() => {
+        if (isOnline && gameProgressService.hasPendingOfflineSessions()) {
+            // Try to sync offline sessions when coming back online
+            const syncOfflineSessions = async () => {
+                try {
+                    await gameProgressService.syncOfflineSessionsManually()
+                    console.log('Offline sessions synced successfully')
+                } catch (error) {
+                    console.error('Failed to sync offline sessions:', error)
+                }
+            }
+            
+            syncOfflineSessions()
+        }
+    }, [isOnline])
+
     // Save progress when user leaves or session ends
     useEffect(() => {
         const handleBeforeUnload = () => {
-            if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
-                saveGameSession()
+            if (correctScore > 0 || wrongScore > 0) {
+                // Use synchronous save for beforeunload
+                const currentSession: GameSession = {
+                    ...gameSession,
+                    correctAnswers: correctScore,
+                    wrongAnswers: wrongScore,
+                    sessionEndTime: new Date()
+                }
+
+                if (isAuthenticated && user) {
+                    // For authenticated users, try to save but don't block
+                    gameProgressService.saveGameProgress(user.id, 'countries', currentSession).catch(console.error)
+                } else {
+                    // For unauthenticated users, save to temp storage
+                    gameProgressService.saveTempSession(currentSession)
+                }
             }
         }
 
@@ -249,6 +321,30 @@ const CountryQuiz = () => {
         return (
             <div >
                 <MainMenu />
+                
+                {/* Offline Indicator */}
+                <OfflineIndicator />
+                
+                {/* Save Status Indicator */}
+                {(isSaving || saveError) && (
+                    <div 
+                        style={{
+                            position: 'fixed',
+                            top: '50px',
+                            right: '10px',
+                            padding: '8px 16px',
+                            borderRadius: '4px',
+                            fontSize: '12px',
+                            zIndex: 999,
+                            backgroundColor: saveError ? '#ff9800' : '#2196f3',
+                            color: 'white',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        {isSaving ? '💾 Saving...' : saveError}
+                    </div>
+                )}
+                
                 <Globe
                     geoData={geoData.features}
                     selectedCountry={correctOption?.name ?? ''}

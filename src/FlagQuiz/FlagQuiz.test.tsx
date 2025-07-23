@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { CountryQuiz } from './CountryQuiz'
+import { FlagQuiz } from './FlagQuiz'
 import { useAuth } from '../Common/Auth/AuthContext'
 import { useOfflineDetector } from '../Common/Network/useOfflineDetector'
 import { gameProgressService } from '../Common/GameProgress/GameProgressService'
@@ -10,112 +10,39 @@ vi.mock('../Common/Auth/AuthContext')
 vi.mock('../Common/Network/useOfflineDetector')
 vi.mock('../Common/GameProgress/GameProgressService')
 vi.mock('../Common/utils', () => ({
-  getSettings: () => ({
-    difficulty: 'medium',
-    language: 'en',
-    showPin: true,
-    showZoomButtons: true,
-    showBorders: true
-  }),
-  randomElement: (arr: any[]) => arr[0],
   shuffleArray: (arr: any[]) => arr
-}))
-
-// Mock geo data
-vi.mock('../Common/GeoData/geo.json', () => ({
-  default: {
-    features: [
-      {
-        properties: {
-          name: 'United States',
-          name_en: 'United States',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Northern America',
-          iso_a2: 'US'
-        }
-      },
-      {
-        properties: {
-          name: 'Canada',
-          name_en: 'Canada',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Northern America',
-          iso_a2: 'CA'
-        }
-      },
-      {
-        properties: {
-          name: 'Mexico',
-          name_en: 'Mexico',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Central America',
-          iso_a2: 'MX'
-        }
-      }
-    ]
-  }
 }))
 
 // Mock flag data
 vi.mock('../Common/GeoData/countryCodes2.json', () => ({
   default: [
-    { name: 'United States', code: 'us' },
-    { name: 'Canada', code: 'ca' },
-    { name: 'Mexico', code: 'mx' }
+    { name: 'United States', name_ru: 'США', code: 'us' },
+    { name: 'Canada', name_ru: 'Канада', code: 'ca' },
+    { name: 'Mexico', name_ru: 'Мексика', code: 'mx' },
+    { name: 'Brazil', name_ru: 'Бразилия', code: 'br' },
+    { name: 'Argentina', name_ru: 'Аргентина', code: 'ar' }
   ]
 }))
 
+// Mock CSS import
+vi.mock('./FlagQuiz.css', () => ({}))
+
 // Mock components
-vi.mock('../Globe/Globe', () => ({
-  Globe: ({ selectedCountry }: { selectedCountry: string }) => (
-    <div data-testid="globe">Globe: {selectedCountry}</div>
-  )
+vi.mock('./FlagMainMenu', () => ({
+  FlagMainMenu: () => <div data-testid="flag-main-menu">Flag Main Menu</div>
 }))
 
-vi.mock('../Quiz/Quiz', () => ({
-  Quiz: ({ onSubmit, disabled, correctOption }: any) => (
-    <div data-testid="quiz">
-      <button 
-        data-testid="correct-answer"
-        onClick={() => onSubmit(true)}
-        disabled={disabled}
-      >
-        {correctOption}
-      </button>
-      <button 
-        data-testid="wrong-answer"
-        onClick={() => onSubmit(false)}
-        disabled={disabled}
-      >
-        Wrong Answer
-      </button>
-    </div>
-  )
-}))
-
-vi.mock('./Score', () => ({
+vi.mock('../CountryQuiz/Score', () => ({
   Score: ({ correctScore, wrongScore }: { correctScore: number; wrongScore: number }) => (
     <div data-testid="score">Score: {correctScore}/{wrongScore}</div>
   )
-}))
-
-vi.mock('../MainMenu/MainMenu', () => ({
-  MainMenu: () => <div data-testid="main-menu">Main Menu</div>
-}))
-
-vi.mock('../Common/Auth/AuthModal', () => ({
-  AuthModal: ({ open }: { open: boolean }) => 
-    open ? <div data-testid="auth-modal">Auth Modal</div> : null
 }))
 
 const mockUseAuth = vi.mocked(useAuth)
 const mockUseOfflineDetector = vi.mocked(useOfflineDetector)
 const mockGameProgressService = vi.mocked(gameProgressService)
 
-describe('CountryQuiz', () => {
+describe('FlagQuiz', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
@@ -155,12 +82,21 @@ describe('CountryQuiz', () => {
   })
 
   it('renders the game components correctly', () => {
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
-    expect(screen.getByTestId('main-menu')).toBeInTheDocument()
-    expect(screen.getByTestId('globe')).toBeInTheDocument()
-    expect(screen.getByTestId('quiz')).toBeInTheDocument()
+    expect(screen.getByTestId('flag-main-menu')).toBeInTheDocument()
     expect(screen.getByTestId('score')).toBeInTheDocument()
+    
+    // Should render flag buttons
+    const flagButtons = screen.getAllByRole('button').filter(button => 
+      button.querySelector('img')
+    )
+    expect(flagButtons).toHaveLength(5)
+    
+    // Should render country buttons
+    expect(screen.getByText('США')).toBeInTheDocument()
+    expect(screen.getByText('Канада')).toBeInTheDocument()
+    expect(screen.getByText('Мексика')).toBeInTheDocument()
   })
 
   it('shows offline indicator when offline', () => {
@@ -174,12 +110,12 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
     expect(screen.getByText('🔴 Offline Mode')).toBeInTheDocument()
   })
 
-  it('saves progress automatically for authenticated users', async () => {
+  it('saves progress automatically for authenticated users when making matches', async () => {
     const mockUser = { id: 'user123', email: 'test@example.com' }
     mockUseAuth.mockReturnValue({
       user: mockUser,
@@ -194,18 +130,25 @@ describe('CountryQuiz', () => {
       clearError: vi.fn()
     })
 
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
-    // Answer a question correctly
-    const correctButton = screen.getByTestId('correct-answer')
-    fireEvent.click(correctButton)
+    // Click on US flag
+    const usFlag = screen.getAllByRole('button').find(button => 
+      button.querySelector('img[alt="us"]')
+    )
+    expect(usFlag).toBeTruthy()
+    fireEvent.click(usFlag!)
+    
+    // Click on USA country button
+    const usaCountry = screen.getByText('США')
+    fireEvent.click(usaCountry)
 
     await waitFor(() => {
       expect(mockGameProgressService.saveGameProgress).toHaveBeenCalledWith(
         'user123',
-        'countries',
+        'flags',
         expect.objectContaining({
-          gameType: 'countries',
+          gameType: 'flags',
           correctAnswers: 1,
           wrongAnswers: 0
         })
@@ -214,18 +157,54 @@ describe('CountryQuiz', () => {
   })
 
   it('saves progress temporarily for unauthenticated users', async () => {
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
-    // Answer a question correctly
-    const correctButton = screen.getByTestId('correct-answer')
-    fireEvent.click(correctButton)
+    // Click on US flag
+    const usFlag = screen.getAllByRole('button').find(button => 
+      button.querySelector('img[alt="us"]')
+    )
+    expect(usFlag).toBeTruthy()
+    fireEvent.click(usFlag!)
+    
+    // Click on USA country button
+    const usaCountry = screen.getByText('США')
+    fireEvent.click(usaCountry)
 
     await waitFor(() => {
       expect(mockGameProgressService.saveTempSession).toHaveBeenCalledWith(
         expect.objectContaining({
-          gameType: 'countries',
+          gameType: 'flags',
           correctAnswers: 1,
           wrongAnswers: 0
+        })
+      )
+    })
+  })
+
+  it('handles wrong matches correctly', async () => {
+    render(<FlagQuiz />)
+    
+    // Click on US flag
+    const usFlag = screen.getAllByRole('button').find(button => 
+      button.querySelector('img[alt="us"]')
+    )
+    expect(usFlag).toBeTruthy()
+    fireEvent.click(usFlag!)
+    
+    // Click on wrong country (Canada instead of USA)
+    const canadaCountry = screen.getByText('Канада')
+    fireEvent.click(canadaCountry)
+
+    await waitFor(() => {
+      expect(screen.getByText('Score: 0/1')).toBeInTheDocument()
+    })
+
+    await waitFor(() => {
+      expect(mockGameProgressService.saveTempSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gameType: 'flags',
+          correctAnswers: 0,
+          wrongAnswers: 1
         })
       )
     })
@@ -259,11 +238,16 @@ describe('CountryQuiz', () => {
     // Mock save to fail (simulating offline)
     mockGameProgressService.saveGameProgress = vi.fn().mockRejectedValue(new Error('Network error'))
 
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
-    // Answer a question correctly
-    const correctButton = screen.getByTestId('correct-answer')
-    fireEvent.click(correctButton)
+    // Make a correct match
+    const usFlag = screen.getAllByRole('button').find(button => 
+      button.querySelector('img[alt="us"]')
+    )
+    fireEvent.click(usFlag!)
+    
+    const usaCountry = screen.getByText('США')
+    fireEvent.click(usaCountry)
 
     await waitFor(() => {
       expect(screen.getByText('Saved offline - will sync when online')).toBeInTheDocument()
@@ -284,7 +268,7 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    const { rerender } = render(<CountryQuiz />)
+    const { rerender } = render(<FlagQuiz />)
 
     // Come back online
     mockUseOfflineDetector.mockReturnValue({
@@ -297,52 +281,38 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    rerender(<CountryQuiz />)
+    rerender(<FlagQuiz />)
 
     await waitFor(() => {
       expect(mockGameProgressService.syncOfflineSessionsManually).toHaveBeenCalled()
     })
   })
 
-  it('updates score correctly when answering questions', async () => {
-    render(<CountryQuiz />)
+  it('shows continue button when all matches are completed', async () => {
+    render(<FlagQuiz />)
     
-    // Answer correctly
-    const correctButton = screen.getByTestId('correct-answer')
-    fireEvent.click(correctButton)
+    // Make all 5 matches
+    const countries = ['США', 'Канада', 'Мексика', 'Бразилия', 'Аргентина']
+    const flags = ['us', 'ca', 'mx', 'br', 'ar']
+    
+    for (let i = 0; i < 5; i++) {
+      // Click flag
+      const flag = screen.getAllByRole('button').find(button => 
+        button.querySelector(`img[alt="${flags[i]}"]`)
+      )
+      fireEvent.click(flag!)
+      
+      // Click corresponding country
+      const country = screen.getByText(countries[i])
+      fireEvent.click(country)
+      
+      // Wait a bit for state updates
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
 
     await waitFor(() => {
-      expect(screen.getByText('Score: 1/0')).toBeInTheDocument()
+      expect(screen.getByText('Продолжить')).toBeInTheDocument()
     })
-
-    // Wait for the timeout and answer incorrectly
-    await new Promise(resolve => setTimeout(resolve, 2100))
-    
-    const wrongButton = screen.getByTestId('wrong-answer')
-    fireEvent.click(wrongButton)
-
-    await waitFor(() => {
-      expect(screen.getByText('Score: 1/1')).toBeInTheDocument()
-    })
-  })
-
-  it('shows auth modal for unauthenticated users', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      login: vi.fn(),
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
-      changePassword: vi.fn(),
-      error: null,
-      clearError: vi.fn()
-    })
-
-    render(<CountryQuiz />)
-    
-    expect(screen.getByTestId('auth-modal')).toBeInTheDocument()
   })
 
   it('shows saving indicator when saving progress', async () => {
@@ -365,11 +335,16 @@ describe('CountryQuiz', () => {
       () => new Promise(resolve => setTimeout(resolve, 1000))
     )
 
-    render(<CountryQuiz />)
+    render(<FlagQuiz />)
     
-    // Answer a question correctly
-    const correctButton = screen.getByTestId('correct-answer')
-    fireEvent.click(correctButton)
+    // Make a match
+    const usFlag = screen.getAllByRole('button').find(button => 
+      button.querySelector('img[alt="us"]')
+    )
+    fireEvent.click(usFlag!)
+    
+    const usaCountry = screen.getByText('США')
+    fireEvent.click(usaCountry)
 
     // Should show saving indicator
     expect(screen.getByText('💾 Saving...')).toBeInTheDocument()

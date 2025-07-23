@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { CountryQuiz } from './CountryQuiz'
+import { StateQuiz } from './StateQuiz'
 import { useAuth } from '../Common/Auth/AuthContext'
 import { useOfflineDetector } from '../Common/Network/useOfflineDetector'
 import { gameProgressService } from '../Common/GameProgress/GameProgressService'
@@ -22,56 +22,35 @@ vi.mock('../Common/utils', () => ({
 }))
 
 // Mock geo data
-vi.mock('../Common/GeoData/geo.json', () => ({
+vi.mock('../Common/GeoData/us.json', () => ({
   default: {
     features: [
       {
         properties: {
-          name: 'United States',
-          name_en: 'United States',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Northern America',
-          iso_a2: 'US'
+          NAME: 'California',
+          STATE: 'CA'
         }
       },
       {
         properties: {
-          name: 'Canada',
-          name_en: 'Canada',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Northern America',
-          iso_a2: 'CA'
+          NAME: 'Texas',
+          STATE: 'TX'
         }
       },
       {
         properties: {
-          name: 'Mexico',
-          name_en: 'Mexico',
-          type: 'Country',
-          continent: 'North America',
-          subregion: 'Central America',
-          iso_a2: 'MX'
+          NAME: 'Florida',
+          STATE: 'FL'
         }
       }
     ]
   }
 }))
 
-// Mock flag data
-vi.mock('../Common/GeoData/countryCodes2.json', () => ({
-  default: [
-    { name: 'United States', code: 'us' },
-    { name: 'Canada', code: 'ca' },
-    { name: 'Mexico', code: 'mx' }
-  ]
-}))
-
 // Mock components
-vi.mock('../Globe/Globe', () => ({
-  Globe: ({ selectedCountry }: { selectedCountry: string }) => (
-    <div data-testid="globe">Globe: {selectedCountry}</div>
+vi.mock('./Map', () => ({
+  Map: ({ selected }: { selected: string }) => (
+    <div data-testid="map">Map: {selected}</div>
   )
 }))
 
@@ -96,26 +75,21 @@ vi.mock('../Quiz/Quiz', () => ({
   )
 }))
 
-vi.mock('./Score', () => ({
+vi.mock('../CountryQuiz/Score', () => ({
   Score: ({ correctScore, wrongScore }: { correctScore: number; wrongScore: number }) => (
     <div data-testid="score">Score: {correctScore}/{wrongScore}</div>
   )
 }))
 
-vi.mock('../MainMenu/MainMenu', () => ({
-  MainMenu: () => <div data-testid="main-menu">Main Menu</div>
-}))
-
-vi.mock('../Common/Auth/AuthModal', () => ({
-  AuthModal: ({ open }: { open: boolean }) => 
-    open ? <div data-testid="auth-modal">Auth Modal</div> : null
+vi.mock('../CountryQuiz/CountryMainMenu', () => ({
+  CountryMainMenu: () => <div data-testid="country-main-menu">Country Main Menu</div>
 }))
 
 const mockUseAuth = vi.mocked(useAuth)
 const mockUseOfflineDetector = vi.mocked(useOfflineDetector)
 const mockGameProgressService = vi.mocked(gameProgressService)
 
-describe('CountryQuiz', () => {
+describe('StateQuiz', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks()
@@ -155,10 +129,10 @@ describe('CountryQuiz', () => {
   })
 
   it('renders the game components correctly', () => {
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
-    expect(screen.getByTestId('main-menu')).toBeInTheDocument()
-    expect(screen.getByTestId('globe')).toBeInTheDocument()
+    expect(screen.getByTestId('country-main-menu')).toBeInTheDocument()
+    expect(screen.getByTestId('map')).toBeInTheDocument()
     expect(screen.getByTestId('quiz')).toBeInTheDocument()
     expect(screen.getByTestId('score')).toBeInTheDocument()
   })
@@ -174,7 +148,7 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     expect(screen.getByText('🔴 Offline Mode')).toBeInTheDocument()
   })
@@ -194,7 +168,7 @@ describe('CountryQuiz', () => {
       clearError: vi.fn()
     })
 
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     // Answer a question correctly
     const correctButton = screen.getByTestId('correct-answer')
@@ -203,9 +177,9 @@ describe('CountryQuiz', () => {
     await waitFor(() => {
       expect(mockGameProgressService.saveGameProgress).toHaveBeenCalledWith(
         'user123',
-        'countries',
+        'states',
         expect.objectContaining({
-          gameType: 'countries',
+          gameType: 'states',
           correctAnswers: 1,
           wrongAnswers: 0
         })
@@ -214,7 +188,7 @@ describe('CountryQuiz', () => {
   })
 
   it('saves progress temporarily for unauthenticated users', async () => {
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     // Answer a question correctly
     const correctButton = screen.getByTestId('correct-answer')
@@ -223,7 +197,7 @@ describe('CountryQuiz', () => {
     await waitFor(() => {
       expect(mockGameProgressService.saveTempSession).toHaveBeenCalledWith(
         expect.objectContaining({
-          gameType: 'countries',
+          gameType: 'states',
           correctAnswers: 1,
           wrongAnswers: 0
         })
@@ -259,7 +233,7 @@ describe('CountryQuiz', () => {
     // Mock save to fail (simulating offline)
     mockGameProgressService.saveGameProgress = vi.fn().mockRejectedValue(new Error('Network error'))
 
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     // Answer a question correctly
     const correctButton = screen.getByTestId('correct-answer')
@@ -284,7 +258,7 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    const { rerender } = render(<CountryQuiz />)
+    const { rerender } = render(<StateQuiz />)
 
     // Come back online
     mockUseOfflineDetector.mockReturnValue({
@@ -297,7 +271,7 @@ describe('CountryQuiz', () => {
       testConnectivity: vi.fn()
     })
 
-    rerender(<CountryQuiz />)
+    rerender(<StateQuiz />)
 
     await waitFor(() => {
       expect(mockGameProgressService.syncOfflineSessionsManually).toHaveBeenCalled()
@@ -305,7 +279,7 @@ describe('CountryQuiz', () => {
   })
 
   it('updates score correctly when answering questions', async () => {
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     // Answer correctly
     const correctButton = screen.getByTestId('correct-answer')
@@ -324,25 +298,6 @@ describe('CountryQuiz', () => {
     await waitFor(() => {
       expect(screen.getByText('Score: 1/1')).toBeInTheDocument()
     })
-  })
-
-  it('shows auth modal for unauthenticated users', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      login: vi.fn(),
-      register: vi.fn(),
-      logout: vi.fn(),
-      updateProfile: vi.fn(),
-      changePassword: vi.fn(),
-      error: null,
-      clearError: vi.fn()
-    })
-
-    render(<CountryQuiz />)
-    
-    expect(screen.getByTestId('auth-modal')).toBeInTheDocument()
   })
 
   it('shows saving indicator when saving progress', async () => {
@@ -365,7 +320,7 @@ describe('CountryQuiz', () => {
       () => new Promise(resolve => setTimeout(resolve, 1000))
     )
 
-    render(<CountryQuiz />)
+    render(<StateQuiz />)
     
     // Answer a question correctly
     const correctButton = screen.getByTestId('correct-answer')
@@ -378,5 +333,19 @@ describe('CountryQuiz', () => {
     await waitFor(() => {
       expect(screen.queryByText('💾 Saving...')).not.toBeInTheDocument()
     }, { timeout: 2000 })
+  })
+
+  it('displays the correct state name in the map', () => {
+    render(<StateQuiz />)
+    
+    // Should show California (first state from mocked data)
+    expect(screen.getByText('Map: California')).toBeInTheDocument()
+  })
+
+  it('displays the correct state name in the quiz', () => {
+    render(<StateQuiz />)
+    
+    // Should show California as the correct answer
+    expect(screen.getByText('California')).toBeInTheDocument()
   })
 })

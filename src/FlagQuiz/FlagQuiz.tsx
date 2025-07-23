@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button, Grid, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
@@ -6,6 +6,8 @@ import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
 import { useAuth } from '../Common/Auth/AuthContext';
 import { gameProgressService, GameSession } from '../Common/GameProgress/GameProgressService';
+import { useOfflineDetector } from '../Common/Network/useOfflineDetector';
+import { OfflineIndicator } from '../Common/Network/OfflineIndicator';
 import flagJson from '../Common/GeoData/countryCodes2.json'
 import { CountryFlagData } from '../Common/types';
 
@@ -20,6 +22,7 @@ export const FlagQuiz = () => {
     const OPTIONS_LENGTH = 5
 
     const { user, isAuthenticated } = useAuth()
+    const { isOnline, isOffline } = useOfflineDetector()
 
     //const [data, setData] = useState<Country[]>([])
     const [countries, setCountries] = useState<CountryFlagData[]>([])
@@ -38,6 +41,10 @@ export const FlagQuiz = () => {
         wrongAnswers: 0,
         sessionStartTime: new Date()
     })
+
+    // Saving state
+    const [isSaving, setIsSaving] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
 
     const data = flagJson as CountryFlagData[]
 
@@ -59,43 +66,105 @@ export const FlagQuiz = () => {
         }))
     }, [correctScore, wrongScore])
 
-    // Save progress when authenticated user finishes a round
-    useEffect(() => {
-        if (isAuthenticated && user && OPTIONS_LENGTH === matches.length) {
-            saveGameSession()
+    // Auto-save progress function
+    const autoSaveProgress = useCallback(async () => {
+        if (correctScore === 0 && wrongScore === 0) return
+
+        setIsSaving(true)
+        setSaveError(null)
+
+        try {
+            const currentSession: GameSession = {
+                ...gameSession,
+                correctAnswers: correctScore,
+                wrongAnswers: wrongScore,
+                sessionEndTime: new Date()
+            }
+
+            if (isAuthenticated && user) {
+                // Save for authenticated users
+                await gameProgressService.saveGameProgress(user.id, 'flags', currentSession)
+                console.log('Flag quiz progress auto-saved for authenticated user')
+            } else {
+                // Save temporarily for unauthenticated users
+                gameProgressService.saveTempSession(currentSession)
+                console.log('Flag quiz progress saved temporarily for unauthenticated user')
+            }
+        } catch (error) {
+            console.error('Failed to auto-save flag quiz progress:', error)
+            setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
+        } finally {
+            setIsSaving(false)
         }
-    }, [isAuthenticated, user, matches.length])
+    }, [isAuthenticated, user, correctScore, wrongScore, gameSession, isOffline])
+
+    // Auto-save progress on score changes and round completion
+    useEffect(() => {
+        if (correctScore > 0 || wrongScore > 0) {
+            autoSaveProgress()
+        }
+    }, [correctScore, wrongScore, autoSaveProgress])
+
+    // Auto-save when round is completed
+    useEffect(() => {
+        if (OPTIONS_LENGTH === matches.length && (correctScore > 0 || wrongScore > 0)) {
+            autoSaveProgress()
+        }
+    }, [matches.length, correctScore, wrongScore, autoSaveProgress])
+
+    // Auto-save every 30 seconds during active gameplay
+    useEffect(() => {
+        if (correctScore === 0 && wrongScore === 0) return
+
+        const interval = setInterval(() => {
+            autoSaveProgress()
+        }, 30000) // 30 seconds
+
+        return () => clearInterval(interval)
+    }, [correctScore, wrongScore, autoSaveProgress])
+
+    // Handle online/offline transitions
+    useEffect(() => {
+        if (isOnline && gameProgressService.hasPendingOfflineSessions()) {
+            // Try to sync offline sessions when coming back online
+            const syncOfflineSessions = async () => {
+                try {
+                    await gameProgressService.syncOfflineSessionsManually()
+                    console.log('Offline flag quiz sessions synced successfully')
+                } catch (error) {
+                    console.error('Failed to sync offline flag quiz sessions:', error)
+                }
+            }
+            
+            syncOfflineSessions()
+        }
+    }, [isOnline])
 
     // Save progress when user leaves
     useEffect(() => {
         const handleBeforeUnload = () => {
-            if (isAuthenticated && user && (correctScore > 0 || wrongScore > 0)) {
-                saveGameSession()
+            if (correctScore > 0 || wrongScore > 0) {
+                // Use synchronous save for beforeunload
+                const currentSession: GameSession = {
+                    ...gameSession,
+                    correctAnswers: correctScore,
+                    wrongAnswers: wrongScore,
+                    sessionEndTime: new Date()
+                }
+
+                if (isAuthenticated && user) {
+                    // For authenticated users, try to save but don't block
+                    gameProgressService.saveGameProgress(user.id, 'flags', currentSession).catch(console.error)
+                } else {
+                    // For unauthenticated users, save to temp storage
+                    gameProgressService.saveTempSession(currentSession)
+                }
             }
         }
 
         window.addEventListener('beforeunload', handleBeforeUnload)
         return () => window.removeEventListener('beforeunload', handleBeforeUnload)
     }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
-
-    // Save progress when game session ends (for authenticated users)
-    const saveGameSession = async () => {
-        if (!isAuthenticated || !user) return
-        
-        try {
-            const sessionToSave: GameSession = {
-                ...gameSession,
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionEndTime: new Date()
-            }
-            
-            await gameProgressService.saveGameProgress(user.id, 'flags', sessionToSave)
-            console.log('Flag quiz session saved:', sessionToSave)
-        } catch (error) {
-            console.error('Failed to save flag quiz session:', error)
-        }
-    }
 
     const startGame = (countryList: CountryFlagData[]) => {
         setMatches([])
@@ -135,7 +204,7 @@ export const FlagQuiz = () => {
         setSelectedCountry(name)
     };
 
-    const checkMatch = (match: Match) => {
+    const checkMatch = async (match: Match) => {
         if (countries.find(x => x.code === match.flag && x.name === match.country)) {
             setMatches([...matches, match])
             setCorrectScore(correctScore + 1)
@@ -147,6 +216,13 @@ export const FlagQuiz = () => {
                 console.log('reset error')
                 setError(undefined)
             }, 1000)
+        }
+
+        // Auto-save after each match attempt
+        try {
+            await autoSaveProgress()
+        } catch (error) {
+            console.error('Failed to save progress after match:', error)
         }
     }
 
@@ -181,6 +257,30 @@ export const FlagQuiz = () => {
     return (
         <>
             <FlagMainMenu />
+            
+            {/* Offline Indicator */}
+            <OfflineIndicator />
+            
+            {/* Save Status Indicator */}
+            {(isSaving || saveError) && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        top: '50px',
+                        right: '10px',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        zIndex: 999,
+                        backgroundColor: saveError ? '#ff9800' : '#2196f3',
+                        color: 'white',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    }}
+                >
+                    {isSaving ? '💾 Saving...' : saveError}
+                </div>
+            )}
+            
             <Box
                 height={'90dvh'}
                 width={'100%'}
