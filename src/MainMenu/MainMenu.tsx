@@ -94,7 +94,7 @@ const MainMenu = () => {
                         size='large'
                         color='primary'
                         aria-label='leaderboard'
-                        href='/globe-react/#/leaderboard'
+                        onClick={handleLeaderboardNavigation}
                     >
                         <EmojiEvents />
                     </IconButton>
@@ -134,6 +134,12 @@ const MainMenu = () => {
                                         <TrendingUp fontSize="small" />
                                     </ListItemIcon>
                                     <ListItemText>Statistics</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleLeaderboardNavigation}>
+                                    <ListItemIcon>
+                                        <EmojiEvents fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Leaderboard</ListItemText>
                                 </MenuItem>
                                 <MenuItem onClick={handleLogout}>
                                     <ListItemIcon>

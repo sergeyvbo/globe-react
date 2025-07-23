@@ -36,6 +36,12 @@ vi.mock('./Common/UserProfile', () => ({
   UserProfile: () => <div data-testid="user-profile">User Profile</div>
 }))
 
+// Mock the Statistics components
+vi.mock('./Statistics', () => ({
+  StatsPage: () => <div data-testid="stats-page">Stats Page</div>,
+  LeaderboardPage: () => <div data-testid="leaderboard-page">Leaderboard Page</div>
+}))
+
 describe('App Routing', () => {
   beforeEach(() => {
     // Reset window location hash
@@ -72,6 +78,12 @@ describe('App Routing', () => {
     // Should show the "must be logged in" message from ProtectedRoute
     expect(screen.getByText(/you must be logged in/i)).toBeInTheDocument()
     expect(screen.getByText(/back to home/i)).toBeInTheDocument()
+  })
+
+  test('renders LeaderboardPage for /leaderboard route', () => {
+    window.location.hash = '#/leaderboard'
+    render(<App />)
+    expect(screen.getByTestId('leaderboard-page')).toBeInTheDocument()
   })
 })
 
