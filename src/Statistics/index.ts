@@ -3,3 +3,4 @@
 
 export { UserStats } from './UserStats'
 export { GameHistory } from './GameHistory'
+export { Leaderboard } from './Leaderboard'
