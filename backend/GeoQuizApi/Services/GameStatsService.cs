@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
+using GeoQuizApi.Models;
+using GeoQuizApi.Middleware;
 
 namespace GeoQuizApi.Services;
 
@@ -21,12 +23,17 @@ public class GameStatsService : IGameStatsService
         // Validate input
         if (string.IsNullOrWhiteSpace(gameType))
         {
-            throw new ArgumentException("Game type is required", nameof(gameType));
+            throw new ValidationException("gameType", "Game type is required");
+        }
+
+        if (!GeoQuizApi.Models.GameTypes.IsValid(gameType))
+        {
+            throw new ValidationException("gameType", $"Invalid game type. Valid types: {string.Join(", ", GeoQuizApi.Models.GameTypes.ValidGameTypes)}");
         }
 
         if (correctAnswers < 0 || wrongAnswers < 0)
         {
-            throw new ArgumentException("Answer counts cannot be negative");
+            throw new ValidationException("answers", "Answer counts cannot be negative");
         }
 
         // Verify user exists

@@ -205,7 +205,7 @@ public class LeaderboardController : ControllerBase
     {
         return Ok(new
         {
-            gameTypes = GameTypes.ValidGameTypes,
+            gameTypes = GeoQuizApi.Models.GameTypes.ValidGameTypes,
             description = "Valid game types for leaderboard filtering"
         });
     }
@@ -220,7 +220,7 @@ public class LeaderboardController : ControllerBase
     {
         return Ok(new
         {
-            periods = LeaderboardPeriods.ValidPeriods,
+            periods = GeoQuizApi.Models.LeaderboardPeriods.ValidPeriods,
             description = "Valid time periods for leaderboard filtering"
         });
     }

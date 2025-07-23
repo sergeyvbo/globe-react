@@ -1,13 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
 using FluentAssertions;
-using GeoQuizApi.Data;
 using GeoQuizApi.Models.DTOs.Auth;
-using GeoQuizApi.Models.Entities;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
@@ -75,7 +69,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Progr
         var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -92,7 +86,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Progr
         var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]

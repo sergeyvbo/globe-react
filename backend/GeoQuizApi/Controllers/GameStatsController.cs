@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using GeoQuizApi.Models.DTOs.GameStats;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Services;
+using GeoQuizApi.Middleware;
 
 namespace GeoQuizApi.Controllers;
 
@@ -42,7 +43,21 @@ public class GameStatsController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("SaveGameSession called with GameType: {GameType}, CorrectAnswers: {CorrectAnswers}, WrongAnswers: {WrongAnswers}", 
+                request?.GameType, request?.CorrectAnswers, request?.WrongAnswers);
+
+            // Check model state first
+            if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state for SaveGameSession: {Errors}", 
+                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+                return BadRequest(ModelState);
+            }
+
             var userId = GetCurrentUserId();
+            _logger.LogInformation("SaveGameSession for user: {UserId}", userId);
+            
+            _logger.LogInformation("Calling SaveGameSessionAsync with GameType: {GameType}", request.GameType);
             
             var gameSession = await _gameStatsService.SaveGameSessionAsync(
                 userId,
@@ -52,11 +67,19 @@ public class GameStatsController : ControllerBase
                 request.SessionStartTime,
                 request.SessionEndTime);
 
+            _logger.LogInformation("SaveGameSessionAsync completed successfully");
+
             var response = MapToGameSessionDto(gameSession);
-            return CreatedAtAction(nameof(GetUserStats), response);
+            return Ok(response);
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning("Validation error in SaveGameSession: {Message}, Details: {Details}", ex.Message, ex.Errors);
+            return UnprocessableEntity(new { error = ex.Message, details = ex.Errors });
         }
         catch (ArgumentException ex)
         {
+            _logger.LogWarning("Argument error in SaveGameSession: {Message}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)

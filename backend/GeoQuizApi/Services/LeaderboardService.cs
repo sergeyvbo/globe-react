@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.DTOs.Leaderboard;
 using GeoQuizApi.Models.Entities;
+using GeoQuizApi.Models;
 
 namespace GeoQuizApi.Services;
 
@@ -34,9 +35,9 @@ public class LeaderboardService : ILeaderboardService
             throw new ArgumentException("Game type is required", nameof(gameType));
         }
 
-        if (!GameTypes.ValidGameTypes.Contains(gameType.ToLowerInvariant()))
+        if (!GeoQuizApi.Models.GameTypes.ValidGameTypes.Contains(gameType.ToLowerInvariant()))
         {
-            throw new ArgumentException($"Invalid game type. Valid types: {string.Join(", ", GameTypes.ValidGameTypes)}", nameof(gameType));
+            throw new ArgumentException($"Invalid game type. Valid types: {string.Join(", ", GeoQuizApi.Models.GameTypes.ValidGameTypes)}", nameof(gameType));
         }
 
         return await GetFilteredLeaderboardAsync(gameType.ToLowerInvariant(), null, page, pageSize, currentUserId);
@@ -49,9 +50,9 @@ public class LeaderboardService : ILeaderboardService
             throw new ArgumentException("Period is required", nameof(period));
         }
 
-        if (!LeaderboardPeriods.ValidPeriods.Contains(period.ToLowerInvariant()))
+        if (!GeoQuizApi.Models.LeaderboardPeriods.ValidPeriods.Contains(period.ToLowerInvariant()))
         {
-            throw new ArgumentException($"Invalid period. Valid periods: {string.Join(", ", LeaderboardPeriods.ValidPeriods)}", nameof(period));
+            throw new ArgumentException($"Invalid period. Valid periods: {string.Join(", ", GeoQuizApi.Models.LeaderboardPeriods.ValidPeriods)}", nameof(period));
         }
 
         return await GetFilteredLeaderboardAsync(null, period.ToLowerInvariant(), page, pageSize, currentUserId);

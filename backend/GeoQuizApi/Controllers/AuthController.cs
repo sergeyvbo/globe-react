@@ -59,6 +59,9 @@ public class AuthController : ControllerBase
                 ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
             };
 
+            _logger.LogInformation("Registration successful for {Email}, AccessToken length: {TokenLength}", 
+                request.Email, accessToken?.Length ?? 0);
+
             return StatusCode(201, response);
         }
         catch (ArgumentException ex)

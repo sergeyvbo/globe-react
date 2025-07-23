@@ -58,10 +58,10 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 services.Remove(service);
             }
 
-            // Add in-memory database for testing
+            // Add in-memory database for testing - use a static name to share across requests
             services.AddDbContext<GeoQuizDbContext>(options =>
             {
-                options.UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}");
+                options.UseInMemoryDatabase(databaseName: "TestDb_Shared");
                 options.EnableSensitiveDataLogging();
             });
 
