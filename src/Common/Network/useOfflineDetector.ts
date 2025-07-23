@@ -9,21 +9,27 @@ export interface UseOfflineDetectorResult {
 }
 
 export const useOfflineDetector = (): UseOfflineDetectorResult => {
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(
-    offlineDetector.getStatus()
-  )
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>(() => {
+    const status = offlineDetector.getStatus()
+    return status || {
+      isOnline: navigator.onLine,
+      isOffline: !navigator.onLine
+    }
+  })
 
   useEffect(() => {
     const unsubscribe = offlineDetector.subscribe((status) => {
-      setNetworkStatus(status)
+      if (status) {
+        setNetworkStatus(status)
+      }
     })
 
     return unsubscribe
   }, [])
 
   return {
-    isOnline: networkStatus.isOnline,
-    isOffline: networkStatus.isOffline,
+    isOnline: networkStatus?.isOnline ?? navigator.onLine,
+    isOffline: networkStatus?.isOffline ?? !navigator.onLine,
     networkStatus,
     testConnectivity: offlineDetector.testConnectivity.bind(offlineDetector)
   }

@@ -7,6 +7,8 @@ import {
   AnonymousGameSession 
 } from '../types'
 import { gameStatsApiService } from './GameStatsApiService'
+import { offlineSyncService } from '../Network/OfflineSyncService'
+import { offlineDetector } from '../Network/OfflineDetector'
 
 export interface GameSession {
   gameType: GameType
@@ -42,17 +44,17 @@ class GameProgressService {
   // Save game progress for authenticated users
   async saveGameProgress(userId: string, gameType: GameType, session: GameSession): Promise<void> {
     try {
-      // Try to save to server first if user is authenticated
-      if (gameStatsApiService.isAuthenticated()) {
+      const sessionRequest: GameSessionRequest = {
+        gameType,
+        correctAnswers: session.correctAnswers,
+        wrongAnswers: session.wrongAnswers,
+        sessionStartTime: session.sessionStartTime.toISOString(),
+        sessionEndTime: (session.sessionEndTime || new Date()).toISOString()
+      }
+
+      // Try to save to server first if user is authenticated and online
+      if (gameStatsApiService.isAuthenticated() && offlineDetector.isOnline()) {
         try {
-          const sessionRequest: GameSessionRequest = {
-            gameType,
-            correctAnswers: session.correctAnswers,
-            wrongAnswers: session.wrongAnswers,
-            sessionStartTime: session.sessionStartTime.toISOString(),
-            sessionEndTime: (session.sessionEndTime || new Date()).toISOString()
-          }
-          
           await gameStatsApiService.saveGameSession(sessionRequest)
           console.log('Game session saved to server successfully', { userId, gameType, session })
           
@@ -61,14 +63,18 @@ class GameProgressService {
           
           return
         } catch (error) {
-          console.warn('Failed to save to server, falling back to local storage:', error)
+          console.warn('Failed to save to server, adding to offline sync queue:', error)
           
-          // Add to offline queue for later sync
-          await this.addToOfflineQueue(sessionRequest)
+          // Add to offline sync service for later sync
+          await offlineSyncService.addPendingAction('game_session', sessionRequest)
         }
+      } else if (gameStatsApiService.isAuthenticated() && !offlineDetector.isOnline()) {
+        // User is authenticated but offline - add to sync queue
+        console.log('User authenticated but offline, adding to sync queue')
+        await offlineSyncService.addPendingAction('game_session', sessionRequest)
       }
       
-      // Fallback to local storage
+      // Always save locally as fallback/cache
       await this.saveGameProgressLocally(userId, gameType, session)
       
     } catch (error) {
