@@ -302,7 +302,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Progr
         var password = "TestPassword123";
         var originalName = "Original Name";
         var newName = "Updated Name";
-        var newAvatar = "new-avatar.jpg";
+        var newAvatar = "https://example.com/new-avatar.jpg";
         
         // Register user
         var registerRequest = new RegisterRequest
@@ -421,7 +421,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Progr
         // Arrange
         var email = "logout@example.com";
         var password = "TestPassword123";
-        
+
         // Register user
         var registerRequest = new RegisterRequest
         {
@@ -432,11 +432,15 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Progr
         var authResponse = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
 
         // Set authorization header
-        _client.DefaultRequestHeaders.Authorization = 
+        _client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", authResponse!.AccessToken);
 
         // Act
-        var response = await _client.PostAsync("/api/auth/logout", null);
+        var refreshTokenRequest = new RefreshTokenRequest
+        {
+            RefreshToken = authResponse!.RefreshToken
+        };
+        var response = await _client.PostAsJsonAsync("/api/auth/logout", refreshTokenRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

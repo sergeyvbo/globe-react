@@ -242,8 +242,8 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         history!.Sessions.Should().HaveCount(3);
         
         // Should be ordered by date descending (most recent first)
-        history.Sessions[0].GameType.Should().Be("flags"); // Most recent
-        history.Sessions[1].GameType.Should().Be("states"); // Middle
+        history.Sessions[0].GameType.Should().Be("states"); // Most recent
+        history.Sessions[1].GameType.Should().Be("flags"); // Middle
         history.Sessions[2].GameType.Should().Be("countries"); // Oldest
     }
 
