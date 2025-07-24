@@ -8,15 +8,20 @@ using GeoQuizApi.Models.DTOs.Leaderboard;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class LeaderboardControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
+public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
 {
-    private readonly TestWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public LeaderboardControllerTests(TestWebApplicationFactory<Program> factory)
+    public LeaderboardControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory;
-        _client = _factory.CreateClient();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await ClearDatabaseAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     private async Task<string> CreateUserWithGameSessionsAsync(string email, string name, List<GameSessionRequest> sessions)

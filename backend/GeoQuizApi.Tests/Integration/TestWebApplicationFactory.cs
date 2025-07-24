@@ -58,7 +58,7 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 services.Remove(service);
             }
 
-            // Add in-memory database for testing - use a static name to share across requests
+            // Add in-memory database for testing - use a static name to share across requests within a test
             services.AddDbContext<GeoQuizDbContext>(options =>
             {
                 options.UseInMemoryDatabase(databaseName: "TestDb_Shared")

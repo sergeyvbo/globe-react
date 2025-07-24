@@ -6,15 +6,20 @@ using GeoQuizApi.Models.DTOs.Auth;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class AuthControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
+public class AuthControllerTests : BaseIntegrationTest, IAsyncLifetime
 {
-    private readonly TestWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public AuthControllerTests(TestWebApplicationFactory<Program> factory)
+    public AuthControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory;
-        _client = _factory.CreateClient();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await ClearDatabaseAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     [Fact]

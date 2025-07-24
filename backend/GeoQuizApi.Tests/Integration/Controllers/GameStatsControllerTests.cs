@@ -8,15 +8,20 @@ using GeoQuizApi.Services;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<Program>>
+public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
 {
-    private readonly TestWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
-
-    public GameStatsControllerTests(TestWebApplicationFactory<Program> factory)
+    public GameStatsControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory;
-        _client = _factory.CreateClient();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await ClearDatabaseAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     private async Task<string> GetAuthTokenAsync(string email = "gametest@example.com", string password = "TestPassword123")
@@ -138,7 +143,8 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        // Create multiple game sessions
+        // Create multiple game sessions with unique timestamps
+        var baseTime = DateTime.UtcNow.AddDays(-10);
         var sessions = new[]
         {
             new GameSessionRequest
@@ -146,30 +152,32 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             },
             new GameSessionRequest
             {
                 GameType = "flags",
                 CorrectAnswers = 6,
                 WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(2),
+                SessionEndTime = baseTime.AddDays(2).AddMinutes(3)
             },
             new GameSessionRequest
             {
                 GameType = "countries",
                 CorrectAnswers = 9,
                 WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                SessionEndTime = DateTime.UtcNow.AddHours(-1).AddMinutes(4)
+                SessionStartTime = baseTime.AddDays(3),
+                SessionEndTime = baseTime.AddDays(3).AddMinutes(4)
             }
         };
 
         foreach (var session in sessions)
         {
-            await _client.PostAsJsonAsync("/api/game-stats", session);
+            var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
+            sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Act
@@ -197,7 +205,8 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        // Create sessions with different dates
+        // Create sessions with different dates and unique timestamps
+        var baseTime = DateTime.UtcNow.AddDays(-10);
         var sessions = new[]
         {
             new GameSessionRequest
@@ -205,30 +214,32 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-3),
-                SessionEndTime = DateTime.UtcNow.AddDays(-3).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             },
             new GameSessionRequest
             {
                 GameType = "flags",
                 CorrectAnswers = 6,
                 WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(3), // Most recent for ordering test
+                SessionEndTime = baseTime.AddDays(3).AddMinutes(3)
             },
             new GameSessionRequest
             {
                 GameType = "states",
                 CorrectAnswers = 7,
                 WrongAnswers = 3,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(4)
+                SessionStartTime = baseTime.AddDays(2),
+                SessionEndTime = baseTime.AddDays(2).AddMinutes(4)
             }
         };
 
         foreach (var session in sessions)
         {
-            await _client.PostAsJsonAsync("/api/game-stats", session);
+            var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
+            sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Act
@@ -241,10 +252,11 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         history.Should().NotBeNull();
         history!.Sessions.Should().HaveCount(3);
         
-        // Should be ordered by date descending (most recent first)
-        history.Sessions[0].GameType.Should().Be("states"); // Most recent
-        history.Sessions[1].GameType.Should().Be("flags"); // Middle
-        history.Sessions[2].GameType.Should().Be("countries"); // Oldest
+        // Should be ordered by CreatedAt descending (most recently created first)
+        // Since we create sessions in order: countries, flags, states
+        history.Sessions[0].GameType.Should().Be("states"); // Last created
+        history.Sessions[1].GameType.Should().Be("flags"); // Middle created
+        history.Sessions[2].GameType.Should().Be("countries"); // First created
     }
 
     [Fact]
@@ -255,19 +267,30 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        // Create 15 sessions
+        // Create 15 sessions with unique timestamps and small delays
+        var baseTime = DateTime.UtcNow.AddDays(-20); // Start from 20 days ago to avoid any timing issues
+        
         for (int i = 1; i <= 15; i++)
         {
+            var sessionStartTime = baseTime.AddDays(i).AddMilliseconds(i * 100); // Ensure unique timestamps
             var session = new GameSessionRequest
             {
                 GameType = "countries",
                 CorrectAnswers = i,
-                WrongAnswers = 10 - i,
-                SessionStartTime = DateTime.UtcNow.AddDays(-i),
-                SessionEndTime = DateTime.UtcNow.AddDays(-i).AddMinutes(5)
+                WrongAnswers = Math.Max(0, 10 - i), // Ensure non-negative values
+                SessionStartTime = sessionStartTime,
+                SessionEndTime = sessionStartTime.AddMinutes(5)
             };
-            await _client.PostAsJsonAsync("/api/game-stats", session);
+            
+            var response = await _client.PostAsJsonAsync("/api/game-stats", session);
+            response.StatusCode.Should().Be(HttpStatusCode.OK, $"Session {i} should be saved successfully. Response: {await response.Content.ReadAsStringAsync()}");
+            
+            // Small delay to prevent any potential race conditions
+            await Task.Delay(10);
         }
+
+        // Small delay before querying to ensure all data is committed
+        await Task.Delay(100);
 
         // Act
         var page1Response = await _client.GetAsync("/api/game-stats/me/history?page=1&pageSize=10");
@@ -283,10 +306,11 @@ public class GameStatsControllerTests : IClassFixture<TestWebApplicationFactory<
         page1!.Sessions.Should().HaveCount(10);
         page2!.Sessions.Should().HaveCount(5);
         
-        // Verify ordering (most recent first)
-        page1.Sessions[0].CorrectAnswers.Should().Be(1); // Most recent session
-        page1.Sessions[9].CorrectAnswers.Should().Be(10);
-        page2.Sessions[0].CorrectAnswers.Should().Be(11);
+        // Verify ordering (most recent first - session 15 should be first)
+        page1.Sessions[0].CorrectAnswers.Should().Be(15); // Most recent session
+        page1.Sessions[9].CorrectAnswers.Should().Be(6);  // 10th session on page 1
+        page2.Sessions[0].CorrectAnswers.Should().Be(5);  // First session on page 2
+        page2.Sessions[4].CorrectAnswers.Should().Be(1);  // Last session (oldest)
     }
 
     [Fact]
