@@ -43,33 +43,43 @@ public class GameStatsService : IGameStatsService
             throw new ArgumentException("User not found", nameof(userId));
         }
 
-        // Calculate session duration if end time is provided
-        int? sessionDurationMs = null;
-        if (sessionEndTime.HasValue)
+        // Use retry logic to handle potential race conditions
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            var duration = sessionEndTime.Value - sessionStartTime;
-            sessionDurationMs = (int)duration.TotalMilliseconds;
-        }
+            // Calculate session duration if end time is provided
+            int? sessionDurationMs = null;
+            if (sessionEndTime.HasValue)
+            {
+                var duration = sessionEndTime.Value - sessionStartTime;
+                sessionDurationMs = (int)duration.TotalMilliseconds;
+            }
 
-        var gameSession = new GameSession
-        {
-            UserId = userId,
-            GameType = gameType.ToLowerInvariant(),
-            CorrectAnswers = correctAnswers,
-            WrongAnswers = wrongAnswers,
-            SessionStartTime = sessionStartTime,
-            SessionEndTime = sessionEndTime,
-            SessionDurationMs = sessionDurationMs,
-            CreatedAt = DateTime.UtcNow
-        };
+            // Use unique timestamp to prevent race conditions
+            var uniqueCreatedAt = TimestampManager.GetUniqueTimestamp();
+            
+            // Ensure sessionStartTime is also unique if it's very close to now
+            var uniqueSessionStartTime = TimestampManager.GetUniqueTimestamp(sessionStartTime);
 
-        _context.GameSessions.Add(gameSession);
-        await _context.SaveChangesAsync();
+            var gameSession = new GameSession
+            {
+                UserId = userId,
+                GameType = gameType.ToLowerInvariant(),
+                CorrectAnswers = correctAnswers,
+                WrongAnswers = wrongAnswers,
+                SessionStartTime = uniqueSessionStartTime,
+                SessionEndTime = sessionEndTime,
+                SessionDurationMs = sessionDurationMs,
+                CreatedAt = uniqueCreatedAt
+            };
 
-        _logger.LogInformation("Game session saved for user {UserId}, game type {GameType}, score {Correct}/{Total}", 
-            userId, gameType, correctAnswers, correctAnswers + wrongAnswers);
+            _context.GameSessions.Add(gameSession);
+            await _context.SaveChangesAsync();
 
-        return gameSession;
+            _logger.LogInformation("Game session saved for user {UserId}, game type {GameType}, score {Correct}/{Total}, CreatedAt: {CreatedAt}", 
+                userId, gameType, correctAnswers, correctAnswers + wrongAnswers, uniqueCreatedAt);
+
+            return gameSession;
+        }, logger: _logger);
     }
 
     public async Task<GameStatsResult> GetUserStatsAsync(Guid userId)
@@ -125,6 +135,7 @@ public class GameStatsService : IGameStatsService
         return await _context.GameSessions
             .Where(gs => gs.UserId == userId)
             .OrderByDescending(gs => gs.CreatedAt)
+            .ThenByDescending(gs => gs.SessionStartTime) // Secondary sort for identical CreatedAt
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -140,6 +151,7 @@ public class GameStatsService : IGameStatsService
         var sessions = await _context.GameSessions
             .Where(gs => gs.UserId == userId && gs.GameType == gameType.ToLowerInvariant())
             .OrderBy(gs => gs.CreatedAt)
+            .ThenBy(gs => gs.SessionStartTime) // Secondary sort for identical CreatedAt
             .ToListAsync();
 
         if (!sessions.Any())
@@ -171,52 +183,74 @@ public class GameStatsService : IGameStatsService
             throw new ArgumentException("User not found", nameof(userId));
         }
 
-        var gameSessions = new List<GameSession>();
-
-        foreach (var anonymousSession in anonymousSessions)
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            // Validate anonymous session data
-            if (string.IsNullOrWhiteSpace(anonymousSession.GameType) ||
-                anonymousSession.CorrectAnswers < 0 ||
-                anonymousSession.WrongAnswers < 0)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                _logger.LogWarning("Skipping invalid anonymous session for user {UserId}", userId);
-                continue;
+                var gameSessions = new List<GameSession>();
+
+                foreach (var anonymousSession in anonymousSessions)
+                {
+                    // Validate anonymous session data
+                    if (string.IsNullOrWhiteSpace(anonymousSession.GameType) ||
+                        anonymousSession.CorrectAnswers < 0 ||
+                        anonymousSession.WrongAnswers < 0)
+                    {
+                        _logger.LogWarning("Skipping invalid anonymous session for user {UserId}", userId);
+                        continue;
+                    }
+
+                    // Calculate session duration if end time is provided
+                    int? sessionDurationMs = null;
+                    if (anonymousSession.SessionEndTime.HasValue)
+                    {
+                        var duration = anonymousSession.SessionEndTime.Value - anonymousSession.SessionStartTime;
+                        sessionDurationMs = (int)duration.TotalMilliseconds;
+                    }
+
+                    // Use unique timestamps for migrated sessions
+                    var uniqueCreatedAt = TimestampManager.GetUniqueTimestamp(
+                        anonymousSession.SessionEndTime ?? anonymousSession.SessionStartTime);
+                    var uniqueSessionStartTime = TimestampManager.GetUniqueTimestamp(anonymousSession.SessionStartTime);
+
+                    var gameSession = new GameSession
+                    {
+                        UserId = userId,
+                        GameType = anonymousSession.GameType.ToLowerInvariant(),
+                        CorrectAnswers = anonymousSession.CorrectAnswers,
+                        WrongAnswers = anonymousSession.WrongAnswers,
+                        SessionStartTime = uniqueSessionStartTime,
+                        SessionEndTime = anonymousSession.SessionEndTime,
+                        SessionDurationMs = sessionDurationMs,
+                        CreatedAt = uniqueCreatedAt
+                    };
+
+                    gameSessions.Add(gameSession);
+                }
+
+                if (gameSessions.Any())
+                {
+                    _context.GameSessions.AddRange(gameSessions);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Migrated {Count} anonymous game sessions for user {UserId}", 
+                        gameSessions.Count, userId);
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                return gameSessions.Any();
             }
-
-            // Calculate session duration if end time is provided
-            int? sessionDurationMs = null;
-            if (anonymousSession.SessionEndTime.HasValue)
+            catch
             {
-                var duration = anonymousSession.SessionEndTime.Value - anonymousSession.SessionStartTime;
-                sessionDurationMs = (int)duration.TotalMilliseconds;
+                await transaction.RollbackAsync();
+                throw;
             }
-
-            var gameSession = new GameSession
-            {
-                UserId = userId,
-                GameType = anonymousSession.GameType.ToLowerInvariant(),
-                CorrectAnswers = anonymousSession.CorrectAnswers,
-                WrongAnswers = anonymousSession.WrongAnswers,
-                SessionStartTime = anonymousSession.SessionStartTime,
-                SessionEndTime = anonymousSession.SessionEndTime,
-                SessionDurationMs = sessionDurationMs,
-                CreatedAt = anonymousSession.SessionEndTime ?? anonymousSession.SessionStartTime
-            };
-
-            gameSessions.Add(gameSession);
-        }
-
-        if (gameSessions.Any())
-        {
-            _context.GameSessions.AddRange(gameSessions);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Migrated {Count} anonymous game sessions for user {UserId}", 
-                gameSessions.Count, userId);
-        }
-
-        return gameSessions.Any();
+        }, logger: _logger);
     }
 
     public double CalculateAccuracy(int correctAnswers, int totalAnswers)
@@ -241,6 +275,7 @@ public class GameStatsService : IGameStatsService
 
         var sessions = await query
             .OrderBy(gs => gs.CreatedAt)
+            .ThenBy(gs => gs.SessionStartTime) // Secondary sort for identical CreatedAt
             .Select(gs => new { gs.CorrectAnswers, gs.WrongAnswers })
             .ToListAsync();
 
@@ -292,7 +327,12 @@ public class GameStatsService : IGameStatsService
         int currentStreak = 0;
         int bestStreak = 0;
 
-        foreach (var session in sessions.OrderBy(s => s.CreatedAt))
+        // Sort by CreatedAt and then by SessionStartTime for consistent ordering
+        var sortedSessions = sessions
+            .OrderBy(s => s.CreatedAt)
+            .ThenBy(s => s.SessionStartTime);
+
+        foreach (var session in sortedSessions)
         {
             var sessionTotal = session.CorrectAnswers + session.WrongAnswers;
             if (sessionTotal > 0 && session.CorrectAnswers > session.WrongAnswers)

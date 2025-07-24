@@ -15,6 +15,9 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly JwtSettings _jwtSettings;
     private readonly ILogger<AuthService> _logger;
+    
+    // Semaphore to prevent concurrent registration attempts
+    private static readonly SemaphoreSlim _registrationSemaphore = new(1, 1);
 
     public AuthService(
         GeoQuizDbContext context,
@@ -48,32 +51,45 @@ public class AuthService : IAuthService
             throw new ValidationException(validationErrors);
         }
 
-        // Check if user already exists
-        var existingUser = await GetUserByEmailAsync(email);
-        if (existingUser != null)
+        // Use retry logic to handle race conditions
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            throw new InvalidOperationException("User with this email already exists");
-        }
+            // Use semaphore to prevent concurrent registrations with same email
+            await _registrationSemaphore.WaitAsync();
+            try
+            {
+                // Check if user already exists
+                var existingUser = await GetUserByEmailAsync(email);
+                if (existingUser != null)
+                {
+                    throw new InvalidOperationException("User with this email already exists");
+                }
 
-        // Create new user
-        var user = new User
-        {
-            Email = email.ToLowerInvariant(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-            Name = name?.Trim(),
-            CreatedAt = DateTime.UtcNow
-        };
+                // Create new user with unique timestamp
+                var user = new User
+                {
+                    Email = email.ToLowerInvariant(),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                    Name = name?.Trim(),
+                    CreatedAt = TimestampManager.GetUniqueTimestamp()
+                };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
 
-        _logger.LogInformation("New user registered successfully. Email: {Email}, UserId: {UserId}", email, user.Id);
+                _logger.LogInformation("New user registered successfully. Email: {Email}, UserId: {UserId}", email, user.Id);
 
-        // Generate tokens
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id);
+                // Generate tokens
+                var accessToken = _jwtService.GenerateAccessToken(user);
+                var refreshToken = await CreateRefreshTokenAsync(user.Id);
 
-        return (user, accessToken, refreshToken);
+                return (user, accessToken, refreshToken);
+            }
+            finally
+            {
+                _registrationSemaphore.Release();
+            }
+        }, maxRetries: 3, logger: _logger);
     }
 
     public async Task<(User user, string accessToken, string refreshToken)> LoginAsync(string email, string password)
@@ -111,9 +127,13 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid email or password");
         }
 
-        // Update last login
-        user.LastLoginAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        // Update last login with retry logic for concurrency
+        await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
+        {
+            user.LastLoginAt = TimestampManager.GetUniqueTimestamp();
+            await _context.SaveChangesAsync();
+            return true;
+        }, logger: _logger);
 
         _logger.LogInformation("User logged in successfully. Email: {Email}, UserId: {UserId}", email, user.Id);
 
@@ -131,35 +151,48 @@ public class AuthService : IAuthService
             throw new ArgumentException("Refresh token is required", nameof(refreshToken));
         }
 
-        // Find refresh token
-        var storedToken = await _context.RefreshTokens
-            .Include(rt => rt.User)
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked);
-
-        if (storedToken == null)
+        // Use transaction to ensure atomic token refresh
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            _logger.LogWarning("Token refresh attempt with invalid refresh token");
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
-        }
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Find refresh token with row-level locking (if supported by database)
+                var storedToken = await _context.RefreshTokens
+                    .Include(rt => rt.User)
+                    .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked);
 
-        if (storedToken.ExpiresAt <= DateTime.UtcNow)
-        {
-            _logger.LogWarning("Token refresh attempt with expired refresh token for user: {UserId}", storedToken.UserId);
-            throw new UnauthorizedAccessException("Invalid or expired refresh token");
-        }
+                if (storedToken == null)
+                {
+                    _logger.LogWarning("Token refresh attempt with invalid refresh token");
+                    throw new UnauthorizedAccessException("Invalid or expired refresh token");
+                }
 
-        // Revoke old token
-        storedToken.IsRevoked = true;
+                if (storedToken.ExpiresAt <= DateTime.UtcNow)
+                {
+                    _logger.LogWarning("Token refresh attempt with expired refresh token for user: {UserId}", storedToken.UserId);
+                    throw new UnauthorizedAccessException("Invalid or expired refresh token");
+                }
 
-        // Generate new tokens
-        var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
-        var newRefreshToken = await CreateRefreshTokenAsync(storedToken.UserId);
+                // Atomically revoke old token and create new one
+                storedToken.IsRevoked = true;
+                
+                var accessToken = _jwtService.GenerateAccessToken(storedToken.User);
+                var newRefreshToken = await CreateRefreshTokenAsync(storedToken.UserId);
 
-        await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
-        _logger.LogInformation("Tokens refreshed successfully for user: {UserId}", storedToken.UserId);
+                _logger.LogInformation("Tokens refreshed successfully for user: {UserId}", storedToken.UserId);
 
-        return (storedToken.User, accessToken, newRefreshToken);
+                return (storedToken.User, accessToken, newRefreshToken);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }, logger: _logger);
     }
 
     public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)
@@ -169,41 +202,57 @@ public class AuthService : IAuthService
             return false;
         }
 
-        var storedToken = await _context.RefreshTokens
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked);
-
-        if (storedToken == null)
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            return false;
-        }
+            var storedToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken && !rt.IsRevoked);
 
-        storedToken.IsRevoked = true;
-        await _context.SaveChangesAsync();
+            if (storedToken == null)
+            {
+                return false;
+            }
 
-        _logger.LogInformation("Refresh token revoked successfully for user: {UserId}", storedToken.UserId);
-        return true;
+            storedToken.IsRevoked = true;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Refresh token revoked successfully for user: {UserId}", storedToken.UserId);
+            return true;
+        }, logger: _logger);
     }
 
     public async Task<bool> RevokeAllUserTokensAsync(Guid userId)
     {
-        var userTokens = await _context.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.IsRevoked)
-            .ToListAsync();
-
-        if (!userTokens.Any())
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            return false;
-        }
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var userTokens = await _context.RefreshTokens
+                    .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+                    .ToListAsync();
 
-        foreach (var token in userTokens)
-        {
-            token.IsRevoked = true;
-        }
+                if (!userTokens.Any())
+                {
+                    return false;
+                }
 
-        await _context.SaveChangesAsync();
+                foreach (var token in userTokens)
+                {
+                    token.IsRevoked = true;
+                }
 
-        _logger.LogInformation("All refresh tokens revoked for user: {UserId}", userId);
-        return true;
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("All refresh tokens revoked for user: {UserId}", userId);
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }, logger: _logger);
     }
 
     public async Task<User?> GetUserByIdAsync(Guid userId)
@@ -225,19 +274,22 @@ public class AuthService : IAuthService
 
     public async Task<bool> UpdateUserProfileAsync(Guid userId, string? name, string? avatar)
     {
-        var user = await GetUserByIdAsync(userId);
-        if (user == null)
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            return false;
-        }
+            var user = await GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
 
-        user.Name = name?.Trim();
-        user.Avatar = avatar?.Trim();
+            user.Name = name?.Trim();
+            user.Avatar = avatar?.Trim();
 
-        await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Profile updated for user: {UserId}", userId);
-        return true;
+            _logger.LogInformation("Profile updated for user: {UserId}", userId);
+            return true;
+        }, logger: _logger);
     }
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
@@ -263,25 +315,28 @@ public class AuthService : IAuthService
             throw new ValidationException(validationErrors);
         }
 
-        var user = await GetUserByIdAsync(userId);
-        if (user == null)
+        return await ConcurrencyUtilities.ExecuteWithRetryAsync(async () =>
         {
-            return false;
-        }
+            var user = await GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
 
-        // Verify current password
-        if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
-        {
-            _logger.LogWarning("Failed password change attempt - incorrect current password for user: {UserId}", userId);
-            throw new UnauthorizedAccessException("Current password is incorrect");
-        }
+            // Verify current password
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            {
+                _logger.LogWarning("Failed password change attempt - incorrect current password for user: {UserId}", userId);
+                throw new UnauthorizedAccessException("Current password is incorrect");
+            }
 
-        // Update password
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        await _context.SaveChangesAsync();
+            // Update password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Password changed successfully for user: {UserId}", userId);
-        return true;
+            _logger.LogInformation("Password changed successfully for user: {UserId}", userId);
+            return true;
+        }, logger: _logger);
     }
 
     public bool ValidateEmail(string email)
@@ -322,7 +377,7 @@ public class AuthService : IAuthService
             Token = _jwtService.GenerateRefreshToken(),
             UserId = userId,
             ExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = TimestampManager.GetUniqueTimestamp()
         };
 
         _context.RefreshTokens.Add(refreshToken);
