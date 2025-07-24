@@ -1,52 +1,229 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using GeoQuizApi.Data;
+using GeoQuizApi.Tests.TestUtilities;
 
 namespace GeoQuizApi.Tests.Integration;
 
-public abstract class BaseIntegrationTest : IClassFixture<TestWebApplicationFactory<Program>>
+/// <summary>
+/// Enhanced base class for integration tests with robust cleanup and initialization
+/// Implements IAsyncLifetime for proper test lifecycle management
+/// </summary>
+public abstract class BaseIntegrationTest : IClassFixture<TestWebApplicationFactory<Program>>, IAsyncLifetime
 {
     protected readonly TestWebApplicationFactory<Program> _factory;
     protected readonly HttpClient _client;
+    private readonly SemaphoreSlim _cleanupSemaphore = new SemaphoreSlim(1, 1);
+    private readonly ILogger<BaseIntegrationTest> _logger;
 
     protected BaseIntegrationTest(TestWebApplicationFactory<Program> factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();
+        
+        // Create logger for this test instance
+        try
+        {
+            using var scope = _factory.Services.CreateScope();
+            var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+            _logger = loggerFactory.CreateLogger<BaseIntegrationTest>();
+        }
+        catch
+        {
+            // Fallback to console logging if service provider is not available
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            _logger = loggerFactory.CreateLogger<BaseIntegrationTest>();
+        }
     }
 
+    /// <summary>
+    /// Called before each test method. Ensures clean database state and clears authorization headers.
+    /// </summary>
+    public virtual async Task InitializeAsync()
+    {
+        _logger.LogDebug("Initializing test: {TestClass}", GetType().Name);
+        
+        // Reset timestamp manager first for deterministic test behavior
+        TimestampManager.Reset();
+        
+        // Clear database and reset authorization headers
+        await ClearDatabaseAsync();
+        ClearAuthorizationHeaders();
+        
+        _logger.LogDebug("Test initialization completed: {TestClass}", GetType().Name);
+    }
+
+    /// <summary>
+    /// Called after each test method. Performs cleanup operations.
+    /// </summary>
+    public virtual Task DisposeAsync()
+    {
+        _logger.LogDebug("Disposing test: {TestClass}", GetType().Name);
+        
+        // Clear authorization headers to prevent test interference
+        ClearAuthorizationHeaders();
+        
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Enhanced database cleanup with semaphore-based synchronization and proper error handling
+    /// </summary>
     protected async Task ClearDatabaseAsync()
+    {
+        await _cleanupSemaphore.WaitAsync();
+        try
+        {
+            _logger.LogDebug("Starting database cleanup for test: {TestClass}", GetType().Name);
+            
+            using var scope = _factory.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+            
+            await ClearTablesInOrderAsync(context);
+            
+            _logger.LogDebug("Database cleanup completed successfully for test: {TestClass}", GetType().Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to clear database tables for test: {TestClass}, attempting full recreation", GetType().Name);
+            
+            try
+            {
+                await RecreateDatabaseAsync();
+                _logger.LogInformation("Database recreated successfully for test: {TestClass}", GetType().Name);
+            }
+            catch (Exception recreateEx)
+            {
+                _logger.LogError(recreateEx, "Failed to recreate database for test: {TestClass}", GetType().Name);
+                
+                // Don't fail the test setup, but log the issue
+                // The in-memory database should still work for most scenarios
+                Console.WriteLine($"Warning: Database cleanup failed for {GetType().Name}: {recreateEx.Message}");
+            }
+        }
+        finally
+        {
+            _cleanupSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Clears database tables in the correct order to respect foreign key constraints
+    /// </summary>
+    private async Task ClearTablesInOrderAsync(GeoQuizDbContext context)
+    {
+        // Clear tables in reverse dependency order to avoid foreign key constraint violations
+        
+        // 1. Clear GameSessions (depends on Users)
+        if (context.GameSessions.Any())
+        {
+            var sessionCount = context.GameSessions.Count();
+            context.GameSessions.RemoveRange(context.GameSessions);
+            _logger.LogDebug("Cleared {Count} records from GameSessions table", sessionCount);
+        }
+
+        // 2. Clear RefreshTokens (depends on Users)
+        if (context.RefreshTokens.Any())
+        {
+            var tokenCount = context.RefreshTokens.Count();
+            context.RefreshTokens.RemoveRange(context.RefreshTokens);
+            _logger.LogDebug("Cleared {Count} records from RefreshTokens table", tokenCount);
+        }
+
+        // 3. Clear Users (main table)
+        if (context.Users.Any())
+        {
+            var userCount = context.Users.Count();
+            context.Users.RemoveRange(context.Users);
+            _logger.LogDebug("Cleared {Count} records from Users table", userCount);
+        }
+
+        // Save changes to commit the deletions
+        await context.SaveChangesAsync();
+        _logger.LogDebug("Database changes saved successfully");
+    }
+
+    /// <summary>
+    /// Recreates the database completely when cleanup fails
+    /// </summary>
+    private async Task RecreateDatabaseAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
         
-        try
+        _logger.LogDebug("Recreating database for test: {TestClass}", GetType().Name);
+        
+        // Delete and recreate the database
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.EnsureCreatedAsync();
+        
+        _logger.LogDebug("Database recreation completed for test: {TestClass}", GetType().Name);
+    }
+
+    /// <summary>
+    /// Clears authorization headers to prevent test interference
+    /// </summary>
+    private void ClearAuthorizationHeaders()
+    {
+        if (_client.DefaultRequestHeaders.Authorization != null)
         {
-            // Clear all tables in the correct order (respecting foreign key constraints)
-            context.GameSessions.RemoveRange(context.GameSessions);
-            context.RefreshTokens.RemoveRange(context.RefreshTokens);
-            context.Users.RemoveRange(context.Users);
-            
-            await context.SaveChangesAsync();
-            
-            // Ensure the database is properly reset
-            await context.Database.EnsureDeletedAsync();
-            await context.Database.EnsureCreatedAsync();
+            _logger.LogDebug("Clearing authorization headers for test: {TestClass}", GetType().Name);
+            _client.DefaultRequestHeaders.Authorization = null;
         }
-        catch (Exception ex)
+    }
+
+    /// <summary>
+    /// Helper method to generate unique email addresses for tests
+    /// </summary>
+    protected string GenerateUniqueEmail(string prefix = "test")
+    {
+        return TestDataBuilder.GenerateUniqueEmail(prefix);
+    }
+
+    /// <summary>
+    /// Helper method to generate unique timestamps for tests
+    /// </summary>
+    protected DateTime GenerateUniqueTimestamp(DateTime? baseTime = null)
+    {
+        return TestDataBuilder.GenerateUniqueTimestamp(baseTime);
+    }
+
+    /// <summary>
+    /// Verifies that the database is empty (useful for debugging test isolation issues)
+    /// </summary>
+    protected async Task<bool> IsDatabaseEmptyAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        var userCount = await context.Users.CountAsync();
+        var sessionCount = await context.GameSessions.CountAsync();
+        var tokenCount = await context.RefreshTokens.CountAsync();
+        
+        var isEmpty = userCount == 0 && sessionCount == 0 && tokenCount == 0;
+        
+        if (!isEmpty)
         {
-            // Log the exception but don't fail the test setup
-            Console.WriteLine($"Warning: Failed to clear database: {ex.Message}");
-            
-            // Try to recreate the database
-            try
-            {
-                await context.Database.EnsureDeletedAsync();
-                await context.Database.EnsureCreatedAsync();
-            }
-            catch
-            {
-                // If all else fails, just continue - the in-memory database should handle this
-            }
+            _logger.LogWarning("Database is not empty for test {TestClass}. Users: {UserCount}, Sessions: {SessionCount}, Tokens: {TokenCount}", 
+                GetType().Name, userCount, sessionCount, tokenCount);
         }
+        
+        return isEmpty;
+    }
+
+    /// <summary>
+    /// Gets diagnostic information about the current database state
+    /// </summary>
+    protected async Task<string> GetDatabaseDiagnosticsAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        var userCount = await context.Users.CountAsync();
+        var sessionCount = await context.GameSessions.CountAsync();
+        var tokenCount = await context.RefreshTokens.CountAsync();
+        
+        return $"Database: {_factory.DatabaseName}, Users: {userCount}, Sessions: {sessionCount}, Tokens: {tokenCount}";
     }
 }

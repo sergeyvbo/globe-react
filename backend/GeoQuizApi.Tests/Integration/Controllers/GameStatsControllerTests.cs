@@ -8,22 +8,10 @@ using GeoQuizApi.Services;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
+public class GameStatsControllerTests : BaseIntegrationTest
 {
     public GameStatsControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
     {
-    }
-
-    public async Task InitializeAsync()
-    {
-        await ClearDatabaseAsync();
-        // Clear any existing authorization headers
-        _client.DefaultRequestHeaders.Authorization = null;
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
     }
 
     private async Task<string> GetAuthTokenAsync(string email = "gametest@example.com", string password = "TestPassword123")
@@ -44,18 +32,19 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task SaveGameSession_WithValidData_ShouldCreateSession()
     {
         // Arrange
-        var uniqueEmail = $"savetest_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("savetest");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
+        var baseTime = GenerateUniqueTimestamp();
         var gameSessionRequest = new GameSessionRequest
         {
             GameType = "countries",
             CorrectAnswers = 8,
             WrongAnswers = 2,
-            SessionStartTime = DateTime.UtcNow.AddMinutes(-5),
-            SessionEndTime = DateTime.UtcNow
+            SessionStartTime = baseTime.AddMinutes(-5),
+            SessionEndTime = baseTime
         };
 
         // Act
@@ -75,13 +64,14 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task SaveGameSession_WithoutAuth_ShouldReturnUnauthorized()
     {
         // Arrange
+        var baseTime = GenerateUniqueTimestamp();
         var gameSessionRequest = new GameSessionRequest
         {
             GameType = "countries",
             CorrectAnswers = 8,
             WrongAnswers = 2,
-            SessionStartTime = DateTime.UtcNow.AddMinutes(-5),
-            SessionEndTime = DateTime.UtcNow
+            SessionStartTime = baseTime.AddMinutes(-5),
+            SessionEndTime = baseTime
         };
 
         // Act
@@ -95,18 +85,19 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task SaveGameSession_WithInvalidGameType_ShouldReturnValidationError()
     {
         // Arrange
-        var uniqueEmail = $"invalidtype_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("invalidtype");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
+        var baseTime = GenerateUniqueTimestamp();
         var gameSessionRequest = new GameSessionRequest
         {
             GameType = "invalid-game-type",
             CorrectAnswers = 8,
             WrongAnswers = 2,
-            SessionStartTime = DateTime.UtcNow.AddMinutes(-5),
-            SessionEndTime = DateTime.UtcNow
+            SessionStartTime = baseTime.AddMinutes(-5),
+            SessionEndTime = baseTime
         };
 
         // Act
@@ -120,7 +111,7 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserStats_WithNoSessions_ShouldReturnEmptyStats()
     {
         // Arrange
-        var uniqueEmail = $"nostats_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("nostats");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -144,13 +135,13 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserStats_WithSessions_ShouldReturnAggregatedStats()
     {
         // Arrange
-        var uniqueEmail = $"withstats_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("withstats");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // Create multiple game sessions with unique timestamps
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         var sessions = new[]
         {
             new GameSessionRequest
@@ -207,13 +198,13 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserGameHistory_ShouldReturnSessionsOrderedByDate()
     {
         // Arrange
-        var uniqueEmail = $"history_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("history");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // Create sessions with different dates and unique timestamps
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         var sessions = new[]
         {
             new GameSessionRequest
@@ -270,13 +261,13 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserGameHistory_WithPagination_ShouldReturnCorrectPage()
     {
         // Arrange
-        var uniqueEmail = $"pagination_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("pagination");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         // Create 15 sessions with unique timestamps and small delays
-        var baseTime = DateTime.UtcNow.AddDays(-20); // Start from 20 days ago to avoid any timing issues
+        var baseTime = GenerateUniqueTimestamp().AddDays(-20); // Start from 20 days ago to avoid any timing issues
         
         for (int i = 1; i <= 15; i++)
         {
@@ -325,11 +316,12 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task MigrateAnonymousProgress_WithValidData_ShouldCreateSessions()
     {
         // Arrange
-        var uniqueEmail = $"migrate_{Guid.NewGuid()}@example.com";
+        var uniqueEmail = GenerateUniqueEmail("migrate");
         var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
+        var baseTime = GenerateUniqueTimestamp();
         var migrateRequest = new MigrateProgressRequest
         {
             AnonymousSessions = new List<AnonymousGameSessionDto>
@@ -339,16 +331,16 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
                     GameType = "countries",
                     CorrectAnswers = 8,
                     WrongAnswers = 2,
-                    SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                    SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                    SessionStartTime = baseTime.AddDays(-2),
+                    SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
                 },
                 new AnonymousGameSessionDto
                 {
                     GameType = "flags",
                     CorrectAnswers = 6,
                     WrongAnswers = 4,
-                    SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                    SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3)
+                    SessionStartTime = baseTime.AddDays(-1),
+                    SessionEndTime = baseTime.AddDays(-1).AddMinutes(3)
                 }
             }
         };

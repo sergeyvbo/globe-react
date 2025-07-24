@@ -14,12 +14,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
     }
 
-    private async Task SetupTestAsync()
-    {
-        await ClearDatabaseAsync();
-        // Clear any existing authorization headers
-        _client.DefaultRequestHeaders.Authorization = null;
-    }
+
 
     private async Task<string> CreateUserWithGameSessionsAsync(string email, string name, List<GameSessionRequest> sessions)
     {
