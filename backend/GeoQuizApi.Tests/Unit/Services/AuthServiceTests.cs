@@ -3,6 +3,7 @@ using GeoQuizApi.Configuration;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,9 +12,8 @@ using Moq;
 namespace GeoQuizApi.Tests.Unit.Services;
 
 [Trait("Category", "Unit")]
-public class AuthServiceTests : IDisposable
+public class AuthServiceTests : BaseUnitTest
 {
-    private readonly GeoQuizDbContext _context;
     private readonly Mock<IJwtService> _mockJwtService;
     private readonly Mock<ILogger<AuthService>> _mockLogger;
     private readonly Mock<IOptions<JwtSettings>> _mockJwtSettings;
@@ -21,14 +21,8 @@ public class AuthServiceTests : IDisposable
 
     public AuthServiceTests()
     {
-        // Setup in-memory database
-        var options = new DbContextOptionsBuilder<GeoQuizDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-        
-        _context = new GeoQuizDbContext(options);
         _mockJwtService = new Mock<IJwtService>();
-        _mockLogger = new Mock<ILogger<AuthService>>();
+        _mockLogger = CreateMockLogger<AuthService>();
         
         // Setup JWT settings mock
         _mockJwtSettings = new Mock<IOptions<JwtSettings>>();
@@ -48,7 +42,7 @@ public class AuthServiceTests : IDisposable
     public async Task RegisterAsync_WithValidData_ShouldCreateUserAndReturnTokens()
     {
         // Arrange
-        var email = "test@example.com";
+        var email = TestDataBuilder.GenerateUniqueEmail();
         var password = "TestPassword123";
         var name = "Test User";
         var expectedAccessToken = "access_token";
@@ -83,17 +77,14 @@ public class AuthServiceTests : IDisposable
     public async Task RegisterAsync_WithExistingEmail_ShouldThrowException()
     {
         // Arrange
-        var email = "existing@example.com";
+        var email = TestDataBuilder.GenerateUniqueEmail();
         var password = "TestPassword123";
         
-        // Create existing user
-        var existingUser = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("OldPassword123"),
-            CreatedAt = DateTime.UtcNow
-        };
+        // Create existing user using TestDataBuilder
+        var existingUser = TestDataBuilder.User()
+            .WithEmail(email)
+            .WithPassword("OldPassword123")
+            .Build();
         _context.Users.Add(existingUser);
         await _context.SaveChangesAsync();
 
@@ -106,20 +97,16 @@ public class AuthServiceTests : IDisposable
     public async Task LoginAsync_WithValidCredentials_ShouldReturnUserAndTokens()
     {
         // Arrange
-        var email = "login@example.com";
+        var email = TestDataBuilder.GenerateUniqueEmail();
         var password = "TestPassword123";
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
         var expectedAccessToken = "access_token";
         var expectedRefreshToken = "refresh_token";
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = hashedPassword,
-            Name = "Login User",
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(email)
+            .WithPassword(password)
+            .WithName("Login User")
+            .Build();
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -146,7 +133,7 @@ public class AuthServiceTests : IDisposable
     public async Task LoginAsync_WithInvalidEmail_ShouldThrowException()
     {
         // Arrange
-        var email = "nonexistent@example.com";
+        var email = TestDataBuilder.GenerateUniqueEmail();
         var password = "TestPassword123";
 
         // Act & Assert
@@ -158,18 +145,14 @@ public class AuthServiceTests : IDisposable
     public async Task LoginAsync_WithInvalidPassword_ShouldThrowException()
     {
         // Arrange
-        var email = "user@example.com";
+        var email = TestDataBuilder.GenerateUniqueEmail();
         var correctPassword = "CorrectPassword123";
         var wrongPassword = "WrongPassword123";
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(correctPassword);
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = hashedPassword,
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(email)
+            .WithPassword(correctPassword)
+            .Build();
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -186,25 +169,18 @@ public class AuthServiceTests : IDisposable
         var expectedAccessToken = "new_access_token";
         var expectedRefreshToken = "new_refresh_token";
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "refresh@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword("Password123")
+            .Build();
         _context.Users.Add(user);
 
-        var refreshToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = refreshTokenValue,
-            UserId = user.Id,
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-            CreatedAt = DateTime.UtcNow,
-            IsRevoked = false,
-            User = user
-        };
+        var refreshToken = TestDataBuilder.RefreshToken()
+            .WithToken(refreshTokenValue)
+            .WithUserId(user.Id)
+            .WithExpiresAt(TestDataBuilder.GenerateUniqueTimestamp().AddDays(7))
+            .Build();
+        refreshToken.User = user;
         _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
@@ -244,25 +220,19 @@ public class AuthServiceTests : IDisposable
         // Arrange
         var expiredTokenValue = "expired_refresh_token";
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "expired@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword("Password123")
+            .Build();
         _context.Users.Add(user);
 
-        var expiredToken = new RefreshToken
-        {
-            Id = Guid.NewGuid(),
-            Token = expiredTokenValue,
-            UserId = user.Id,
-            ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired
-            CreatedAt = DateTime.UtcNow.AddDays(-8),
-            IsRevoked = false,
-            User = user
-        };
+        var expiredToken = TestDataBuilder.RefreshToken()
+            .WithToken(expiredTokenValue)
+            .WithUserId(user.Id)
+            .WithExpiresAt(TestDataBuilder.GenerateUniqueTimestamp().AddDays(-1)) // Expired
+            .WithCreatedAt(TestDataBuilder.GenerateUniqueTimestamp().AddDays(-8))
+            .Build();
+        expiredToken.User = user;
         _context.RefreshTokens.Add(expiredToken);
         await _context.SaveChangesAsync();
 
@@ -308,15 +278,12 @@ public class AuthServiceTests : IDisposable
     public async Task UpdateUserProfileAsync_WithValidData_ShouldUpdateUser()
     {
         // Arrange
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "update@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            Name = "Old Name",
-            Avatar = "old-avatar.jpg",
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword("Password123")
+            .WithName("Old Name")
+            .Build();
+        user.Avatar = "old-avatar.jpg";
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -340,15 +307,11 @@ public class AuthServiceTests : IDisposable
         // Arrange
         var currentPassword = "CurrentPassword123";
         var newPassword = "NewPassword123";
-        var hashedCurrentPassword = BCrypt.Net.BCrypt.HashPassword(currentPassword);
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "changepass@example.com",
-            PasswordHash = hashedCurrentPassword,
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword(currentPassword)
+            .Build();
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -370,15 +333,11 @@ public class AuthServiceTests : IDisposable
         var currentPassword = "CurrentPassword123";
         var wrongCurrentPassword = "WrongPassword123";
         var newPassword = "NewPassword123";
-        var hashedCurrentPassword = BCrypt.Net.BCrypt.HashPassword(currentPassword);
 
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "changepass@example.com",
-            PasswordHash = hashedCurrentPassword,
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword(currentPassword)
+            .Build();
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -391,8 +350,5 @@ public class AuthServiceTests : IDisposable
         BCrypt.Net.BCrypt.Verify(currentPassword, unchangedUser!.PasswordHash).Should().BeTrue();
     }
 
-    public void Dispose()
-    {
-        _context.Dispose();
-    }
+
 }

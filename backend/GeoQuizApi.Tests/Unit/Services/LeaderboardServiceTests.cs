@@ -2,6 +2,7 @@ using FluentAssertions;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -10,9 +11,8 @@ using Moq;
 namespace GeoQuizApi.Tests.Unit.Services;
 
 [Trait("Category", "Unit")]
-public class LeaderboardServiceTests : IDisposable
+public class LeaderboardServiceTests : BaseUnitTest
 {
-    private readonly GeoQuizDbContext _context;
     private readonly Mock<ILogger<LeaderboardService>> _mockLogger;
     private readonly IMemoryCache _memoryCache;
     private readonly LeaderboardService _leaderboardService;
@@ -20,44 +20,33 @@ public class LeaderboardServiceTests : IDisposable
 
     public LeaderboardServiceTests()
     {
-        // Setup in-memory database
-        var options = new DbContextOptionsBuilder<GeoQuizDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-        
-        _context = new GeoQuizDbContext(options);
-        _mockLogger = new Mock<ILogger<LeaderboardService>>();
+        _mockLogger = CreateMockLogger<LeaderboardService>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         
         _leaderboardService = new LeaderboardService(_context, _memoryCache, _mockLogger.Object);
 
-        // Create test users
+        // Create test users using TestDataBuilder
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         _testUsers = new List<User>
         {
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "user1@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-                Name = "Alice Johnson",
-                CreatedAt = DateTime.UtcNow.AddDays(-10)
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "user2@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-                Name = "Bob Smith",
-                CreatedAt = DateTime.UtcNow.AddDays(-9)
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Email = "user3@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-                Name = "Charlie Brown",
-                CreatedAt = DateTime.UtcNow.AddDays(-8)
-            }
+            TestDataBuilder.User()
+                .WithEmail(TestDataBuilder.GenerateUniqueEmail("user1"))
+                .WithPassword("Password123")
+                .WithName("Alice Johnson")
+                .WithCreatedAt(baseTime.AddDays(-10))
+                .Build(),
+            TestDataBuilder.User()
+                .WithEmail(TestDataBuilder.GenerateUniqueEmail("user2"))
+                .WithPassword("Password123")
+                .WithName("Bob Smith")
+                .WithCreatedAt(baseTime.AddDays(-9))
+                .Build(),
+            TestDataBuilder.User()
+                .WithEmail(TestDataBuilder.GenerateUniqueEmail("user3"))
+                .WithPassword("Password123")
+                .WithName("Charlie Brown")
+                .WithCreatedAt(baseTime.AddDays(-8))
+                .Build()
         };
 
         _context.Users.AddRange(_testUsers);
@@ -81,51 +70,44 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetGlobalLeaderboardAsync_WithGameSessions_ShouldReturnOrderedLeaderboard()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
             // Alice: 2 sessions, 15 correct, 5 wrong (75% accuracy)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "flags",
-                CorrectAnswers = 7,
-                WrongAnswers = 3,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(7)
+                .WithWrongAnswers(3)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
             // Bob: 1 session, 9 correct, 1 wrong (90% accuracy)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[1].Id,
-                GameType = "countries",
-                CorrectAnswers = 9,
-                WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-2),
-                CreatedAt = DateTime.UtcNow.AddHours(-2)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[1].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(9)
+                .WithWrongAnswers(1)
+                .WithSessionTimes(baseTime.AddHours(-2), null)
+                .WithCreatedAt(baseTime.AddHours(-2))
+                .Build(),
             // Charlie: 1 session, 5 correct, 5 wrong (50% accuracy)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[2].Id,
-                GameType = "states",
-                CorrectAnswers = 5,
-                WrongAnswers = 5,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[2].Id)
+                .WithGameType("states")
+                .WithCorrectAnswers(5)
+                .WithWrongAnswers(5)
+                .WithSessionTimes(baseTime.AddHours(-1), null)
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -167,28 +149,25 @@ public class LeaderboardServiceTests : IDisposable
     {
         // Arrange
         var currentUserId = _testUsers[1].Id; // Bob
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "countries",
-                CorrectAnswers = 10,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = currentUserId,
-                GameType = "flags",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(10)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(currentUserId)
+                .WithGameType("flags")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddHours(-1), null)
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -210,40 +189,35 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetLeaderboardByGameTypeAsync_ShouldFilterByGameType()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
             // Countries sessions
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[1].Id,
-                GameType = "countries",
-                CorrectAnswers = 9,
-                WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[1].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(9)
+                .WithWrongAnswers(1)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
             // Flags session (should be excluded)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[2].Id,
-                GameType = "flags",
-                CorrectAnswers = 10,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[2].Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(10)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-1), null)
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -270,30 +244,27 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetLeaderboardByPeriodAsync_ShouldFilterByTimePeriod()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
             // Recent session (within last week)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
             // Old session (more than a week ago)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[1].Id,
-                GameType = "countries",
-                CorrectAnswers = 10,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddDays(-10),
-                CreatedAt = DateTime.UtcNow.AddDays(-10)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[1].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(10)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddDays(-10), null)
+                .WithCreatedAt(baseTime.AddDays(-10))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -316,41 +287,36 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetFilteredLeaderboardAsync_WithBothFilters_ShouldApplyBothFilters()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
             // Recent countries session
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[0].Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[0].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
             // Recent flags session (should be excluded by game type filter)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[1].Id,
-                GameType = "flags",
-                CorrectAnswers = 9,
-                WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[1].Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(9)
+                .WithWrongAnswers(1)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
             // Old countries session (should be excluded by period filter)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUsers[2].Id,
-                GameType = "countries",
-                CorrectAnswers = 10,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddDays(-10),
-                CreatedAt = DateTime.UtcNow.AddDays(-10)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUsers[2].Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(10)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddDays(-10), null)
+                .WithCreatedAt(baseTime.AddDays(-10))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -370,27 +336,28 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetGlobalLeaderboardAsync_WithPagination_ShouldReturnCorrectPage()
     {
         // Arrange - Create 25 users with game sessions
-        var users = Enumerable.Range(1, 25).Select(i => new User
-        {
-            Id = Guid.NewGuid(),
-            Email = $"user{i}@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            Name = $"User {i}",
-            CreatedAt = DateTime.UtcNow.AddDays(-i)
-        }).ToList();
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
+        var users = Enumerable.Range(1, 25).Select(i => 
+            TestDataBuilder.User()
+                .WithEmail(TestDataBuilder.GenerateUniqueEmail($"user{i}"))
+                .WithPassword("Password123")
+                .WithName($"User {i}")
+                .WithCreatedAt(baseTime.AddDays(-i))
+                .Build()
+        ).ToList();
 
         _context.Users.AddRange(users);
 
-        var sessions = users.Select((user, index) => new GameSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            GameType = "countries",
-            CorrectAnswers = 25 - index, // User 1 has 25 points, User 2 has 24, etc.
-            WrongAnswers = index,
-            SessionStartTime = DateTime.UtcNow.AddDays(-index),
-            CreatedAt = DateTime.UtcNow.AddDays(-index)
-        }).ToList();
+        var sessions = users.Select((user, index) => 
+            TestDataBuilder.GameSession()
+                .WithUserId(user.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(25 - index) // User 1 has 25 points, User 2 has 24, etc.
+                .WithWrongAnswers(index)
+                .WithSessionTimes(baseTime.AddDays(-index), null)
+                .WithCreatedAt(baseTime.AddDays(-index))
+                .Build()
+        ).ToList();
 
         _context.GameSessions.AddRange(sessions);
         await _context.SaveChangesAsync();
@@ -475,16 +442,15 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetLeaderboardByGameTypeAsync_WithValidGameTypes_ShouldWork(string gameType)
     {
         // Arrange
-        var session = new GameSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = _testUsers[0].Id,
-            GameType = gameType,
-            CorrectAnswers = 8,
-            WrongAnswers = 2,
-            SessionStartTime = DateTime.UtcNow.AddDays(-1),
-            CreatedAt = DateTime.UtcNow.AddDays(-1)
-        };
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
+        var session = TestDataBuilder.GameSession()
+            .WithUserId(_testUsers[0].Id)
+            .WithGameType(gameType)
+            .WithCorrectAnswers(8)
+            .WithWrongAnswers(2)
+            .WithSessionTimes(baseTime.AddDays(-1), null)
+            .WithCreatedAt(baseTime.AddDays(-1))
+            .Build();
 
         _context.GameSessions.Add(session);
         await _context.SaveChangesAsync();
@@ -506,16 +472,15 @@ public class LeaderboardServiceTests : IDisposable
     public async Task GetLeaderboardByPeriodAsync_WithValidPeriods_ShouldWork(string period)
     {
         // Arrange
-        var session = new GameSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = _testUsers[0].Id,
-            GameType = "countries",
-            CorrectAnswers = 8,
-            WrongAnswers = 2,
-            SessionStartTime = DateTime.UtcNow.AddDays(-1),
-            CreatedAt = DateTime.UtcNow.AddDays(-1)
-        };
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
+        var session = TestDataBuilder.GameSession()
+            .WithUserId(_testUsers[0].Id)
+            .WithGameType("countries")
+            .WithCorrectAnswers(8)
+            .WithWrongAnswers(2)
+            .WithSessionTimes(baseTime.AddDays(-1), null)
+            .WithCreatedAt(baseTime.AddDays(-1))
+            .Build();
 
         _context.GameSessions.Add(session);
         await _context.SaveChangesAsync();
@@ -526,15 +491,15 @@ public class LeaderboardServiceTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         // For recent session, all periods should include it except potentially year depending on test timing
-        if (period != "year" || DateTime.UtcNow.Month == DateTime.UtcNow.AddDays(-1).Month)
+        if (period != "year" || baseTime.Month == baseTime.AddDays(-1).Month)
         {
             result.Entries.Should().HaveCount(1);
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
-        _context.Dispose();
         _memoryCache.Dispose();
+        base.Dispose();
     }
 }

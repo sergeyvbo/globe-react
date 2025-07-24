@@ -2,6 +2,7 @@ using FluentAssertions;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -9,34 +10,23 @@ using Moq;
 namespace GeoQuizApi.Tests.Unit.Services;
 
 [Trait("Category", "Unit")]
-public class GameStatsServiceTests : IDisposable
+public class GameStatsServiceTests : BaseUnitTest
 {
-    private readonly GeoQuizDbContext _context;
     private readonly Mock<ILogger<GameStatsService>> _mockLogger;
     private readonly GameStatsService _gameStatsService;
     private readonly User _testUser;
 
     public GameStatsServiceTests()
     {
-        // Setup in-memory database
-        var options = new DbContextOptionsBuilder<GeoQuizDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-        
-        _context = new GeoQuizDbContext(options);
-        _mockLogger = new Mock<ILogger<GameStatsService>>();
-        
+        _mockLogger = CreateMockLogger<GameStatsService>();
         _gameStatsService = new GameStatsService(_context, _mockLogger.Object);
 
-        // Create test user
-        _testUser = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Password123"),
-            Name = "Test User",
-            CreatedAt = DateTime.UtcNow
-        };
+        // Create test user using TestDataBuilder
+        _testUser = TestDataBuilder.User()
+            .WithEmail(TestDataBuilder.GenerateUniqueEmail())
+            .WithPassword("Password123")
+            .WithName("Test User")
+            .Build();
         _context.Users.Add(_testUser);
         _context.SaveChanges();
     }
@@ -48,8 +38,8 @@ public class GameStatsServiceTests : IDisposable
         var gameType = "countries";
         var correctAnswers = 8;
         var wrongAnswers = 2;
-        var sessionStartTime = DateTime.UtcNow.AddMinutes(-5);
-        var sessionEndTime = DateTime.UtcNow;
+        var sessionStartTime = TestDataBuilder.GenerateUniqueTimestamp().AddMinutes(-5);
+        var sessionEndTime = TestDataBuilder.GenerateUniqueTimestamp();
 
         // Act
         var result = await _gameStatsService.SaveGameSessionAsync(
@@ -91,41 +81,33 @@ public class GameStatsServiceTests : IDisposable
     public async Task GetUserStatsAsync_WithMultipleSessions_ShouldReturnAggregatedStats()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "flags",
-                CorrectAnswers = 6,
-                WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 9,
-                WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                SessionEndTime = DateTime.UtcNow.AddHours(-1).AddMinutes(4),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), baseTime.AddDays(-2).AddMinutes(5))
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(6)
+                .WithWrongAnswers(4)
+                .WithSessionTimes(baseTime.AddDays(-1), baseTime.AddDays(-1).AddMinutes(3))
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(9)
+                .WithWrongAnswers(1)
+                .WithSessionTimes(baseTime.AddHours(-1), baseTime.AddHours(-1).AddMinutes(4))
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -140,7 +122,7 @@ public class GameStatsServiceTests : IDisposable
         result.TotalCorrectAnswers.Should().Be(23); // 8 + 6 + 9
         result.TotalWrongAnswers.Should().Be(7); // 2 + 4 + 1
         result.AverageAccuracy.Should().BeApproximately(76.67, 0.01); // 23/30 * 100
-        result.LastPlayedAt.Should().BeCloseTo(DateTime.UtcNow.AddHours(-1), TimeSpan.FromMinutes(1));
+        result.LastPlayedAt.Should().BeCloseTo(baseTime.AddHours(-1), TimeSpan.FromMinutes(1));
 
         // Check game type stats
         result.GameTypeStats.Should().HaveCount(2);
@@ -164,38 +146,33 @@ public class GameStatsServiceTests : IDisposable
     public async Task GetUserGameHistoryAsync_ShouldReturnSessionsOrderedByDate()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-3),
-                CreatedAt = DateTime.UtcNow.AddDays(-3)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "flags",
-                CorrectAnswers = 6,
-                WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "states",
-                CorrectAnswers = 7,
-                WrongAnswers = 3,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-3), null)
+                .WithCreatedAt(baseTime.AddDays(-3))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(6)
+                .WithWrongAnswers(4)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("states")
+                .WithCorrectAnswers(7)
+                .WithWrongAnswers(3)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -218,16 +195,17 @@ public class GameStatsServiceTests : IDisposable
     public async Task GetUserGameHistoryAsync_WithPagination_ShouldReturnCorrectPage()
     {
         // Arrange
-        var sessions = Enumerable.Range(1, 25).Select(i => new GameSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = _testUser.Id,
-            GameType = "countries",
-            CorrectAnswers = i,
-            WrongAnswers = 10 - i,
-            SessionStartTime = DateTime.UtcNow.AddDays(-i),
-            CreatedAt = DateTime.UtcNow.AddDays(-i)
-        }).ToList();
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
+        var sessions = Enumerable.Range(1, 25).Select(i => 
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(i)
+                .WithWrongAnswers(10 - i)
+                .WithSessionTimes(baseTime.AddDays(-i), null)
+                .WithCreatedAt(baseTime.AddDays(-i))
+                .Build()
+        ).ToList();
 
         _context.GameSessions.AddRange(sessions);
         await _context.SaveChangesAsync();
@@ -252,38 +230,33 @@ public class GameStatsServiceTests : IDisposable
     public async Task GetUserStatsByGameTypeAsync_ShouldReturnStatsForSpecificGameType()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 8,
-                WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "flags", // Different game type - should be ignored
-                CorrectAnswers = 6,
-                WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 9,
-                WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(8)
+                .WithWrongAnswers(2)
+                .WithSessionTimes(baseTime.AddDays(-2), null)
+                .WithCreatedAt(baseTime.AddDays(-2))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("flags") // Different game type - should be ignored
+                .WithCorrectAnswers(6)
+                .WithWrongAnswers(4)
+                .WithSessionTimes(baseTime.AddDays(-1), null)
+                .WithCreatedAt(baseTime.AddDays(-1))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(9)
+                .WithWrongAnswers(1)
+                .WithSessionTimes(baseTime.AddHours(-1), null)
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -318,6 +291,7 @@ public class GameStatsServiceTests : IDisposable
     public async Task MigrateAnonymousProgressAsync_ShouldCreateGameSessionsFromAnonymousData()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var anonymousSessions = new List<AnonymousGameSession>
         {
             new AnonymousGameSession
@@ -325,16 +299,16 @@ public class GameStatsServiceTests : IDisposable
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-2),
+                SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
             },
             new AnonymousGameSession
             {
                 GameType = "flags",
                 CorrectAnswers = 6,
                 WrongAnswers = 4,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(-1),
+                SessionEndTime = baseTime.AddDays(-1).AddMinutes(3)
             }
         };
 
@@ -369,48 +343,42 @@ public class GameStatsServiceTests : IDisposable
     {
         // Arrange - Create sessions with a pattern: 3 correct, 1 wrong, 5 correct, 2 wrong
         var sessions = new List<GameSession>();
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp().AddDays(-10);
 
         // First streak: 3 correct answers
         for (int i = 0; i < 3; i++)
         {
-            sessions.Add(new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = baseTime.AddHours(i),
-                CreatedAt = baseTime.AddHours(i)
-            });
+            sessions.Add(TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(i), null)
+                .WithCreatedAt(baseTime.AddHours(i))
+                .Build());
         }
 
         // Break the streak with a wrong answer
-        sessions.Add(new GameSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = _testUser.Id,
-            GameType = "countries",
-            CorrectAnswers = 0,
-            WrongAnswers = 1,
-            SessionStartTime = baseTime.AddHours(3),
-            CreatedAt = baseTime.AddHours(3)
-        });
+        sessions.Add(TestDataBuilder.GameSession()
+            .WithUserId(_testUser.Id)
+            .WithGameType("countries")
+            .WithCorrectAnswers(0)
+            .WithWrongAnswers(1)
+            .WithSessionTimes(baseTime.AddHours(3), null)
+            .WithCreatedAt(baseTime.AddHours(3))
+            .Build());
 
         // Second streak: 5 correct answers (this should be the best streak)
         for (int i = 0; i < 5; i++)
         {
-            sessions.Add(new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = baseTime.AddHours(4 + i),
-                CreatedAt = baseTime.AddHours(4 + i)
-            });
+            sessions.Add(TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(4 + i), null)
+                .WithCreatedAt(baseTime.AddHours(4 + i))
+                .Build());
         }
 
         _context.GameSessions.AddRange(sessions);
@@ -427,60 +395,51 @@ public class GameStatsServiceTests : IDisposable
     public async Task CalculateBestStreakAsync_WithGameTypeFilter_ShouldReturnStreakForSpecificGameType()
     {
         // Arrange
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         var sessions = new List<GameSession>
         {
             // Countries game - 3 correct in a row
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-5),
-                CreatedAt = DateTime.UtcNow.AddHours(-5)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-4),
-                CreatedAt = DateTime.UtcNow.AddHours(-4)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "countries",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-3),
-                CreatedAt = DateTime.UtcNow.AddHours(-3)
-            },
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-5), null)
+                .WithCreatedAt(baseTime.AddHours(-5))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-4), null)
+                .WithCreatedAt(baseTime.AddHours(-4))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("countries")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-3), null)
+                .WithCreatedAt(baseTime.AddHours(-3))
+                .Build(),
             // Flags game - 2 correct in a row (should be ignored when filtering by countries)
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "flags",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-2),
-                CreatedAt = DateTime.UtcNow.AddHours(-2)
-            },
-            new GameSession
-            {
-                Id = Guid.NewGuid(),
-                UserId = _testUser.Id,
-                GameType = "flags",
-                CorrectAnswers = 1,
-                WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                CreatedAt = DateTime.UtcNow.AddHours(-1)
-            }
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-2), null)
+                .WithCreatedAt(baseTime.AddHours(-2))
+                .Build(),
+            TestDataBuilder.GameSession()
+                .WithUserId(_testUser.Id)
+                .WithGameType("flags")
+                .WithCorrectAnswers(1)
+                .WithWrongAnswers(0)
+                .WithSessionTimes(baseTime.AddHours(-1), null)
+                .WithCreatedAt(baseTime.AddHours(-1))
+                .Build()
         };
 
         _context.GameSessions.AddRange(sessions);
@@ -495,8 +454,5 @@ public class GameStatsServiceTests : IDisposable
         flagsStreak.Should().Be(2);
     }
 
-    public void Dispose()
-    {
-        _context.Dispose();
-    }
+
 }
