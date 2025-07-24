@@ -11,6 +11,47 @@ namespace GeoQuizApi.Tests.Integration;
 
 public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartup> where TStartup : class
 {
+    private static readonly object _databaseNameLock = new object();
+    private static int _databaseCounter = 0;
+    private readonly string _databaseName;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ILogger<TestWebApplicationFactory<TStartup>> _logger;
+
+    public TestWebApplicationFactory()
+    {
+        _databaseName = GenerateUniqueDatabaseName();
+        
+        // Create a logger factory for internal logging
+        _loggerFactory = LoggerFactory.Create(builder => 
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Debug);
+        });
+        _logger = _loggerFactory.CreateLogger<TestWebApplicationFactory<TStartup>>();
+    }
+
+    /// <summary>
+    /// Generates a thread-safe unique database name using counter and timestamp
+    /// </summary>
+    private string GenerateUniqueDatabaseName()
+    {
+        lock (_databaseNameLock)
+        {
+            var timestamp = DateTime.UtcNow.Ticks;
+            var counter = ++_databaseCounter;
+            var testClassName = typeof(TStartup).Name;
+            var uniqueName = $"TestDb_{testClassName}_{counter}_{timestamp}";
+            
+            _logger?.LogInformation("Generated unique database name: {DatabaseName}", uniqueName);
+            return uniqueName;
+        }
+    }
+
+    /// <summary>
+    /// Gets the unique database name for this factory instance
+    /// </summary>
+    public string DatabaseName => _databaseName;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -58,12 +99,11 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 services.Remove(service);
             }
 
-            // Add in-memory database for testing - use a unique name per test class to avoid conflicts
-            var databaseName = $"TestDb_{typeof(TStartup).Name}_{Guid.NewGuid()}";
+            // Add in-memory database for testing with pre-generated unique name
             services.AddDbContext<GeoQuizDbContext>(options =>
             {
-                options.UseInMemoryDatabase(databaseName: databaseName)
-                    .LogTo(Console.WriteLine, LogLevel.Information);
+                options.UseInMemoryDatabase(databaseName: _databaseName)
+                    .LogTo(message => _logger?.LogDebug("EF Core: {Message}", message), LogLevel.Information);
                 options.EnableSensitiveDataLogging();
             });
 
@@ -74,5 +114,130 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 loggingBuilder.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
             });
         });
+    }
+
+    /// <summary>
+    /// Clears all data from the test database with proper error handling
+    /// </summary>
+    public async Task ClearDatabaseAsync()
+    {
+        try
+        {
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+            
+            _logger?.LogDebug("Starting database cleanup for {DatabaseName}", _databaseName);
+            
+            await ClearTablesInOrderAsync(context);
+            
+            _logger?.LogDebug("Database cleanup completed successfully for {DatabaseName}", _databaseName);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to clear database {DatabaseName}, attempting full recreation", _databaseName);
+            
+            try
+            {
+                await RecreateDatabaseAsync();
+                _logger?.LogInformation("Database {DatabaseName} recreated successfully", _databaseName);
+            }
+            catch (Exception recreateEx)
+            {
+                _logger?.LogError(recreateEx, "Failed to recreate database {DatabaseName}", _databaseName);
+                throw new InvalidOperationException($"Failed to clear or recreate test database {_databaseName}", recreateEx);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clears database tables in the correct order to respect foreign key constraints
+    /// </summary>
+    private async Task ClearTablesInOrderAsync(GeoQuizDbContext context)
+    {
+        // Clear tables in reverse dependency order to avoid foreign key constraint violations
+        
+        // 1. Clear GameSessions (depends on Users)
+        if (context.GameSessions.Any())
+        {
+            context.GameSessions.RemoveRange(context.GameSessions);
+            _logger?.LogDebug("Cleared GameSessions table");
+        }
+
+        // 2. Clear RefreshTokens (depends on Users)
+        if (context.RefreshTokens.Any())
+        {
+            context.RefreshTokens.RemoveRange(context.RefreshTokens);
+            _logger?.LogDebug("Cleared RefreshTokens table");
+        }
+
+        // 3. Clear Users (main table)
+        if (context.Users.Any())
+        {
+            context.Users.RemoveRange(context.Users);
+            _logger?.LogDebug("Cleared Users table");
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Recreates the database completely when cleanup fails
+    /// </summary>
+    private async Task RecreateDatabaseAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        // Delete and recreate the database
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Ensures the database is properly initialized
+    /// </summary>
+    public async Task EnsureDatabaseCreatedAsync()
+    {
+        try
+        {
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+            
+            await context.Database.EnsureCreatedAsync();
+            _logger?.LogDebug("Database {DatabaseName} ensured created", _databaseName);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to ensure database {DatabaseName} is created", _databaseName);
+            throw;
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            try
+            {
+                // Attempt to clean up the database on disposal
+                using var scope = Services.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+                context.Database.EnsureDeleted();
+                
+                _logger?.LogDebug("Database {DatabaseName} cleaned up on disposal", _databaseName);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Failed to clean up database {DatabaseName} on disposal", _databaseName);
+                // Don't throw during disposal
+            }
+            finally
+            {
+                // Dispose of the logger factory
+                _loggerFactory?.Dispose();
+            }
+        }
+        
+        base.Dispose(disposing);
     }
 }
