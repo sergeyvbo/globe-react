@@ -55,27 +55,46 @@ public abstract class BaseUnitTest : IDisposable
     }
 
     /// <summary>
-    /// Clears all data from the test database while maintaining schema
+    /// Clears all data from the test database with comprehensive error handling and logging
     /// </summary>
     protected async Task ClearDatabaseAsync()
     {
-        try
+        var testName = GetType().Name;
+        var logger = CreateConsoleLogger();
+        
+        var cleanupResult = await TestErrorHandler.HandleDatabaseCleanupAsync(
+            logger,
+            _context,
+            testName,
+            async () =>
+            {
+                // Clear all tables in the correct order (respecting foreign key constraints)
+                _context.GameSessions.RemoveRange(_context.GameSessions);
+                _context.RefreshTokens.RemoveRange(_context.RefreshTokens);
+                _context.Users.RemoveRange(_context.Users);
+                
+                await _context.SaveChangesAsync();
+            },
+            async () =>
+            {
+                // Fallback: recreate the database
+                await _context.Database.EnsureDeletedAsync();
+                await _context.Database.EnsureCreatedAsync();
+            }
+        );
+
+        if (!cleanupResult.Success)
         {
-            // Clear all tables in the correct order (respecting foreign key constraints)
-            _context.GameSessions.RemoveRange(_context.GameSessions);
-            _context.RefreshTokens.RemoveRange(_context.RefreshTokens);
-            _context.Users.RemoveRange(_context.Users);
+            var errorMessage = TestErrorHandler.CreateEnhancedAssertionMessage(
+                testName,
+                "Database cleanup should succeed",
+                "Clean database state",
+                "Failed cleanup operation",
+                await TestDiagnostics.GetDatabaseDiagnosticsAsync(_context, testName),
+                cleanupResult.DetailedError
+            );
             
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            // If clearing fails, recreate the database
-            await _context.Database.EnsureDeletedAsync();
-            await _context.Database.EnsureCreatedAsync();
-            
-            // Log the issue but don't fail the test
-            Console.WriteLine($"Warning: Database clear failed, recreated database. Error: {ex.Message}");
+            Console.WriteLine($"WARNING: {errorMessage}");
         }
     }
 
@@ -137,6 +156,89 @@ public abstract class BaseUnitTest : IDisposable
     /// Gets the current database name for debugging purposes
     /// </summary>
     protected string GetDatabaseName() => _databaseName;
+
+    /// <summary>
+    /// Gets comprehensive diagnostic information about the current database state
+    /// </summary>
+    protected async Task<DatabaseDiagnosticInfo> GetDatabaseDiagnosticsAsync()
+    {
+        return await TestDiagnostics.GetDatabaseDiagnosticsAsync(_context, GetType().Name);
+    }
+
+    /// <summary>
+    /// Gets simple diagnostic summary for quick debugging
+    /// </summary>
+    protected async Task<string> GetDatabaseDiagnosticsSummaryAsync()
+    {
+        var diagnostics = await GetDatabaseDiagnosticsAsync();
+        return diagnostics.ToSummaryString();
+    }
+
+    /// <summary>
+    /// Validates that the database is properly isolated for this test
+    /// </summary>
+    protected async Task<DatabaseIsolationResult> ValidateDatabaseIsolationAsync()
+    {
+        return await TestDiagnostics.ValidateDatabaseIsolationAsync(_context, GetType().Name);
+    }
+
+    /// <summary>
+    /// Executes an operation with comprehensive error handling and logging
+    /// </summary>
+    protected async Task<TestOperationResult<T>> ExecuteWithErrorHandlingAsync<T>(string operationName, Func<Task<T>> operation)
+    {
+        var logger = CreateConsoleLogger();
+        return await TestErrorHandler.ExecuteWithErrorHandlingAsync(logger, GetType().Name, operationName, operation, _context);
+    }
+
+    /// <summary>
+    /// Executes a void operation with comprehensive error handling and logging
+    /// </summary>
+    protected async Task<TestOperationResult> ExecuteWithErrorHandlingAsync(string operationName, Func<Task> operation)
+    {
+        var logger = CreateConsoleLogger();
+        return await TestErrorHandler.ExecuteWithErrorHandlingAsync(logger, GetType().Name, operationName, operation, _context);
+    }
+
+    /// <summary>
+    /// Creates enhanced assertion failure messages with database context
+    /// </summary>
+    protected async Task<string> CreateEnhancedAssertionMessageAsync(string assertion, object? expected, object? actual, string? additionalContext = null)
+    {
+        var databaseState = await GetDatabaseDiagnosticsAsync();
+        return TestErrorHandler.CreateEnhancedAssertionMessage(GetType().Name, assertion, expected, actual, databaseState, additionalContext);
+    }
+
+    /// <summary>
+    /// Measures and logs the performance of test operations
+    /// </summary>
+    protected async Task<T> MeasureOperationAsync<T>(string operationName, Func<Task<T>> operation)
+    {
+        var logger = CreateConsoleLogger();
+        return await TestDiagnostics.MeasureOperationAsync(logger, GetType().Name, operationName, operation);
+    }
+
+    /// <summary>
+    /// Measures and logs the performance of void test operations
+    /// </summary>
+    protected async Task MeasureOperationAsync(string operationName, Func<Task> operation)
+    {
+        var logger = CreateConsoleLogger();
+        await TestDiagnostics.MeasureOperationAsync(logger, GetType().Name, operationName, operation);
+    }
+
+    /// <summary>
+    /// Creates a console logger for unit tests
+    /// </summary>
+    private ILogger CreateConsoleLogger()
+    {
+        var loggerFactory = LoggerFactory.Create(builder => 
+        {
+            builder.AddConsole();
+            builder.SetMinimumLevel(LogLevel.Debug);
+        });
+        return loggerFactory.CreateLogger(GetType().Name);
+    }
 
     public virtual void Dispose()
     {

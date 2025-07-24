@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using GeoQuizApi.Data;
+using GeoQuizApi.Tests.TestUtilities;
 
 namespace GeoQuizApi.Tests.Integration;
 
@@ -117,34 +118,41 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
     }
 
     /// <summary>
-    /// Clears all data from the test database with proper error handling
+    /// Clears all data from the test database with comprehensive error handling and logging
     /// </summary>
     public async Task ClearDatabaseAsync()
     {
-        try
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        var cleanupResult = await TestErrorHandler.HandleDatabaseCleanupAsync(
+            _logger,
+            context,
+            $"Factory_{_databaseName}",
+            async () => await ClearTablesInOrderAsync(context),
+            async () => await RecreateDatabaseAsync()
+        );
+
+        if (!cleanupResult.Success)
         {
-            using var scope = Services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+            var errorMessage = TestErrorHandler.CreateEnhancedAssertionMessage(
+                $"Factory_{_databaseName}",
+                "Database cleanup should succeed",
+                "Clean database state",
+                "Failed cleanup operation",
+                await TestDiagnostics.GetDatabaseDiagnosticsAsync(context, $"Factory_{_databaseName}"),
+                cleanupResult.DetailedError
+            );
             
-            _logger?.LogDebug("Starting database cleanup for {DatabaseName}", _databaseName);
-            
-            await ClearTablesInOrderAsync(context);
-            
-            _logger?.LogDebug("Database cleanup completed successfully for {DatabaseName}", _databaseName);
+            _logger?.LogError("Factory database cleanup failed: {ErrorMessage}", errorMessage);
+            throw new InvalidOperationException($"Failed to clear or recreate test database {_databaseName}: {cleanupResult.DetailedError}", cleanupResult.PrimaryError);
         }
-        catch (Exception ex)
+        
+        if (cleanupResult.Warnings.Any())
         {
-            _logger?.LogWarning(ex, "Failed to clear database {DatabaseName}, attempting full recreation", _databaseName);
-            
-            try
+            foreach (var warning in cleanupResult.Warnings)
             {
-                await RecreateDatabaseAsync();
-                _logger?.LogInformation("Database {DatabaseName} recreated successfully", _databaseName);
-            }
-            catch (Exception recreateEx)
-            {
-                _logger?.LogError(recreateEx, "Failed to recreate database {DatabaseName}", _databaseName);
-                throw new InvalidOperationException($"Failed to clear or recreate test database {_databaseName}", recreateEx);
+                _logger?.LogWarning("Factory database cleanup warning for {DatabaseName}: {Warning}", _databaseName, warning);
             }
         }
     }
@@ -213,17 +221,56 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
         }
     }
 
+    /// <summary>
+    /// Gets comprehensive diagnostic information about the current database state
+    /// </summary>
+    public async Task<DatabaseDiagnosticInfo> GetDatabaseDiagnosticsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        return await TestDiagnostics.GetDatabaseDiagnosticsAsync(context, $"Factory_{_databaseName}");
+    }
+
+    /// <summary>
+    /// Gets simple diagnostic summary for quick debugging
+    /// </summary>
+    public async Task<string> GetDatabaseDiagnosticsSummaryAsync()
+    {
+        var diagnostics = await GetDatabaseDiagnosticsAsync();
+        return diagnostics.ToSummaryString();
+    }
+
+    /// <summary>
+    /// Validates that the database is properly isolated
+    /// </summary>
+    public async Task<DatabaseIsolationResult> ValidateDatabaseIsolationAsync()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        return await TestDiagnostics.ValidateDatabaseIsolationAsync(context, $"Factory_{_databaseName}");
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             try
             {
-                // Attempt to clean up the database on disposal
+                // Attempt to clean up the database on disposal with enhanced logging
                 using var scope = Services.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
-                context.Database.EnsureDeleted();
                 
+                // Log final database state before cleanup
+                var finalDiagnostics = TestDiagnostics.GetDatabaseDiagnosticsAsync(context, $"Factory_{_databaseName}").Result;
+                if (finalDiagnostics.HasData)
+                {
+                    _logger?.LogDebug("Database {DatabaseName} has residual data on disposal: {Diagnostics}", 
+                        _databaseName, finalDiagnostics.ToSummaryString());
+                }
+                
+                context.Database.EnsureDeleted();
                 _logger?.LogDebug("Database {DatabaseName} cleaned up on disposal", _databaseName);
             }
             catch (Exception ex)

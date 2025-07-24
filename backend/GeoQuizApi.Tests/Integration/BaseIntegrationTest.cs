@@ -68,38 +68,53 @@ public abstract class BaseIntegrationTest : IClassFixture<TestWebApplicationFact
     }
 
     /// <summary>
-    /// Enhanced database cleanup with semaphore-based synchronization and proper error handling
+    /// Enhanced database cleanup with comprehensive error handling, logging, and fallback strategies
     /// </summary>
     protected async Task ClearDatabaseAsync()
     {
         await _cleanupSemaphore.WaitAsync();
         try
         {
-            _logger.LogDebug("Starting database cleanup for test: {TestClass}", GetType().Name);
-            
             using var scope = _factory.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
             
-            await ClearTablesInOrderAsync(context);
+            var testName = GetType().Name;
             
-            _logger.LogDebug("Database cleanup completed successfully for test: {TestClass}", GetType().Name);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to clear database tables for test: {TestClass}, attempting full recreation", GetType().Name);
-            
-            try
+            // Use enhanced error handler for comprehensive cleanup
+            var cleanupResult = await TestErrorHandler.HandleDatabaseCleanupAsync(
+                _logger,
+                context,
+                testName,
+                async () => await ClearTablesInOrderAsync(context),
+                async () => await RecreateDatabaseAsync()
+            );
+
+            if (!cleanupResult.Success)
             {
-                await RecreateDatabaseAsync();
-                _logger.LogInformation("Database recreated successfully for test: {TestClass}", GetType().Name);
-            }
-            catch (Exception recreateEx)
-            {
-                _logger.LogError(recreateEx, "Failed to recreate database for test: {TestClass}", GetType().Name);
+                // Log detailed failure information
+                _logger.LogError("Complete database cleanup failure for test {TestName}: {CleanupResult}", 
+                    testName, cleanupResult.ToString());
                 
-                // Don't fail the test setup, but log the issue
-                // The in-memory database should still work for most scenarios
-                Console.WriteLine($"Warning: Database cleanup failed for {GetType().Name}: {recreateEx.Message}");
+                // Create informative error message for debugging
+                var errorMessage = TestErrorHandler.CreateEnhancedAssertionMessage(
+                    testName,
+                    "Database cleanup should succeed",
+                    "Clean database state",
+                    "Failed cleanup operation",
+                    await TestDiagnostics.GetDatabaseDiagnosticsAsync(context, testName),
+                    cleanupResult.DetailedError
+                );
+                
+                // Don't fail the test setup, but provide comprehensive warning
+                Console.WriteLine($"WARNING: {errorMessage}");
+            }
+            else if (cleanupResult.Warnings.Any())
+            {
+                // Log warnings about cleanup issues
+                foreach (var warning in cleanupResult.Warnings)
+                {
+                    _logger.LogWarning("Database cleanup warning for test {TestName}: {Warning}", testName, warning);
+                }
             }
         }
         finally
@@ -213,17 +228,80 @@ public abstract class BaseIntegrationTest : IClassFixture<TestWebApplicationFact
     }
 
     /// <summary>
-    /// Gets diagnostic information about the current database state
+    /// Gets comprehensive diagnostic information about the current database state
     /// </summary>
-    protected async Task<string> GetDatabaseDiagnosticsAsync()
+    protected async Task<DatabaseDiagnosticInfo> GetDatabaseDiagnosticsAsync()
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
         
-        var userCount = await context.Users.CountAsync();
-        var sessionCount = await context.GameSessions.CountAsync();
-        var tokenCount = await context.RefreshTokens.CountAsync();
+        return await TestDiagnostics.GetDatabaseDiagnosticsAsync(context, GetType().Name);
+    }
+
+    /// <summary>
+    /// Gets simple diagnostic summary for quick debugging
+    /// </summary>
+    protected async Task<string> GetDatabaseDiagnosticsSummaryAsync()
+    {
+        var diagnostics = await GetDatabaseDiagnosticsAsync();
+        return diagnostics.ToSummaryString();
+    }
+
+    /// <summary>
+    /// Validates that the database is properly isolated for this test
+    /// </summary>
+    protected async Task<DatabaseIsolationResult> ValidateDatabaseIsolationAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
         
-        return $"Database: {_factory.DatabaseName}, Users: {userCount}, Sessions: {sessionCount}, Tokens: {tokenCount}";
+        return await TestDiagnostics.ValidateDatabaseIsolationAsync(context, GetType().Name);
+    }
+
+    /// <summary>
+    /// Executes an operation with comprehensive error handling and logging
+    /// </summary>
+    protected async Task<TestOperationResult<T>> ExecuteWithErrorHandlingAsync<T>(string operationName, Func<Task<T>> operation)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        return await TestErrorHandler.ExecuteWithErrorHandlingAsync(_logger, GetType().Name, operationName, operation, context);
+    }
+
+    /// <summary>
+    /// Executes a void operation with comprehensive error handling and logging
+    /// </summary>
+    protected async Task<TestOperationResult> ExecuteWithErrorHandlingAsync(string operationName, Func<Task> operation)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+        
+        return await TestErrorHandler.ExecuteWithErrorHandlingAsync(_logger, GetType().Name, operationName, operation, context);
+    }
+
+    /// <summary>
+    /// Creates enhanced assertion failure messages with database context
+    /// </summary>
+    protected async Task<string> CreateEnhancedAssertionMessageAsync(string assertion, object? expected, object? actual, string? additionalContext = null)
+    {
+        var databaseState = await GetDatabaseDiagnosticsAsync();
+        return TestErrorHandler.CreateEnhancedAssertionMessage(GetType().Name, assertion, expected, actual, databaseState, additionalContext);
+    }
+
+    /// <summary>
+    /// Measures and logs the performance of test operations
+    /// </summary>
+    protected async Task<T> MeasureOperationAsync<T>(string operationName, Func<Task<T>> operation)
+    {
+        return await TestDiagnostics.MeasureOperationAsync(_logger, GetType().Name, operationName, operation);
+    }
+
+    /// <summary>
+    /// Measures and logs the performance of void test operations
+    /// </summary>
+    protected async Task MeasureOperationAsync(string operationName, Func<Task> operation)
+    {
+        await TestDiagnostics.MeasureOperationAsync(_logger, GetType().Name, operationName, operation);
     }
 }
