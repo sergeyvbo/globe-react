@@ -2,11 +2,37 @@ using GeoQuizApi.Models.Entities;
 
 namespace GeoQuizApi.Tests.TestUtilities;
 
-public class TestDataBuilder
+public static class TestDataBuilder
 {
+    private static readonly object _emailLock = new object();
+    private static int _emailCounter = 0;
+
     public static UserBuilder User() => new UserBuilder();
     public static GameSessionBuilder GameSession() => new GameSessionBuilder();
     public static RefreshTokenBuilder RefreshToken() => new RefreshTokenBuilder();
+
+    /// <summary>
+    /// Generates a unique email address for testing purposes
+    /// </summary>
+    /// <param name="prefix">Optional prefix for the email (default: "test")</param>
+    /// <returns>A unique email address</returns>
+    public static string GenerateUniqueEmail(string prefix = "test")
+    {
+        lock (_emailLock)
+        {
+            return $"{prefix}_{++_emailCounter}_{Guid.NewGuid():N}@example.com";
+        }
+    }
+
+    /// <summary>
+    /// Generates a unique timestamp based on a base time with incremental ticks
+    /// </summary>
+    /// <param name="baseTime">Base time to start from (default: current UTC time)</param>
+    /// <returns>A unique timestamp</returns>
+    public static DateTime GenerateUniqueTimestamp(DateTime? baseTime = null)
+    {
+        return TimestampManager.GetUniqueTimestamp(baseTime);
+    }
 }
 
 public class UserBuilder
@@ -18,11 +44,11 @@ public class UserBuilder
         _user = new User
         {
             Id = Guid.NewGuid(),
-            Email = "test@example.com",
+            Email = TestDataBuilder.GenerateUniqueEmail(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("TestPassword123"),
             Name = "Test User",
             Provider = "email",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = TestDataBuilder.GenerateUniqueTimestamp()
         };
     }
 
@@ -71,6 +97,7 @@ public class GameSessionBuilder
 
     public GameSessionBuilder()
     {
+        var baseTime = TestDataBuilder.GenerateUniqueTimestamp();
         _session = new GameSession
         {
             Id = Guid.NewGuid(),
@@ -78,9 +105,9 @@ public class GameSessionBuilder
             GameType = "countries",
             CorrectAnswers = 5,
             WrongAnswers = 5,
-            SessionStartTime = DateTime.UtcNow.AddMinutes(-10),
-            SessionEndTime = DateTime.UtcNow.AddMinutes(-5),
-            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
+            SessionStartTime = baseTime.AddMinutes(-10),
+            SessionEndTime = baseTime.AddMinutes(-5),
+            CreatedAt = baseTime.AddMinutes(-5)
         };
     }
 
@@ -142,13 +169,14 @@ public class RefreshTokenBuilder
 
     public RefreshTokenBuilder()
     {
+        var createdAt = TestDataBuilder.GenerateUniqueTimestamp();
         _token = new RefreshToken
         {
             Id = Guid.NewGuid(),
             Token = Guid.NewGuid().ToString(),
             UserId = Guid.NewGuid(),
-            ExpiresAt = DateTime.UtcNow.AddDays(7),
-            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = createdAt.AddDays(7),
+            CreatedAt = createdAt,
             IsRevoked = false
         };
     }

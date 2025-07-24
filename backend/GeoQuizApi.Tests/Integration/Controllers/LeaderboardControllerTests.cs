@@ -8,20 +8,17 @@ using GeoQuizApi.Models.DTOs.Leaderboard;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
+public class LeaderboardControllerTests : BaseIntegrationTest
 {
     public LeaderboardControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
     {
     }
 
-    public async Task InitializeAsync()
+    private async Task SetupTestAsync()
     {
         await ClearDatabaseAsync();
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
+        // Clear any existing authorization headers
+        _client.DefaultRequestHeaders.Authorization = null;
     }
 
     private async Task<string> CreateUserWithGameSessionsAsync(string email, string name, List<GameSessionRequest> sessions)
@@ -44,7 +41,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
 
         foreach (var session in sessions)
         {
-            await _client.PostAsJsonAsync("/api/game-stats", session);
+            var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
+            sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Clear auth header for next user
@@ -71,7 +70,10 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     [Fact]
     public async Task GetGlobalLeaderboard_WithGameSessions_ShouldReturnOrderedLeaderboard()
     {
-        // Arrange - Create users with different scores
+        // Arrange - Create users with different scores using unique emails
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-10);
+        
         var aliceSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -79,16 +81,16 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             },
             new GameSessionRequest
             {
                 GameType = "flags",
                 CorrectAnswers = 7,
                 WrongAnswers = 3,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(4)
+                SessionStartTime = baseTime.AddDays(2),
+                SessionEndTime = baseTime.AddDays(2).AddMinutes(4)
             }
         };
 
@@ -99,8 +101,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "countries",
                 CorrectAnswers = 9,
                 WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-2),
-                SessionEndTime = DateTime.UtcNow.AddHours(-2).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(3),
+                SessionEndTime = baseTime.AddDays(3).AddMinutes(3)
             }
         };
 
@@ -111,14 +113,14 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "states",
                 CorrectAnswers = 5,
                 WrongAnswers = 5,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                SessionEndTime = DateTime.UtcNow.AddHours(-1).AddMinutes(2)
+                SessionStartTime = baseTime.AddDays(4),
+                SessionEndTime = baseTime.AddDays(4).AddMinutes(2)
             }
         };
 
-        await CreateUserWithGameSessionsAsync("alice@leaderboard.com", "Alice Johnson", aliceSessions);
-        await CreateUserWithGameSessionsAsync("bob@leaderboard.com", "Bob Smith", bobSessions);
-        await CreateUserWithGameSessionsAsync("charlie@leaderboard.com", "Charlie Brown", charlieSessions);
+        await CreateUserWithGameSessionsAsync($"alice_{testId}@leaderboard.com", "Alice Johnson", aliceSessions);
+        await CreateUserWithGameSessionsAsync($"bob_{testId}@leaderboard.com", "Bob Smith", bobSessions);
+        await CreateUserWithGameSessionsAsync($"charlie_{testId}@leaderboard.com", "Charlie Brown", charlieSessions);
 
         // Act
         var response = await _client.GetAsync("/api/leaderboard");
@@ -150,6 +152,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetLeaderboardByGameType_ShouldFilterByGameType()
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-10);
+        
         var countriesSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -157,8 +162,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             }
         };
 
@@ -169,13 +174,13 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "flags",
                 CorrectAnswers = 9,
                 WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddHours(-1),
-                SessionEndTime = DateTime.UtcNow.AddHours(-1).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(2),
+                SessionEndTime = baseTime.AddDays(2).AddMinutes(3)
             }
         };
 
-        await CreateUserWithGameSessionsAsync("countries@test.com", "Countries Player", countriesSessions);
-        await CreateUserWithGameSessionsAsync("flags@test.com", "Flags Player", flagsSessions);
+        await CreateUserWithGameSessionsAsync($"countries_{testId}@test.com", "Countries Player", countriesSessions);
+        await CreateUserWithGameSessionsAsync($"flags_{testId}@test.com", "Flags Player", flagsSessions);
 
         // Act
         var response = await _client.GetAsync("/api/leaderboard/game-type/countries");
@@ -203,6 +208,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetLeaderboardByPeriod_ShouldFilterByTimePeriod()
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        
         var recentSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -227,8 +234,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
             }
         };
 
-        await CreateUserWithGameSessionsAsync("recent@test.com", "Recent Player", recentSessions);
-        await CreateUserWithGameSessionsAsync("old@test.com", "Old Player", oldSessions);
+        await CreateUserWithGameSessionsAsync($"recent_{testId}@test.com", "Recent Player", recentSessions);
+        await CreateUserWithGameSessionsAsync($"old_{testId}@test.com", "Old Player", oldSessions);
 
         // Act
         var weekResponse = await _client.GetAsync("/api/leaderboard/period/week");
@@ -260,7 +267,10 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     [Fact]
     public async Task GetLeaderboard_WithPagination_ShouldReturnCorrectPage()
     {
-        // Arrange - Create multiple users
+        // Arrange - Create multiple users with unique emails
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-20);
+        
         for (int i = 1; i <= 15; i++)
         {
             var sessions = new List<GameSessionRequest>
@@ -270,12 +280,12 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                     GameType = "countries",
                     CorrectAnswers = 15 - i + 1, // Higher scores for lower numbers
                     WrongAnswers = i - 1,
-                    SessionStartTime = DateTime.UtcNow.AddDays(-i),
-                    SessionEndTime = DateTime.UtcNow.AddDays(-i).AddMinutes(5)
+                    SessionStartTime = baseTime.AddDays(i).AddMilliseconds(i * 100),
+                    SessionEndTime = baseTime.AddDays(i).AddMilliseconds(i * 100).AddMinutes(5)
                 }
             };
 
-            await CreateUserWithGameSessionsAsync($"user{i}@test.com", $"User {i}", sessions);
+            await CreateUserWithGameSessionsAsync($"user{i}_{testId}@test.com", $"User {i}", sessions);
         }
 
         // Act
@@ -302,6 +312,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetLeaderboard_WithCurrentUser_ShouldIncludeCurrentUserEntry()
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-10);
+        
         var sessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -309,12 +322,12 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             }
         };
 
-        var token = await CreateUserWithGameSessionsAsync("current@test.com", "Current User", sessions);
+        var token = await CreateUserWithGameSessionsAsync($"current_{testId}@test.com", "Current User", sessions);
 
         // Set authorization header
         _client.DefaultRequestHeaders.Authorization = 
@@ -331,12 +344,17 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
         leaderboard!.CurrentUserEntry.Should().NotBeNull();
         leaderboard.CurrentUserEntry!.DisplayName.Should().Be("Current User");
         leaderboard.CurrentUserEntry.Rank.Should().BeGreaterThan(0);
+        
+        // Clear auth header
+        _client.DefaultRequestHeaders.Authorization = null;
     }
 
     [Fact]
     public async Task GetFilteredLeaderboard_WithBothFilters_ShouldApplyBothFilters()
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        
         var recentCountriesSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -373,9 +391,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
             }
         };
 
-        await CreateUserWithGameSessionsAsync("recent-countries@test.com", "Recent Countries", recentCountriesSessions);
-        await CreateUserWithGameSessionsAsync("recent-flags@test.com", "Recent Flags", recentFlagsSessions);
-        await CreateUserWithGameSessionsAsync("old-countries@test.com", "Old Countries", oldCountriesSessions);
+        await CreateUserWithGameSessionsAsync($"recent-countries_{testId}@test.com", "Recent Countries", recentCountriesSessions);
+        await CreateUserWithGameSessionsAsync($"recent-flags_{testId}@test.com", "Recent Flags", recentFlagsSessions);
+        await CreateUserWithGameSessionsAsync($"old-countries_{testId}@test.com", "Old Countries", oldCountriesSessions);
 
         // Act
         var response = await _client.GetAsync("/api/leaderboard?gameType=countries&period=week");
@@ -396,6 +414,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetLeaderboardByGameType_WithValidGameTypes_ShouldWork(string gameType)
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-10);
+        
         var sessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -403,12 +424,12 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = gameType,
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             }
         };
 
-        await CreateUserWithGameSessionsAsync($"{gameType}@test.com", $"{gameType} Player", sessions);
+        await CreateUserWithGameSessionsAsync($"{gameType}_{testId}@test.com", $"{gameType} Player", sessions);
 
         // Act
         var response = await _client.GetAsync($"/api/leaderboard/game-type/{gameType}");
@@ -430,6 +451,9 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetLeaderboardByPeriod_WithValidPeriods_ShouldWork(string period)
     {
         // Arrange
+        var testId = Guid.NewGuid().ToString("N")[..8];
+        var baseTime = DateTime.UtcNow.AddDays(-10);
+        
         var sessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -437,12 +461,12 @@ public class LeaderboardControllerTests : BaseIntegrationTest, IAsyncLifetime
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(1),
+                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
             }
         };
 
-        await CreateUserWithGameSessionsAsync($"{period}@test.com", $"{period} Player", sessions);
+        await CreateUserWithGameSessionsAsync($"{period}_{testId}@test.com", $"{period} Player", sessions);
 
         // Act
         var response = await _client.GetAsync($"/api/leaderboard/period/{period}");
