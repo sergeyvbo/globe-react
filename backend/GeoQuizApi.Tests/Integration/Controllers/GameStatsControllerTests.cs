@@ -17,6 +17,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task InitializeAsync()
     {
         await ClearDatabaseAsync();
+        // Clear any existing authorization headers
+        _client.DefaultRequestHeaders.Authorization = null;
     }
 
     public Task DisposeAsync()
@@ -42,7 +44,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task SaveGameSession_WithValidData_ShouldCreateSession()
     {
         // Arrange
-        var token = await GetAuthTokenAsync();
+        var uniqueEmail = $"savetest_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -92,7 +95,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task SaveGameSession_WithInvalidGameType_ShouldReturnValidationError()
     {
         // Arrange
-        var token = await GetAuthTokenAsync();
+        var uniqueEmail = $"invalidtype_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -116,7 +120,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserStats_WithNoSessions_ShouldReturnEmptyStats()
     {
         // Arrange
-        var token = await GetAuthTokenAsync("nostats@example.com");
+        var uniqueEmail = $"nostats_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -139,7 +144,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserStats_WithSessions_ShouldReturnAggregatedStats()
     {
         // Arrange
-        var token = await GetAuthTokenAsync("withstats@example.com");
+        var uniqueEmail = $"withstats_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -201,7 +207,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserGameHistory_ShouldReturnSessionsOrderedByDate()
     {
         // Arrange
-        var token = await GetAuthTokenAsync("history@example.com");
+        var uniqueEmail = $"history_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -263,7 +270,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task GetUserGameHistory_WithPagination_ShouldReturnCorrectPage()
     {
         // Arrange
-        var token = await GetAuthTokenAsync("pagination@example.com");
+        var uniqueEmail = $"pagination_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
@@ -317,7 +325,8 @@ public class GameStatsControllerTests : BaseIntegrationTest, IAsyncLifetime
     public async Task MigrateAnonymousProgress_WithValidData_ShouldCreateSessions()
     {
         // Arrange
-        var token = await GetAuthTokenAsync("migrate@example.com");
+        var uniqueEmail = $"migrate_{Guid.NewGuid()}@example.com";
+        var token = await GetAuthTokenAsync(uniqueEmail);
         _client.DefaultRequestHeaders.Authorization = 
             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
