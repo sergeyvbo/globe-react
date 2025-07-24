@@ -38,7 +38,6 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         {
             var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
             sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Clear auth header for next user
@@ -67,7 +66,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange - Create users with different scores using unique emails
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         
         var aliceSessions = new List<GameSessionRequest>
         {
@@ -148,7 +147,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         
         var countriesSessions = new List<GameSessionRequest>
         {
@@ -205,6 +204,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
         
+        var baseTime = GenerateUniqueTimestamp();
         var recentSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -212,8 +212,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-2),
+                SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
             }
         };
 
@@ -224,8 +224,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 10,
                 WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddDays(-10),
-                SessionEndTime = DateTime.UtcNow.AddDays(-10).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-10),
+                SessionEndTime = baseTime.AddDays(-10).AddMinutes(5)
             }
         };
 
@@ -264,7 +264,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange - Create multiple users with unique emails
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-20);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-20);
         
         for (int i = 1; i <= 15; i++)
         {
@@ -308,7 +308,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         
         var sessions = new List<GameSessionRequest>
         {
@@ -350,6 +350,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
         
+        var baseTime = GenerateUniqueTimestamp();
         var recentCountriesSessions = new List<GameSessionRequest>
         {
             new GameSessionRequest
@@ -357,8 +358,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = DateTime.UtcNow.AddDays(-2),
-                SessionEndTime = DateTime.UtcNow.AddDays(-2).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-2),
+                SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
             }
         };
 
@@ -369,8 +370,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "flags",
                 CorrectAnswers = 9,
                 WrongAnswers = 1,
-                SessionStartTime = DateTime.UtcNow.AddDays(-1),
-                SessionEndTime = DateTime.UtcNow.AddDays(-1).AddMinutes(3)
+                SessionStartTime = baseTime.AddDays(-1),
+                SessionEndTime = baseTime.AddDays(-1).AddMinutes(3)
             }
         };
 
@@ -381,8 +382,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 10,
                 WrongAnswers = 0,
-                SessionStartTime = DateTime.UtcNow.AddDays(-10),
-                SessionEndTime = DateTime.UtcNow.AddDays(-10).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-10),
+                SessionEndTime = baseTime.AddDays(-10).AddMinutes(5)
             }
         };
 
@@ -410,7 +411,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         
         var sessions = new List<GameSessionRequest>
         {
@@ -447,7 +448,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = DateTime.UtcNow.AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
         
         var sessions = new List<GameSessionRequest>
         {
@@ -473,7 +474,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         leaderboard.Should().NotBeNull();
         
         // For recent sessions, all periods should include them except potentially year
-        if (period != "year" || DateTime.UtcNow.Month == DateTime.UtcNow.AddDays(-1).Month)
+        var now = GenerateUniqueTimestamp();
+        if (period != "year" || now.Month == now.AddDays(-1).Month)
         {
             leaderboard!.Entries.Should().HaveCount(1);
         }

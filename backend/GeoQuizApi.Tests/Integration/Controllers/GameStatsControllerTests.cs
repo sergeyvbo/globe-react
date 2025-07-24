@@ -14,11 +14,11 @@ public class GameStatsControllerTests : BaseIntegrationTest
     {
     }
 
-    private async Task<string> GetAuthTokenAsync(string email = "gametest@example.com", string password = "TestPassword123")
+    private async Task<string> GetAuthTokenAsync(string email = null, string password = "TestPassword123")
     {
         var registerRequest = new RegisterRequest
         {
-            Email = email,
+            Email = email ?? GenerateUniqueEmail("gametest"),
             Password = password,
             Name = "Game Test User"
         };
@@ -174,7 +174,6 @@ public class GameStatsControllerTests : BaseIntegrationTest
         {
             var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
             sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Act
@@ -237,7 +236,6 @@ public class GameStatsControllerTests : BaseIntegrationTest
         {
             var sessionResponse = await _client.PostAsJsonAsync("/api/game-stats", session);
             sessionResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-            await Task.Delay(10); // Small delay to prevent race conditions
         }
 
         // Act
@@ -283,13 +281,7 @@ public class GameStatsControllerTests : BaseIntegrationTest
             
             var response = await _client.PostAsJsonAsync("/api/game-stats", session);
             response.StatusCode.Should().Be(HttpStatusCode.OK, $"Session {i} should be saved successfully. Response: {await response.Content.ReadAsStringAsync()}");
-            
-            // Small delay to prevent any potential race conditions
-            await Task.Delay(10);
         }
-
-        // Small delay before querying to ensure all data is committed
-        await Task.Delay(100);
 
         // Act
         var page1Response = await _client.GetAsync("/api/game-stats/me/history?page=1&pageSize=10");
