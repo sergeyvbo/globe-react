@@ -19,7 +19,7 @@ public abstract class BaseUnitTest : IDisposable
     {
         _databaseName = GenerateUniqueDatabaseName();
         var options = new DbContextOptionsBuilder<GeoQuizDbContext>()
-            .UseInMemoryDatabase(databaseName: _databaseName)
+            .UseSqlite($"Data Source={_databaseName}.db")
             .EnableSensitiveDataLogging()
             .Options;
         
@@ -246,6 +246,20 @@ public abstract class BaseUnitTest : IDisposable
         {
             _context?.Database.EnsureDeleted();
             _context?.Dispose();
+            
+            // Also delete the physical SQLite file
+            var dbPath = $"{_databaseName}.db";
+            if (File.Exists(dbPath))
+            {
+                try
+                {
+                    File.Delete(dbPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Failed to delete SQLite database file {dbPath}: {ex.Message}");
+                }
+            }
         }
         catch (Exception ex)
         {

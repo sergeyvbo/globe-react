@@ -100,10 +100,10 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 services.Remove(service);
             }
 
-            // Add in-memory database for testing with pre-generated unique name
+            // Add SQLite database for testing with pre-generated unique name
             services.AddDbContext<GeoQuizDbContext>(options =>
             {
-                options.UseInMemoryDatabase(databaseName: _databaseName)
+                options.UseSqlite($"Data Source={_databaseName}.db")
                     .LogTo(message => _logger?.LogDebug("EF Core: {Message}", message), LogLevel.Information);
                 options.EnableSensitiveDataLogging();
             });
@@ -198,6 +198,22 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
         
         // Delete and recreate the database
         await context.Database.EnsureDeletedAsync();
+        
+        // Also delete the physical SQLite file if it exists
+        var dbPath = $"{_databaseName}.db";
+        if (File.Exists(dbPath))
+        {
+            try
+            {
+                File.Delete(dbPath);
+                _logger?.LogDebug("Deleted SQLite database file: {DatabasePath}", dbPath);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Failed to delete SQLite database file: {DatabasePath}", dbPath);
+            }
+        }
+        
         await context.Database.EnsureCreatedAsync();
     }
 
@@ -271,6 +287,22 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
                 }
                 
                 context.Database.EnsureDeleted();
+                
+                // Also delete the physical SQLite file
+                var dbPath = $"{_databaseName}.db";
+                if (File.Exists(dbPath))
+                {
+                    try
+                    {
+                        File.Delete(dbPath);
+                        _logger?.LogDebug("Deleted SQLite database file on disposal: {DatabasePath}", dbPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "Failed to delete SQLite database file on disposal: {DatabasePath}", dbPath);
+                    }
+                }
+                
                 _logger?.LogDebug("Database {DatabaseName} cleaned up on disposal", _databaseName);
             }
             catch (Exception ex)

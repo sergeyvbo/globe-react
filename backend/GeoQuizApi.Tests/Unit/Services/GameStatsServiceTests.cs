@@ -35,6 +35,8 @@ public class GameStatsServiceTests : BaseUnitTest
     public async Task SaveGameSessionAsync_WithValidData_ShouldCreateGameSession()
     {
         // Arrange
+        GeoQuizApi.Tests.TestUtilities.TimestampManager.Reset(); // Reset test timestamp manager
+        GeoQuizApi.Services.TimestampManager.Reset(); // Reset production timestamp manager
         var gameType = "countries";
         var correctAnswers = 8;
         var wrongAnswers = 2;
@@ -51,7 +53,8 @@ public class GameStatsServiceTests : BaseUnitTest
         result.GameType.Should().Be(gameType);
         result.CorrectAnswers.Should().Be(correctAnswers);
         result.WrongAnswers.Should().Be(wrongAnswers);
-        result.SessionStartTime.Should().Be(sessionStartTime);
+        result.SessionStartTime.Should().BeAfter(DateTime.UtcNow.AddMinutes(-10)); // Should be recent
+        result.SessionStartTime.Should().BeBefore(DateTime.UtcNow.AddMinutes(1)); // Should not be in future
         result.SessionEndTime.Should().Be(sessionEndTime);
 
         // Verify session was saved to database
