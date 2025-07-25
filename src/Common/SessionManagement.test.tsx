@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
-import { AuthProvider, useAuth } from './AuthContext'
+import { AuthProvider, useAuth } from './Auth/AuthContext'
 
 // Mock localStorage
 const mockLocalStorage = {

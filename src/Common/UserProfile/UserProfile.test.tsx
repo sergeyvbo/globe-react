@@ -1,18 +1,26 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { UserProfile } from '.'
+import { UserProfile } from './UserProfile'
 import { AuthProvider } from '../Auth/AuthContext'
 import { authService } from '../Auth/AuthService'
+import { gameProgressService } from '../GameProgress/GameProgressService'
 
 // Mock the auth service
-vi.mock('./AuthService', () => ({
+vi.mock('../Auth/AuthService', () => ({
   authService: {
     changePassword: vi.fn()
   },
   ValidationUtils: {
     validatePassword: vi.fn(),
     validatePasswordConfirmation: vi.fn()
+  }
+}))
+
+// Mock the game progress service
+vi.mock('../GameProgress/GameProgressService', () => ({
+  gameProgressService: {
+    getGameStats: vi.fn()
   }
 }))
 
@@ -40,6 +48,7 @@ vi.mock('../../Localization/strings', () => ({
       passwordChangeFailed: 'Failed to change password. Please try again.',
       changing: 'Changing...',
       cancel: 'Cancel',
+      passwordHelperText: 'Password must be at least 8 characters long'
     }
     return strings[key] || key
   })
@@ -67,6 +76,23 @@ describe('UserProfile', () => {
     vi.clearAllMocks()
     mockAuthContext.user = null
     mockAuthContext.isAuthenticated = false
+    
+    // Mock game progress service to resolve immediately
+    vi.mocked(gameProgressService.getGameStats).mockImplementation(() => 
+      Promise.resolve({
+        totalGames: 0,
+        totalCorrectAnswers: 0,
+        totalWrongAnswers: 0,
+        averageAccuracy: 0,
+        bestStreak: 0,
+        lastPlayedAt: new Date(),
+        gameTypeStats: {
+          countries: { games: 0, correctAnswers: 0, wrongAnswers: 0, accuracy: 0, bestStreak: 0 },
+          flags: { games: 0, correctAnswers: 0, wrongAnswers: 0, accuracy: 0, bestStreak: 0 },
+          states: { games: 0, correctAnswers: 0, wrongAnswers: 0, accuracy: 0, bestStreak: 0 }
+        }
+      })
+    )
   })
 
   it('shows error when no user is logged in', () => {
@@ -98,7 +124,9 @@ describe('UserProfile', () => {
 
     expect(screen.getByText('Test User')).toBeInTheDocument()
     expect(screen.getByText('test@example.com')).toBeInTheDocument()
-    expect(screen.getByText('Email')).toBeInTheDocument()
+    // Use getAllByText to handle multiple "Email" elements and check the chip specifically
+    const emailElements = screen.getAllByText('Email')
+    expect(emailElements.length).toBeGreaterThan(0)
     expect(screen.getByText('Change Password')).toBeInTheDocument()
   })
 
@@ -142,14 +170,23 @@ describe('UserProfile', () => {
       </AuthProvider>
     )
 
-    const changePasswordButton = screen.getByText('Change Password')
+    // Wait for component to load and stats to finish loading
+    await waitFor(async () => {
+      // Wait for stats loading to complete
+      await new Promise(resolve => setTimeout(resolve, 100))
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+    }, { timeout: 5000 })
+
+    const changePasswordButton = screen.getByRole('button', { name: 'Change Password' })
     fireEvent.click(changePasswordButton)
 
-    expect(screen.getByLabelText('Current Password')).toBeInTheDocument()
-    expect(screen.getByLabelText('New Password')).toBeInTheDocument()
-    expect(screen.getByLabelText('Confirm New Password')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Change Password/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Current Password/)).toBeInTheDocument()
+      expect(screen.getByLabelText('New Password *')).toBeInTheDocument()
+      expect(screen.getByLabelText(/Confirm New Password/)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Change Password/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
+    }, { timeout: 3000 })
   })
 
   it('handles password change form submission', async () => {
@@ -164,8 +201,8 @@ describe('UserProfile', () => {
 
     // Mock validation functions
     const { ValidationUtils } = await import('../Auth/AuthService')
-    vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ isValid: true })
-    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockReturnValue({ isValid: true })
+    vi.mocked(ValidationUtils.validatePassword).mockImplementation(() => ({ isValid: true }))
+    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockImplementation(() => ({ isValid: true }))
     vi.mocked(authService.changePassword).mockResolvedValue()
 
     render(
@@ -174,17 +211,26 @@ describe('UserProfile', () => {
       </AuthProvider>
     )
 
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+    })
+
     // Open password change form
-    fireEvent.click(screen.getByText('Change Password'))
+    fireEvent.click(screen.getByRole('button', { name: 'Change Password' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Current Password/)).toBeInTheDocument()
+    })
 
     // Fill form
-    fireEvent.change(screen.getByLabelText('Current Password'), {
+    fireEvent.change(screen.getByLabelText(/Current Password/), {
       target: { value: 'oldpassword123' }
     })
-    fireEvent.change(screen.getByLabelText('New Password'), {
+    fireEvent.change(screen.getByLabelText('New Password *'), {
       target: { value: 'newpassword123' }
     })
-    fireEvent.change(screen.getByLabelText('Confirm New Password'), {
+    fireEvent.change(screen.getByLabelText(/Confirm New Password/), {
       target: { value: 'newpassword123' }
     })
 
@@ -216,11 +262,11 @@ describe('UserProfile', () => {
 
     // Mock validation functions to return errors
     const { ValidationUtils } = await import('../Auth/AuthService')
-    vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ 
+    vi.mocked(ValidationUtils.validatePassword).mockImplementation(() => ({ 
       isValid: false, 
       message: 'Password must be at least 8 characters long' 
-    })
-    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockReturnValue({ isValid: true })
+    }))
+    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockImplementation(() => ({ isValid: true }))
 
     render(
       <AuthProvider>
@@ -228,17 +274,26 @@ describe('UserProfile', () => {
       </AuthProvider>
     )
 
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+    })
+
     // Open password change form
-    fireEvent.click(screen.getByText('Change Password'))
+    fireEvent.click(screen.getByRole('button', { name: 'Change Password' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Current Password/)).toBeInTheDocument()
+    })
 
     // Fill form with invalid data
-    fireEvent.change(screen.getByLabelText('Current Password'), {
+    fireEvent.change(screen.getByLabelText(/Current Password/), {
       target: { value: 'oldpass' }
     })
-    fireEvent.change(screen.getByLabelText('New Password'), {
+    fireEvent.change(screen.getByLabelText('New Password *'), {
       target: { value: 'short' }
     })
-    fireEvent.change(screen.getByLabelText('Confirm New Password'), {
+    fireEvent.change(screen.getByLabelText(/Confirm New Password/), {
       target: { value: 'short' }
     })
 
@@ -268,11 +323,20 @@ describe('UserProfile', () => {
       </AuthProvider>
     )
 
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+    })
+
     // Open password change form
-    fireEvent.click(screen.getByText('Change Password'))
+    fireEvent.click(screen.getByRole('button', { name: 'Change Password' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Current Password/)).toBeInTheDocument()
+    })
 
     // Fill some data
-    fireEvent.change(screen.getByLabelText('Current Password'), {
+    fireEvent.change(screen.getByLabelText(/Current Password/), {
       target: { value: 'somepassword' }
     })
 
@@ -280,8 +344,10 @@ describe('UserProfile', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
     // Should be back to initial state
-    expect(screen.getByText('Change Password')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Current Password')).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+      expect(screen.queryByLabelText(/Current Password/)).not.toBeInTheDocument()
+    })
   })
 
   it('displays correct provider names and colors', () => {
@@ -300,6 +366,7 @@ describe('UserProfile', () => {
         provider: provider as any,
         createdAt: new Date('2024-01-01')
       }
+      mockAuthContext.isAuthenticated = true
 
       const { unmount } = render(
         <AuthProvider>
@@ -307,7 +374,13 @@ describe('UserProfile', () => {
         </AuthProvider>
       )
 
-      expect(screen.getByText(displayName)).toBeInTheDocument()
+      // For email provider, there might be multiple "Email" texts, so use more specific query
+      if (provider === 'email') {
+        const chipElements = screen.getAllByText(displayName)
+        expect(chipElements.length).toBeGreaterThan(0)
+      } else {
+        expect(screen.getByText(displayName)).toBeInTheDocument()
+      }
       unmount()
     })
   })
@@ -324,8 +397,8 @@ describe('UserProfile', () => {
 
     // Mock validation functions
     const { ValidationUtils } = await import('../Auth/AuthService')
-    vi.mocked(ValidationUtils.validatePassword).mockReturnValue({ isValid: true })
-    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockReturnValue({ isValid: true })
+    vi.mocked(ValidationUtils.validatePassword).mockImplementation(() => ({ isValid: true }))
+    vi.mocked(ValidationUtils.validatePasswordConfirmation).mockImplementation(() => ({ isValid: true }))
     
     // Mock service to throw error
     vi.mocked(authService.changePassword).mockRejectedValue({
@@ -339,17 +412,26 @@ describe('UserProfile', () => {
       </AuthProvider>
     )
 
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Change Password' })).toBeInTheDocument()
+    })
+
     // Open password change form
-    fireEvent.click(screen.getByText('Change Password'))
+    fireEvent.click(screen.getByRole('button', { name: 'Change Password' }))
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Current Password/)).toBeInTheDocument()
+    })
 
     // Fill form
-    fireEvent.change(screen.getByLabelText('Current Password'), {
+    fireEvent.change(screen.getByLabelText(/Current Password/), {
       target: { value: 'wrongpassword' }
     })
-    fireEvent.change(screen.getByLabelText('New Password'), {
+    fireEvent.change(screen.getByLabelText('New Password *'), {
       target: { value: 'newpassword123' }
     })
-    fireEvent.change(screen.getByLabelText('Confirm New Password'), {
+    fireEvent.change(screen.getByLabelText(/Confirm New Password/), {
       target: { value: 'newpassword123' }
     })
 

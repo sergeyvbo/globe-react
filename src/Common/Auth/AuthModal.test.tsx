@@ -236,7 +236,7 @@ describe('AuthModal', () => {
       const loginButton = screen.getByRole('button', { name: 'Login' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'wrongpassword')
+      await user.type(passwordInput, 'wrongpassword123')
       await user.click(loginButton)
 
       await waitFor(() => {

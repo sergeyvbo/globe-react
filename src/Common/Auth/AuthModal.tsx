@@ -51,6 +51,12 @@ const validatePassword = (password: string): { isValid: boolean; message?: strin
   if (password.length < 8) {
     return { isValid: false, message: getAuthString('passwordTooShort') }
   }
+  // Check if password contains at least one letter and one number
+  const hasLetter = /[a-zA-Z]/.test(password)
+  const hasNumber = /\d/.test(password)
+  if (!hasLetter || !hasNumber) {
+    return { isValid: false, message: getAuthString('passwordMustContainLetterAndNumber') }
+  }
   return { isValid: true }
 }
 
@@ -178,21 +184,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   // Get error message based on error type
-  const getErrorMessage = (error: AuthError): string => {
-    switch (error.type) {
-      case 'INVALID_CREDENTIALS':
-        return getAuthString('loginError')
-      case 'USER_EXISTS':
-        return getAuthString('userExistsError')
-      case 'NETWORK_ERROR':
-        return getAuthString('networkError')
-      case 'VALIDATION_ERROR':
-        return getAuthString('validationError')
-      case 'OAUTH_ERROR':
-        return getAuthString('oauthError')
-      default:
-        return mode === 'login' ? getAuthString('loginError') : getAuthString('registerError')
+  const getErrorMessage = (error: any): string => {
+    // If error has a message property, use it directly (for simple Error objects)
+    if (error?.message && typeof error.message === 'string') {
+      return error.message
     }
+
+    // If error has a type property, use it to get localized message
+    if (error?.type) {
+      switch (error.type) {
+        case 'INVALID_CREDENTIALS':
+          return getAuthString('loginError')
+        case 'USER_EXISTS':
+          return getAuthString('userExistsError')
+        case 'NETWORK_ERROR':
+          return getAuthString('networkError')
+        case 'VALIDATION_ERROR':
+          return getAuthString('validationError')
+        case 'OAUTH_ERROR':
+          return getAuthString('oauthError')
+        default:
+          return mode === 'login' ? getAuthString('loginError') : getAuthString('registerError')
+      }
+    }
+
+    // If error is a string, use it directly
+    if (typeof error === 'string') {
+      return error
+    }
+
+    // Fallback to default error message
+    return mode === 'login' ? getAuthString('loginError') : getAuthString('registerError')
   }
 
   // Handle Enter key press
@@ -289,6 +311,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           const isProviderLoading = oauthLoading === provider
           const isAnyLoading = isLoading || oauthLoading !== null
 
+          // Get the appropriate text based on mode
+          const getButtonText = () => {
+            if (mode === 'register') {
+              switch (provider) {
+                case 'google':
+                  return getAuthString('registerWithGoogle')
+                case 'yandex':
+                  return getAuthString('registerWithYandex')
+                case 'vk':
+                  return getAuthString('registerWithVK')
+                default:
+                  return ''
+              }
+            } else {
+              switch (provider) {
+                case 'google':
+                  return getAuthString('loginWithGoogle')
+                case 'yandex':
+                  return getAuthString('loginWithYandex')
+                case 'vk':
+                  return getAuthString('loginWithVK')
+                default:
+                  return ''
+              }
+            }
+          }
+
           return (
             <Button
               key={provider}
@@ -311,9 +360,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }
               }}
             >
-              {provider === 'google' && getAuthString('loginWithGoogle')}
-              {provider === 'yandex' && getAuthString('loginWithYandex')}
-              {provider === 'vk' && getAuthString('loginWithVK')}
+              {getButtonText()}
             </Button>
           )
         })}
@@ -369,7 +416,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           sx={{ mt: 2 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : getAuthString('loginButton')}
+          {isLoading ? (
+            <>
+              <CircularProgress size={20} sx={{ mr: 1 }} />
+              {getAuthString('loginButton')}
+            </>
+          ) : (
+            getAuthString('loginButton')
+          )}
         </Button>
 
         <Button
@@ -462,7 +516,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           fullWidth
           sx={{ mt: 2 }}
         >
-          {isLoading ? <CircularProgress size={24} /> : getAuthString('registerButton')}
+          {isLoading ? (
+            <>
+              <CircularProgress size={20} sx={{ mr: 1 }} />
+              {getAuthString('registerButton')}
+            </>
+          ) : (
+            getAuthString('registerButton')
+          )}
         </Button>
 
         <Button

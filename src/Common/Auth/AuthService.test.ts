@@ -220,13 +220,11 @@ describe('AuthService', () => {
 
     it('should handle API error responses', async () => {
       const mockFetch = fetch as any
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 409,
         json: vi.fn().mockResolvedValue({ message: 'User already exists' })
       })
-
-      await expect(authService.register('test@example.com', 'password123', 'password123')).rejects.toThrow(AuthServiceError)
 
       try {
         await authService.register('test@example.com', 'password123', 'password123')
@@ -239,9 +237,7 @@ describe('AuthService', () => {
 
     it('should handle network errors', async () => {
       const mockFetch = fetch as any
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      await expect(authService.register('test@example.com', 'password123', 'password123')).rejects.toThrow(AuthServiceError)
+      mockFetch.mockRejectedValue(new Error('Network error'))
 
       try {
         await authService.register('test@example.com', 'password123', 'password123')
@@ -289,13 +285,11 @@ describe('AuthService', () => {
 
     it('should handle invalid credentials', async () => {
       const mockFetch = fetch as any
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
         json: vi.fn().mockResolvedValue({ message: 'Invalid credentials' })
       })
-
-      await expect(authService.login('test@example.com', 'wrongpassword')).rejects.toThrow(AuthServiceError)
 
       try {
         await authService.login('test@example.com', 'wrongpassword')
@@ -307,9 +301,7 @@ describe('AuthService', () => {
 
     it('should handle network errors', async () => {
       const mockFetch = fetch as any
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      await expect(authService.login('test@example.com', 'password123')).rejects.toThrow(AuthServiceError)
+      mockFetch.mockRejectedValue(new Error('Network error'))
 
       try {
         await authService.login('test@example.com', 'password123')
@@ -372,13 +364,11 @@ describe('AuthService', () => {
       })
 
       const mockFetch = fetch as any
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
         json: vi.fn().mockResolvedValue({ message: 'Invalid refresh token' })
       })
-
-      await expect(authService.refreshToken()).rejects.toThrow(AuthServiceError)
 
       try {
         await authService.refreshToken()

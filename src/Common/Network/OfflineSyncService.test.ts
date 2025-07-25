@@ -41,6 +41,7 @@ describe('OfflineSyncService', () => {
 
   describe('Initialization', () => {
     it('should subscribe to offline detector on initialization', () => {
+      // The service is already initialized when imported, so subscribe should have been called
       expect(mockOfflineDetector.subscribe).toHaveBeenCalledWith(expect.any(Function))
     })
 
@@ -277,41 +278,39 @@ describe('OfflineSyncService', () => {
 
   describe('Network Status Integration', () => {
     it('should trigger sync when network comes online', () => {
-      // Verify that subscribe was called
+      // Verify that subscribe was called during initialization
       expect(mockOfflineDetector.subscribe).toHaveBeenCalled()
       
-      if (mockOfflineDetector.subscribe.mock.calls.length > 0) {
-        const networkCallback = mockOfflineDetector.subscribe.mock.calls[0][0]
-        
-        // Simulate network coming online
-        networkCallback({
-          isOnline: true,
-          isOffline: false,
-          lastOnlineAt: new Date()
-        })
-        
-        // Should schedule a sync (we can't easily test the timeout, but we can verify the callback was called)
-        expect(networkCallback).toBeDefined()
-      }
+      const networkCallback = mockOfflineDetector.subscribe.mock.calls[0][0]
+      expect(networkCallback).toBeDefined()
+      
+      // Simulate network coming online
+      networkCallback({
+        isOnline: true,
+        isOffline: false,
+        lastOnlineAt: new Date()
+      })
+      
+      // The callback should have been executed (we can't easily test the timeout scheduling)
+      expect(typeof networkCallback).toBe('function')
     })
 
     it('should not trigger sync when network goes offline', () => {
-      // Verify that subscribe was called
+      // Verify that subscribe was called during initialization
       expect(mockOfflineDetector.subscribe).toHaveBeenCalled()
       
-      if (mockOfflineDetector.subscribe.mock.calls.length > 0) {
-        const networkCallback = mockOfflineDetector.subscribe.mock.calls[0][0]
-        
-        // Simulate network going offline
-        networkCallback({
-          isOnline: false,
-          isOffline: true,
-          lastOfflineAt: new Date()
-        })
-        
-        // Should not attempt to sync
-        expect(mockGameStatsApiService.saveGameSession).not.toHaveBeenCalled()
-      }
+      const networkCallback = mockOfflineDetector.subscribe.mock.calls[0][0]
+      expect(networkCallback).toBeDefined()
+      
+      // Simulate network going offline
+      networkCallback({
+        isOnline: false,
+        isOffline: true,
+        lastOfflineAt: new Date()
+      })
+      
+      // Should not attempt to sync immediately
+      expect(mockGameStatsApiService.saveGameSession).not.toHaveBeenCalled()
     })
   })
 
