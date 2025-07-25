@@ -157,10 +157,10 @@ public class LeaderboardService : ILeaderboardService
             query = query.Where(gs => gs.GameType == gameType);
         }
 
-        // Apply date filter
+        // Apply date filter - use SessionStartTime for more accurate filtering
         if (fromDate.HasValue)
         {
-            query = query.Where(gs => gs.CreatedAt >= fromDate.Value);
+            query = query.Where(gs => gs.SessionStartTime >= fromDate.Value);
         }
 
         // Group by user and calculate aggregated stats
@@ -174,8 +174,8 @@ public class LeaderboardService : ILeaderboardService
                 TotalGames = g.Count(),
                 TotalCorrectAnswers = g.Sum(gs => gs.CorrectAnswers),
                 TotalWrongAnswers = g.Sum(gs => gs.WrongAnswers),
-                LastPlayedAt = g.Max(gs => gs.CreatedAt),
-                Sessions = g.OrderBy(gs => gs.CreatedAt).ToList()
+                LastPlayedAt = g.Max(gs => gs.SessionStartTime),
+                Sessions = g.OrderBy(gs => gs.SessionStartTime).ToList()
             })
             .ToListAsync();
 
@@ -241,10 +241,10 @@ public class LeaderboardService : ILeaderboardService
 
         if (fromDate.HasValue)
         {
-            query = query.Where(gs => gs.CreatedAt >= fromDate.Value);
+            query = query.Where(gs => gs.SessionStartTime >= fromDate.Value);
         }
 
-        var userSessions = await query.OrderBy(gs => gs.CreatedAt).ToListAsync();
+        var userSessions = await query.OrderBy(gs => gs.SessionStartTime).ToListAsync();
 
         if (!userSessions.Any())
         {
@@ -271,7 +271,7 @@ public class LeaderboardService : ILeaderboardService
             TotalGames = userSessions.Count,
             Accuracy = accuracy,
             BestStreak = bestStreak,
-            LastPlayedAt = userSessions.Max(s => s.CreatedAt),
+            LastPlayedAt = userSessions.Max(s => s.SessionStartTime),
             Rank = userRank > 0 ? userRank : allUserStats.Count + 1
         };
     }
@@ -286,7 +286,7 @@ public class LeaderboardService : ILeaderboardService
         int currentStreak = 0;
         int bestStreak = 0;
 
-        foreach (var session in sessions.OrderBy(s => s.CreatedAt))
+        foreach (var session in sessions.OrderBy(s => s.SessionStartTime))
         {
             var totalAnswers = session.CorrectAnswers + session.WrongAnswers;
             if (totalAnswers > 0 && session.CorrectAnswers > session.WrongAnswers)

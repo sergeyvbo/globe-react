@@ -44,11 +44,12 @@ public abstract class BaseIntegrationTest : IClassFixture<TestWebApplicationFact
     {
         _logger.LogDebug("Initializing test: {TestClass}", GetType().Name);
         
-        // Reset timestamp manager first for deterministic test behavior
+        // Reset timestamp managers first for deterministic test behavior
         TimestampManager.Reset();
+        GeoQuizApi.Services.TimestampManager.Reset();
         
-        // Clear database and reset authorization headers
-        await ClearDatabaseAsync();
+        // Force recreate database for complete isolation
+        await _factory.ForceRecreateDatabaseAsync();
         ClearAuthorizationHeaders();
         
         _logger.LogDebug("Test initialization completed: {TestClass}", GetType().Name);

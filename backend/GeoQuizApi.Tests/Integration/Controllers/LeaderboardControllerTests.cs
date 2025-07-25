@@ -8,11 +8,8 @@ using GeoQuizApi.Models.DTOs.Leaderboard;
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
 [Trait("Category", "Integration")]
-public class LeaderboardControllerTests : BaseIntegrationTest
+public class LeaderboardControllerTests : BaseIsolatedIntegrationTest
 {
-    public LeaderboardControllerTests(TestWebApplicationFactory<Program> factory) : base(factory)
-    {
-    }
 
 
 
@@ -212,7 +209,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = baseTime.AddDays(-2),
+                SessionStartTime = baseTime.AddDays(-2), // Within last week
                 SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
             }
         };
@@ -224,8 +221,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 10,
                 WrongAnswers = 0,
-                SessionStartTime = baseTime.AddDays(-10),
-                SessionEndTime = baseTime.AddDays(-10).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-15), // Older than 7 days
+                SessionEndTime = baseTime.AddDays(-15).AddMinutes(5)
             }
         };
 
@@ -358,7 +355,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = baseTime.AddDays(-2),
+                SessionStartTime = baseTime.AddDays(-2), // Within last week
                 SessionEndTime = baseTime.AddDays(-2).AddMinutes(5)
             }
         };
@@ -370,7 +367,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "flags",
                 CorrectAnswers = 9,
                 WrongAnswers = 1,
-                SessionStartTime = baseTime.AddDays(-1),
+                SessionStartTime = baseTime.AddDays(-1), // Within last week
                 SessionEndTime = baseTime.AddDays(-1).AddMinutes(3)
             }
         };
@@ -382,8 +379,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 10,
                 WrongAnswers = 0,
-                SessionStartTime = baseTime.AddDays(-10),
-                SessionEndTime = baseTime.AddDays(-10).AddMinutes(5)
+                SessionStartTime = baseTime.AddDays(-15), // Older than 7 days
+                SessionEndTime = baseTime.AddDays(-15).AddMinutes(5)
             }
         };
 
@@ -392,7 +389,7 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         await CreateUserWithGameSessionsAsync($"old-countries_{testId}@test.com", "Old Countries", oldCountriesSessions);
 
         // Act
-        var response = await _client.GetAsync("/api/leaderboard?gameType=countries&period=week");
+        var response = await _client.GetAsync("/api/leaderboard/filtered?gameType=countries&period=week");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -448,7 +445,17 @@ public class LeaderboardControllerTests : BaseIntegrationTest
     {
         // Arrange
         var testId = Guid.NewGuid().ToString("N")[..8];
-        var baseTime = GenerateUniqueTimestamp().AddDays(-10);
+        var baseTime = GenerateUniqueTimestamp();
+        
+        // Create session data that falls within the specified period
+        var sessionStartTime = period switch
+        {
+            "week" => baseTime.AddDays(-3),      // 3 days ago (within last week)
+            "month" => baseTime.AddDays(-15),    // 15 days ago (within last month)
+            "year" => baseTime.AddDays(-100),    // 100 days ago (within last year)
+            "all-time" => baseTime.AddDays(-400), // 400 days ago (any time)
+            _ => baseTime.AddDays(-1)            // Default: 1 day ago
+        };
         
         var sessions = new List<GameSessionRequest>
         {
@@ -457,8 +464,8 @@ public class LeaderboardControllerTests : BaseIntegrationTest
                 GameType = "countries",
                 CorrectAnswers = 8,
                 WrongAnswers = 2,
-                SessionStartTime = baseTime.AddDays(1),
-                SessionEndTime = baseTime.AddDays(1).AddMinutes(5)
+                SessionStartTime = sessionStartTime,
+                SessionEndTime = sessionStartTime.AddMinutes(5)
             }
         };
 
@@ -472,12 +479,6 @@ public class LeaderboardControllerTests : BaseIntegrationTest
         
         var leaderboard = await response.Content.ReadFromJsonAsync<LeaderboardResponse>();
         leaderboard.Should().NotBeNull();
-        
-        // For recent sessions, all periods should include them except potentially year
-        var now = GenerateUniqueTimestamp();
-        if (period != "year" || now.Month == now.AddDays(-1).Month)
-        {
-            leaderboard!.Entries.Should().HaveCount(1);
-        }
+        leaderboard!.Entries.Should().HaveCount(1);
     }
 }

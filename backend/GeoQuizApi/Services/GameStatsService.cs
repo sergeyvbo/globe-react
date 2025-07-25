@@ -57,8 +57,11 @@ public class GameStatsService : IGameStatsService
             // Use unique timestamp to prevent race conditions
             var uniqueCreatedAt = TimestampManager.GetUniqueTimestamp();
             
-            // Ensure sessionStartTime is also unique if it's very close to now
-            var uniqueSessionStartTime = TimestampManager.GetUniqueTimestamp(sessionStartTime);
+            // For SessionStartTime, preserve the original time if it's significantly different from now
+            // Only make it unique if it's very close to current time (within 1 minute)
+            var uniqueSessionStartTime = Math.Abs((DateTime.UtcNow - sessionStartTime).TotalMinutes) < 1 
+                ? TimestampManager.GetUniqueTimestamp(sessionStartTime)
+                : sessionStartTime;
 
             var gameSession = new GameSession
             {
@@ -212,7 +215,11 @@ public class GameStatsService : IGameStatsService
                     // Use unique timestamps for migrated sessions
                     var uniqueCreatedAt = TimestampManager.GetUniqueTimestamp(
                         anonymousSession.SessionEndTime ?? anonymousSession.SessionStartTime);
-                    var uniqueSessionStartTime = TimestampManager.GetUniqueTimestamp(anonymousSession.SessionStartTime);
+                    
+                    // For migrated sessions, preserve the original SessionStartTime if it's significantly different from now
+                    var uniqueSessionStartTime = Math.Abs((DateTime.UtcNow - anonymousSession.SessionStartTime).TotalMinutes) < 1 
+                        ? TimestampManager.GetUniqueTimestamp(anonymousSession.SessionStartTime)
+                        : anonymousSession.SessionStartTime;
 
                     var gameSession = new GameSession
                     {

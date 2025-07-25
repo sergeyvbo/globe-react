@@ -49,6 +49,14 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
     }
 
     /// <summary>
+    /// Creates a new unique database name for test isolation
+    /// </summary>
+    public string CreateNewDatabaseName()
+    {
+        return GenerateUniqueDatabaseName();
+    }
+
+    /// <summary>
     /// Gets the unique database name for this factory instance
     /// </summary>
     public string DatabaseName => _databaseName;
@@ -215,6 +223,45 @@ public class TestWebApplicationFactory<TStartup> : WebApplicationFactory<TStartu
         }
         
         await context.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Forces complete database recreation for test isolation
+    /// </summary>
+    public async Task ForceRecreateDatabaseAsync()
+    {
+        try
+        {
+            using var scope = Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<GeoQuizDbContext>();
+            
+            // Delete the current database
+            await context.Database.EnsureDeletedAsync();
+            
+            // Delete the physical SQLite file
+            var dbPath = $"{_databaseName}.db";
+            if (File.Exists(dbPath))
+            {
+                try
+                {
+                    File.Delete(dbPath);
+                    _logger?.LogDebug("Force deleted SQLite database file: {DatabasePath}", dbPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Failed to force delete SQLite database file: {DatabasePath}", dbPath);
+                }
+            }
+            
+            // Recreate the database
+            await context.Database.EnsureCreatedAsync();
+            _logger?.LogDebug("Force recreated database: {DatabaseName}", _databaseName);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to force recreate database: {DatabaseName}", _databaseName);
+            throw;
+        }
     }
 
     /// <summary>
