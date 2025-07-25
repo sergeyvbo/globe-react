@@ -20,6 +20,7 @@ global.fetch = vi.fn()
 vi.mock('./OAuth2Service', () => ({
   oauth2Service: {
     initiateLogin: vi.fn(),
+    loginWithPopup: vi.fn(),
     handleCallback: vi.fn(),
     isCallbackUrl: vi.fn(),
     getProviderFromCallback: vi.fn(),
@@ -382,10 +383,8 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should successfully logout', async () => {
       localStorageMock.getItem.mockImplementation((key) => {
-        if (key === 'auth_session') {
-          return JSON.stringify({
-            accessToken: 'valid-access-token'
-          })
+        if (key === 'auth_access_token') {
+          return 'valid-access-token'
         }
         return null
       })
@@ -413,27 +412,23 @@ describe('AuthService', () => {
       localStorageMock.getItem.mockReturnValue(null)
 
       const mockFetch = fetch as any
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValue({})
-      })
+      mockFetch.mockClear()
 
       await authService.logout()
       
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/logout'),
-        expect.objectContaining({
-          method: 'POST'
-        })
-      )
+      // Should not make API call when no token is available
+      expect(mockFetch).not.toHaveBeenCalled()
+      
+      // Should still clear tokens (which is a no-op when no tokens exist)
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('auth_access_token')
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('auth_refresh_token')
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('auth_token_expiry')
     })
 
     it('should handle logout API errors gracefully', async () => {
       localStorageMock.getItem.mockImplementation((key) => {
-        if (key === 'auth_session') {
-          return JSON.stringify({
-            accessToken: 'valid-access-token'
-          })
+        if (key === 'auth_access_token') {
+          return 'valid-access-token'
         }
         return null
       })
@@ -452,11 +447,13 @@ describe('AuthService', () => {
 
   describe('updateProfile', () => {
     it('should successfully update profile', async () => {
+      const futureTime = Date.now() + 60 * 60 * 1000 // 1 hour from now
       localStorageMock.getItem.mockImplementation((key) => {
-        if (key === 'auth_session') {
-          return JSON.stringify({
-            accessToken: 'valid-access-token'
-          })
+        if (key === 'auth_access_token') {
+          return 'valid-access-token'
+        }
+        if (key === 'auth_token_expiry') {
+          return futureTime.toString()
         }
         return null
       })
@@ -500,10 +497,19 @@ describe('AuthService', () => {
   describe('loginWithOAuth', () => {
     it('should initiate OAuth login', async () => {
       const { oauth2Service } = await import('./OAuth2Service')
+      const mockOAuth2Response = {
+        user: mockUser,
+        accessToken: 'oauth-access-token',
+        refreshToken: 'oauth-refresh-token',
+        expiresIn: 3600
+      }
       
-      await authService.loginWithOAuth('google')
+      oauth2Service.loginWithPopup = vi.fn().mockResolvedValue(mockOAuth2Response)
       
-      expect(oauth2Service.initiateLogin).toHaveBeenCalledWith('google')
+      const result = await authService.loginWithOAuth('google')
+      
+      expect(oauth2Service.loginWithPopup).toHaveBeenCalledWith('google')
+      expect(result).toEqual(mockOAuth2Response)
     })
 
     it('should handle OAuth callback', async () => {
@@ -515,18 +521,11 @@ describe('AuthService', () => {
         expiresIn: 3600
       }
       
-      oauth2Service.isCallbackUrl = vi.fn().mockReturnValue(true)
-      oauth2Service.getProviderFromCallback = vi.fn().mockReturnValue('google')
-      oauth2Service.handleCallback = vi.fn().mockResolvedValue(mockOAuth2Response)
-
-      // Mock window.location
-      Object.defineProperty(window, 'location', {
-        value: { href: 'http://localhost:3000?code=test-code&state=test-state' },
-        writable: true
-      })
+      oauth2Service.loginWithPopup = vi.fn().mockResolvedValue(mockOAuth2Response)
 
       const result = await authService.loginWithOAuth('google')
       
+      expect(oauth2Service.loginWithPopup).toHaveBeenCalledWith('google')
       expect(result).toEqual(mockOAuth2Response)
     })
   })
@@ -551,12 +550,13 @@ describe('AuthService', () => {
     })
 
     it('should return true when token is valid', () => {
+      const futureTime = Date.now() + 60 * 60 * 1000 // 1 hour from now
       localStorageMock.getItem.mockImplementation((key) => {
-        if (key === 'auth_session') {
-          return JSON.stringify({
-            accessToken: 'token',
-            expiresAt: new Date(Date.now() + 1000).toISOString() // Valid
-          })
+        if (key === 'auth_access_token') {
+          return 'valid-token'
+        }
+        if (key === 'auth_token_expiry') {
+          return futureTime.toString()
         }
         return null
       })
@@ -576,15 +576,18 @@ describe('AuthService', () => {
 
   describe('getSession', () => {
     it('should return valid session', () => {
-      const sessionData = {
-        accessToken: 'token',
-        refreshToken: 'refresh-token',
-        expiresAt: new Date(Date.now() + 1000).toISOString()
-      }
+      const futureTime = Date.now() + 60 * 60 * 1000 // 1 hour from now
+      const expiryDate = new Date(futureTime)
       
       localStorageMock.getItem.mockImplementation((key) => {
-        if (key === 'auth_session') {
-          return JSON.stringify(sessionData)
+        if (key === 'auth_access_token') {
+          return 'token'
+        }
+        if (key === 'auth_refresh_token') {
+          return 'refresh-token'
+        }
+        if (key === 'auth_token_expiry') {
+          return futureTime.toString()
         }
         return null
       })
@@ -592,6 +595,8 @@ describe('AuthService', () => {
       const session = authService.getSession()
       expect(session).toBeDefined()
       expect(session?.accessToken).toBe('token')
+      expect(session?.refreshToken).toBe('refresh-token')
+      expect(session?.expiresAt).toEqual(expiryDate)
     })
 
     it('should return null for invalid session', () => {
