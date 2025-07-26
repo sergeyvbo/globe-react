@@ -3,6 +3,22 @@ import { OAuth2Service, oauth2Service } from './OAuth2Service'
 import { AuthServiceError } from './AuthService'
 import { AuthErrorType, OAuthProvider } from '../types'
 
+// Mock the config module
+vi.mock('../config/api', async () => {
+  const actual = await vi.importActual('../config/api')
+  return {
+    ...actual,
+    OAUTH_CONFIG: {
+      GOOGLE_CLIENT_ID: 'test-google-client-id',
+      YANDEX_CLIENT_ID: 'test-yandex-client-id', 
+      VK_CLIENT_ID: 'test-vk-client-id',
+      GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback/google',
+      YANDEX_REDIRECT_URI: 'http://localhost:3000/auth/callback/yandex',
+      VK_REDIRECT_URI: 'http://localhost:3000/auth/callback/vk',
+    }
+  }
+})
+
 // Mock window.location
 const mockLocation = {
   href: 'http://localhost:3000',
@@ -51,6 +67,9 @@ describe('OAuth2Service', () => {
     mockSessionStorage.clear()
     mockLocalStorage.clear()
     
+    // Reset singleton instance to allow for fresh instances with new env vars
+    ;(OAuth2Service as any).instance = undefined
+    
     // Setup environment variables
     // Environment variables are set in vite.config.ts for tests
     
@@ -78,6 +97,10 @@ describe('OAuth2Service', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.doUnmock('../config/api')
+    vi.resetModules()
+    // Reset singleton instance
+    ;(OAuth2Service as any).instance = undefined
   })
 
   describe('getInstance', () => {
@@ -123,9 +146,37 @@ describe('OAuth2Service', () => {
       expect(url).toContain('state=')
     })
 
-    it.skip('should throw error if client ID not configured', () => {
-      // This test is skipped because import.meta.env cannot be modified in Vitest
-      // In a real scenario, the service would throw an error if client ID is not configured
+    it('should throw error if client ID not configured', async () => {
+      // Reset modules to clear cache
+      vi.resetModules()
+      
+      // Mock config with empty Google client ID
+      vi.doMock('../config/api', () => ({
+        API_CONFIG: {
+          BASE_URL: 'http://localhost:5000/api',
+          TIMEOUT: 10000,
+          DEFAULT_HEADERS: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        },
+        OAUTH_CONFIG: {
+          GOOGLE_CLIENT_ID: '', // Empty client ID
+          YANDEX_CLIENT_ID: 'test-yandex-client-id',
+          VK_CLIENT_ID: 'test-vk-client-id',
+          GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback/google',
+          YANDEX_REDIRECT_URI: 'http://localhost:3000/auth/callback/yandex',
+          VK_REDIRECT_URI: 'http://localhost:3000/auth/callback/vk',
+        }
+      }))
+      
+      // Re-import the service and AuthServiceError to get the new config
+      const { OAuth2Service: TestOAuth2Service } = await import('./OAuth2Service')
+      const { AuthServiceError: TestAuthServiceError } = await import('./AuthService')
+      const testService = TestOAuth2Service.getInstance()
+      
+      expect(() => testService.getAuthUrl('google')).toThrow(TestAuthServiceError)
+      expect(() => testService.getAuthUrl('google')).toThrow('OAuth2 client ID not configured for google')
     })
 
     it('should save state to sessionStorage', () => {
@@ -302,8 +353,37 @@ describe('OAuth2Service', () => {
       expect(service.isProviderConfigured('vk')).toBe(true)
     })
 
-    it.skip('should return false for unconfigured providers', () => {
-      // This test is skipped because import.meta.env cannot be modified in Vitest
+    it('should return false for unconfigured providers', async () => {
+      // Reset modules to clear cache
+      vi.resetModules()
+      
+      // Mock config with empty Google and Yandex client IDs
+      vi.doMock('../config/api', () => ({
+        API_CONFIG: {
+          BASE_URL: 'http://localhost:5000/api',
+          TIMEOUT: 10000,
+          DEFAULT_HEADERS: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        },
+        OAUTH_CONFIG: {
+          GOOGLE_CLIENT_ID: '', // Empty client ID
+          YANDEX_CLIENT_ID: '', // Empty client ID
+          VK_CLIENT_ID: 'test-vk-client-id',
+          GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback/google',
+          YANDEX_REDIRECT_URI: 'http://localhost:3000/auth/callback/yandex',
+          VK_REDIRECT_URI: 'http://localhost:3000/auth/callback/vk',
+        }
+      }))
+      
+      // Re-import the service to get the new config
+      const { OAuth2Service: TestOAuth2Service } = await import('./OAuth2Service')
+      const testService = TestOAuth2Service.getInstance()
+      
+      expect(testService.isProviderConfigured('google')).toBe(false)
+      expect(testService.isProviderConfigured('yandex')).toBe(false)
+      expect(testService.isProviderConfigured('vk')).toBe(true) // VK should still be configured
     })
   })
 
@@ -313,8 +393,38 @@ describe('OAuth2Service', () => {
       expect(providers).toEqual(['google', 'yandex', 'vk'])
     })
 
-    it.skip('should exclude unconfigured providers', () => {
-      // This test is skipped because import.meta.env cannot be modified in Vitest
+    it('should exclude unconfigured providers', async () => {
+      // Reset modules to clear cache
+      vi.resetModules()
+      
+      // Mock config with only VK configured
+      vi.doMock('../config/api', () => ({
+        API_CONFIG: {
+          BASE_URL: 'http://localhost:5000/api',
+          TIMEOUT: 10000,
+          DEFAULT_HEADERS: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        },
+        OAUTH_CONFIG: {
+          GOOGLE_CLIENT_ID: '', // Empty client ID
+          YANDEX_CLIENT_ID: '', // Empty client ID
+          VK_CLIENT_ID: 'test-vk-client-id',
+          GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback/google',
+          YANDEX_REDIRECT_URI: 'http://localhost:3000/auth/callback/yandex',
+          VK_REDIRECT_URI: 'http://localhost:3000/auth/callback/vk',
+        }
+      }))
+      
+      // Re-import the service to get the new config
+      const { OAuth2Service: TestOAuth2Service } = await import('./OAuth2Service')
+      const testService = TestOAuth2Service.getInstance()
+      
+      const providers = testService.getConfiguredProviders()
+      expect(providers).toEqual(['vk'])
+      expect(providers).not.toContain('google')
+      expect(providers).not.toContain('yandex')
     })
   })
 
@@ -330,8 +440,37 @@ describe('OAuth2Service', () => {
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith('oauth2_provider', 'google')
     }, 15000)
 
-    it.skip('should throw error for unconfigured provider', async () => {
-      // This test is skipped because import.meta.env cannot be modified in Vitest
+    it('should throw error for unconfigured provider', async () => {
+      // Reset modules to clear cache
+      vi.resetModules()
+      
+      // Mock config with empty Google client ID
+      vi.doMock('../config/api', () => ({
+        API_CONFIG: {
+          BASE_URL: 'http://localhost:5000/api',
+          TIMEOUT: 10000,
+          DEFAULT_HEADERS: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        },
+        OAUTH_CONFIG: {
+          GOOGLE_CLIENT_ID: '', // Empty client ID
+          YANDEX_CLIENT_ID: 'test-yandex-client-id',
+          VK_CLIENT_ID: 'test-vk-client-id',
+          GOOGLE_REDIRECT_URI: 'http://localhost:3000/auth/callback/google',
+          YANDEX_REDIRECT_URI: 'http://localhost:3000/auth/callback/yandex',
+          VK_REDIRECT_URI: 'http://localhost:3000/auth/callback/vk',
+        }
+      }))
+      
+      // Re-import the service and AuthServiceError to get the new config
+      const { OAuth2Service: TestOAuth2Service } = await import('./OAuth2Service')
+      const { AuthServiceError: TestAuthServiceError } = await import('./AuthService')
+      const testService = TestOAuth2Service.getInstance()
+      
+      await expect(testService.initiateLogin('google')).rejects.toThrow(TestAuthServiceError)
+      await expect(testService.initiateLogin('google')).rejects.toThrow('OAuth2 client ID not configured for google')
     }, 15000)
   })
 
