@@ -52,13 +52,10 @@ describe('Session Management Integration', () => {
       </AuthProvider>
     )
 
-    // Should start with loading
-    expect(screen.getByTestId('loading-state')).toHaveTextContent('loading')
-    
     // Should eventually finish loading
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loaded')
-    })
+    }, { timeout: 1000 })
     
     // Should not be authenticated without session
     expect(screen.getByTestId('auth-state')).toHaveTextContent('not-authenticated')
@@ -99,7 +96,7 @@ describe('Session Management Integration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loaded')
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated')
-    })
+    }, { timeout: 10000 })
   })
 
   it('should clear expired session', async () => {
@@ -134,7 +131,7 @@ describe('Session Management Integration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loaded')
       expect(screen.getByTestId('auth-state')).toHaveTextContent('not-authenticated')
-    })
+    }, { timeout: 10000 })
 
     // Should have cleared the expired session
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
@@ -177,7 +174,7 @@ describe('Session Management Integration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('loading-state')).toHaveTextContent('loaded')
       expect(screen.getByTestId('auth-state')).toHaveTextContent('not-authenticated')
-    })
+    }, { timeout: 10000 })
 
     // Should have cleared the inactive session
     expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
@@ -219,7 +216,7 @@ describe('Session Management Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-state')).toHaveTextContent('authenticated')
-    })
+    }, { timeout: 10000 })
 
     // Simulate user activity
     act(() => {

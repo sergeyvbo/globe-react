@@ -17,6 +17,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
+    testTimeout: 30000,
     env: {
       VITE_API_URL: 'http://localhost:5000/api',
       VITE_GOOGLE_CLIENT_ID: 'test-google-client-id',

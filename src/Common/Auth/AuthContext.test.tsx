@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event'
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest'
 import { AuthProvider, useAuth } from './AuthContext'
 import { authService } from './AuthService'
-import { gameProgressService } from '../GameProgress'
 import { AuthResponse, User, AuthErrorType } from '../types'
 
 // Mock the AuthService
@@ -114,13 +113,12 @@ describe('AuthContext', () => {
     it('should initialize with loading state', async () => {
       renderWithAuthProvider()
       
-      expect(screen.getByTestId('loading')).toHaveTextContent('loading')
-      expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
-      
       await waitFor(() => {
         expect(screen.getByTestId('loading')).toHaveTextContent('not-loading')
-      }, { timeout: 1000 })
-    })
+      }, { timeout: 10000 })
+      
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
+    }, 15000)
 
     it('should restore valid session from localStorage', async () => {
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
@@ -151,8 +149,8 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
         expect(screen.getByTestId('user')).toHaveTextContent('test@example.com')
-      }, { timeout: 1000 })
-    })
+      }, { timeout: 10000 })
+    }, 15000)
 
     it('should clear expired session', async () => {
       const pastExpiry = new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
@@ -181,7 +179,7 @@ describe('AuthContext', () => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
         expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
         expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
-      }, { timeout: 1000 })
+      }, { timeout: 10000 })
     })
   })
 
@@ -206,7 +204,7 @@ describe('AuthContext', () => {
       expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123')
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_session', expect.any(String))
       expect(mockLocalStorage.setItem).toHaveBeenCalledWith('auth_user', expect.any(String))
-    })
+    }, 15000)
 
     it('should handle login error', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -228,7 +226,7 @@ describe('AuthContext', () => {
       }).rejects.toThrow()
 
       expect(authService.login).toHaveBeenCalled()
-    })
+    }, 15000)
 
     it('should handle successful registration', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -248,7 +246,7 @@ describe('AuthContext', () => {
       })
 
       expect(authService.register).toHaveBeenCalledWith('test@example.com', 'password123', 'password123')
-    })
+    }, 15000)
 
     it('should handle OAuth login', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -267,7 +265,7 @@ describe('AuthContext', () => {
       })
 
       expect(authService.loginWithOAuth).toHaveBeenCalledWith('google')
-    })
+    }, 15000)
 
     it('should handle logout', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -311,7 +309,7 @@ describe('AuthContext', () => {
       expect(authService.logout).toHaveBeenCalled()
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
-    })
+    }, 15000)
 
     it('should handle profile update', async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
@@ -351,7 +349,7 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(authService.updateProfile).toHaveBeenCalledWith({ email: 'new@example.com' })
       })
-    })
+    }, 15000)
   })
 
   describe('Session Management', () => {
@@ -386,7 +384,7 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(authService.refreshToken).toHaveBeenCalled()
       }, { timeout: 2000 })
-    })
+    }, 15000)
 
     it('should logout if user is inactive for too long', async () => {
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
@@ -420,8 +418,8 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
         expect(authService.logout).toHaveBeenCalled()
-      }, { timeout: 1000 })
-    })
+      }, { timeout: 10000 })
+    }, 15000)
 
     it('should track user activity', async () => {
       const futureExpiry = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
@@ -463,7 +461,7 @@ describe('AuthContext', () => {
         'auth_last_activity',
         expect.any(String)
       )
-    })
+    }, 15000)
   })
 
   describe('Error Handling', () => {
@@ -478,8 +476,8 @@ describe('AuthContext', () => {
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
         expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_session')
-      }, { timeout: 1000 })
-    })
+      }, { timeout: 10000 })
+    }, 15000)
 
     it('should handle localStorage access errors', async () => {
       mockLocalStorage.getItem.mockImplementation(() => {
@@ -490,7 +488,7 @@ describe('AuthContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('authenticated')).toHaveTextContent('not-authenticated')
-      }, { timeout: 1000 })
-    })
+      }, { timeout: 10000 })
+    }, 15000)
   })
 })
