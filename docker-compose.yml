@@ -6,7 +6,8 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: geoquiz-frontend
     ports:
-      - "80:80"
+      - "8080:80"
+      - "6666:80"
     depends_on:
       backend:
         condition: service_healthy
@@ -32,10 +33,11 @@ services:
       - sqlite-data:/app/data
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=http://*:5000
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/geoquiz.db
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-jwt-key-that-is-at-least-32-characters-long}
-      - CorsSettings__AllowedOrigins__0=http://localhost
+      - CorsSettings__AllowedOrigins__0=http://localhost:8080
+      - CorsSettings__AllowedOrigins__1=http://localhost:6666
       - SecuritySettings__EnforceHttps=false
       - SecuritySettings__EnableHsts=false
     networks:

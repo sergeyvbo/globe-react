@@ -25,13 +25,13 @@ This document describes how to run the GeoQuiz application using Docker Compose.
    ```
 
 4. **Access the application**
-   - Frontend: http://localhost
-   - Backend API: http://localhost/api (proxied through nginx)
+   - Frontend: http://localhost:8080 или http://localhost:6666
+   - Backend API: http://localhost:8080/api или http://localhost:6666/api (proxied through nginx)
 
 ## Services
 
 ### Frontend (geoquiz-frontend)
-- **Port**: 80
+- **Ports**: 8080 и 6666 (external) → 80 (internal)
 - **Technology**: React + Vite served by nginx
 - **Health Check**: Available at `/health`
 
@@ -86,7 +86,7 @@ For development with live reload, you can mount source code volumes by creating 
 
 ## Troubleshooting
 
-1. **Port conflicts**: Ensure port 80 is not in use by other applications
+1. **Port conflicts**: Ensure ports 8080 and 6666 are not in use by other applications
 2. **Build failures**: Run `docker compose build --no-cache` to rebuild from scratch
 3. **Database issues**: Remove the volume with `docker volume rm geoquiz-sqlite-data` to reset the database
 4. **Health check failures**: Check service logs with `docker compose logs <service-name>`
