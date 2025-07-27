@@ -121,7 +121,7 @@ describe('API Integration Tests', () => {
         })
       )
       expect(fetch).toHaveBeenNthCalledWith(2,
-        'http://localhost:5000/api/game-stats/user',
+        'http://localhost:5000/api/game-stats/me',
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
@@ -220,7 +220,7 @@ describe('API Integration Tests', () => {
       expect(userStats.gameTypeStats.states.bestStreak).toBe(8)
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/game-stats/user',
+        'http://localhost:5000/api/game-stats/me',
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
@@ -283,7 +283,7 @@ describe('API Integration Tests', () => {
       expect(history.sessions[1].gameType).toBe('flags')
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/game-stats/history?page=1&pageSize=10',
+        'http://localhost:5000/api/game-stats/me/history?page=1&pageSize=10',
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({

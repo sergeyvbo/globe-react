@@ -272,8 +272,8 @@ The backend provides the following API endpoints:
 
 #### Game Statistics
 - `POST /api/game-stats` - Save game session
-- `GET /api/game-stats` - Get user statistics
-- `GET /api/game-stats/history` - Get game history with pagination
+- `GET /api/game-stats/me` - Get user statistics
+- `GET /api/game-stats/me/history` - Get game history with pagination
 - `POST /api/game-stats/migrate` - Migrate anonymous progress
 
 #### Leaderboards

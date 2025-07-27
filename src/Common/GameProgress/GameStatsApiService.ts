@@ -174,7 +174,7 @@ export class GameStatsApiService {
     const accessToken = await this.getValidAccessToken()
     
     try {
-      const response = await HttpClient.get<GameStatsResponse>('/game-stats/user', accessToken)
+      const response = await HttpClient.get<GameStatsResponse>('/game-stats/me', accessToken)
       console.log('User stats retrieved successfully:', response)
       return response
     } catch (error) {
@@ -197,7 +197,7 @@ export class GameStatsApiService {
     
     try {
       const response = await HttpClient.get<GameHistoryResponse>(
-        `/game-stats/history?page=${page}&pageSize=${pageSize}`, 
+        `/game-stats/me/history?page=${page}&pageSize=${pageSize}`, 
         accessToken
       )
       console.log('User game history retrieved successfully:', response)

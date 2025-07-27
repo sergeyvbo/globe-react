@@ -286,7 +286,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-#### GET /api/game-stats
+#### GET /api/game-stats/me
 
 Get user's overall game statistics.
 
@@ -335,7 +335,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-#### GET /api/game-stats/history
+#### GET /api/game-stats/me/history
 
 Get user's game session history with pagination.
 
@@ -351,7 +351,7 @@ Authorization: Bearer <access_token>
 
 **Example Request:**
 ```
-GET /api/game-stats/history?page=1&pageSize=10&gameType=CountryQuiz
+GET /api/game-stats/me/history?page=1&pageSize=10&gameType=CountryQuiz
 ```
 
 **Response (200 OK):**
