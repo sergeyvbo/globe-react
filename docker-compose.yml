@@ -1,0 +1,61 @@
+services:
+  # Frontend service - React app served by nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: geoquiz-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - geoquiz-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Backend service - .NET API
+  backend:
+    build:
+      context: ./backend/GeoQuizApi
+      dockerfile: Dockerfile
+    container_name: geoquiz-backend
+    expose:
+      - "5000"
+    volumes:
+      - sqlite-data:/app/data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Data Source=/app/data/geoquiz.db
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-jwt-key-that-is-at-least-32-characters-long}
+      - CorsSettings__AllowedOrigins__0=http://localhost
+      - SecuritySettings__EnforceHttps=false
+      - SecuritySettings__EnableHsts=false
+    networks:
+      - geoquiz-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Named volume for SQLite database persistence
+volumes:
+  sqlite-data:
+    driver: local
+    name: geoquiz-sqlite-data
+
+# Internal network for container communication
+networks:
+  geoquiz-network:
+    driver: bridge
+    name: geoquiz-network
