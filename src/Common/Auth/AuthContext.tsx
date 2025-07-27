@@ -120,14 +120,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Helper function to save session to localStorage
   const saveSession = (session: AuthSession) => {
     try {
+      // Helper function to safely convert to ISO string
+      const toISOString = (date: Date | string | undefined): string | undefined => {
+        if (!date) return undefined
+        if (typeof date === 'string') return date
+        if (date instanceof Date) return date.toISOString()
+        return undefined
+      }
+
       localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify({
         ...session,
         expiresAt: session.expiresAt.toISOString()
       }))
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({
         ...session.user,
-        createdAt: session.user.createdAt.toISOString(),
-        lastLoginAt: session.user.lastLoginAt?.toISOString()
+        createdAt: toISOString(session.user.createdAt),
+        lastLoginAt: toISOString(session.user.lastLoginAt)
       }))
       
       // Update last activity timestamp
@@ -188,11 +196,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Helper function to convert AuthResponse to AuthSession
   const createSessionFromAuthResponse = (authResponse: any): AuthSession => {
+    // Helper function to safely convert to Date object
+    const toDate = (date: Date | string | undefined): Date | undefined => {
+      if (!date) return undefined
+      if (date instanceof Date) return date
+      if (typeof date === 'string') return new Date(date)
+      return undefined
+    }
+
     return {
       accessToken: authResponse.accessToken,
       refreshToken: authResponse.refreshToken,
       expiresAt: new Date(Date.now() + (authResponse.expiresIn * 1000)),
-      user: authResponse.user
+      user: {
+        ...authResponse.user,
+        createdAt: toDate(authResponse.user.createdAt) || new Date(),
+        lastLoginAt: toDate(authResponse.user.lastLoginAt)
+      }
     }
   }
 

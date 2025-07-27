@@ -290,7 +290,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           )}
 
           {/* No Data State */}
-          {!isLoading && !error && (!leaderboardData || leaderboardData.players.length === 0) && (
+          {!isLoading && !error && (!leaderboardData || !leaderboardData.players || leaderboardData.players.length === 0) && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <TrophyIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -318,7 +318,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           )}
 
           {/* Leaderboard Table */}
-          {!isLoading && !error && leaderboardData && leaderboardData.players.length > 0 && (
+          {!isLoading && !error && leaderboardData && leaderboardData.players && leaderboardData.players.length > 0 && (
             <>
               <TableContainer component={Paper} variant="outlined">
                 <Table>
