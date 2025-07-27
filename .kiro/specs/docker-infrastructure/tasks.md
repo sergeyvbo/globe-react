@@ -11,7 +11,13 @@
   - Add .dockerignore file to exclude unnecessary files from build context
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-- [ ] 2. Create Backend Dockerfile with .NET optimization
+- [x] 2. Create Backend Dockerfile with .NET optimization
+
+
+
+
+
+
   - Create Dockerfile in backend/GeoQuizApi directory with SDK build stage and runtime stage
   - Configure proper working directory and file permissions
   - Set up environment variables for production configuration

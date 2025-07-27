@@ -1,0 +1,37 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Environment files
+.env
+.env.*
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Documentation and test files
+*.md
+*.http
+test-*.ps1
+validate-*.ps1
+
+# Git
+.git/
+.gitignore
+
+# Temporary files
+*.tmp
+*.temp
