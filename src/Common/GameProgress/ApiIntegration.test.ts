@@ -378,7 +378,7 @@ describe('API Integration Tests', () => {
       expect(leaderboard.hasNextPage).toBe(false)
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/leaderboard?gameType=countries&page=1&pageSize=50',
+        'http://localhost:5000/api/leaderboard/game-type/countries?page=1&pageSize=50',
         expect.objectContaining({
           method: 'GET'
         })
@@ -416,7 +416,7 @@ describe('API Integration Tests', () => {
       expect(leaderboard.totalPlayers).toBe(75)
 
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/leaderboard?period=week&page=1&pageSize=50',
+        'http://localhost:5000/api/leaderboard/period/week?page=1&pageSize=50',
         expect.objectContaining({
           method: 'GET'
         })

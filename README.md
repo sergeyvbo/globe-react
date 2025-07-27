@@ -280,6 +280,7 @@ The backend provides the following API endpoints:
 - `GET /api/leaderboard` - Get global leaderboard
 - `GET /api/leaderboard/game-type/{gameType}` - Get leaderboard by game type
 - `GET /api/leaderboard/period/{period}` - Get leaderboard by time period
+- `GET /api/leaderboard/filtered` - Get leaderboard with combined filters
 
 ### Environment Variables
 

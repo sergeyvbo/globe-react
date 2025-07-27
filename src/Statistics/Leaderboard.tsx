@@ -162,8 +162,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
   const getPeriodName = (period: LeaderboardPeriod) => {
     switch (period) {
-      case 'today':
-        return 'Today'
       case 'week':
         return 'This Week'
       case 'month':
@@ -257,7 +255,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 disabled={isLoading}
               >
                 <MenuItem value="all">All Time</MenuItem>
-                <MenuItem value="today">Today</MenuItem>
                 <MenuItem value="week">This Week</MenuItem>
                 <MenuItem value="month">This Month</MenuItem>
                 <MenuItem value="year">This Year</MenuItem>
@@ -290,7 +287,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           )}
 
           {/* No Data State */}
-          {!isLoading && !error && (!leaderboardData || !leaderboardData.players || leaderboardData.players.length === 0) && (
+          {!isLoading && !error && (!leaderboardData || 
+            (!leaderboardData.players && !leaderboardData.entries) || 
+            (leaderboardData.players && leaderboardData.players.length === 0) ||
+            (leaderboardData.entries && leaderboardData.entries.length === 0)) && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <TrophyIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -318,7 +318,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           )}
 
           {/* Leaderboard Table */}
-          {!isLoading && !error && leaderboardData && leaderboardData.players && leaderboardData.players.length > 0 && (
+          {!isLoading && !error && leaderboardData && 
+            ((leaderboardData.players && leaderboardData.players.length > 0) ||
+             (leaderboardData.entries && leaderboardData.entries.length > 0)) && (
             <>
               <TableContainer component={Paper} variant="outlined">
                 <Table>
@@ -332,7 +334,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {leaderboardData.players.map((player: LeaderboardEntryDto) => (
+                    {(leaderboardData.players || leaderboardData.entries || []).map((player: LeaderboardEntryDto) => (
                       <TableRow 
                         key={player.userId} 
                         hover
@@ -372,7 +374,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                                   color: player.isCurrentUser ? 'primary.main' : 'inherit'
                                 }}
                               >
-                                {player.userName || 'Anonymous Player'}
+                                {player.userName || player.displayName || 'Anonymous Player'}
                                 {player.isCurrentUser && (
                                   <Chip 
                                     label="You" 
@@ -412,7 +414,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         
                         <TableCell align="center">
                           <Typography variant="body2">
-                            {player.gamesPlayed}
+                            {player.gamesPlayed || player.totalGames}
                           </Typography>
                         </TableCell>
                       </TableRow>
