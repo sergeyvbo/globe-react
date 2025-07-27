@@ -118,7 +118,7 @@ describe('LeaderboardService', () => {
 
       expect(result).toEqual(mockResponse)
       expect(fetch).toHaveBeenCalledWith(
-        'http://localhost:5000/api/leaderboard?gameType=countries&page=1&pageSize=50',
+        'http://localhost:5000/api/leaderboard/game-type/countries?page=1&pageSize=50',
         expect.objectContaining({
           method: 'GET'
         })

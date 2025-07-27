@@ -154,9 +154,12 @@ export class LeaderboardService {
         token
       )
       
-      this.setCachedData(cacheKey, response)
-      console.log('Global leaderboard retrieved successfully:', response)
-      return response
+      // Transform backend response to frontend format
+      const transformedResponse = this.transformLeaderboardResponse(response)
+      
+      this.setCachedData(cacheKey, transformedResponse)
+      console.log('Global leaderboard retrieved successfully:', transformedResponse)
+      return transformedResponse
     } catch (error) {
       console.error('Failed to fetch global leaderboard:', error)
       if (error instanceof LeaderboardApiError) {
@@ -187,13 +190,16 @@ export class LeaderboardService {
     try {
       const token = this.getOptionalAccessToken()
       const response = await HttpClient.get<LeaderboardResponse>(
-        `/leaderboard?gameType=${encodeURIComponent(gameType)}&page=${page}&pageSize=${pageSize}`, 
+        `/leaderboard/game-type/${encodeURIComponent(gameType)}?page=${page}&pageSize=${pageSize}`, 
         token
       )
       
-      this.setCachedData(cacheKey, response)
-      console.log('Game type leaderboard retrieved successfully:', response)
-      return response
+      // Transform backend response to frontend format
+      const transformedResponse = this.transformLeaderboardResponse(response)
+      
+      this.setCachedData(cacheKey, transformedResponse)
+      console.log('Game type leaderboard retrieved successfully:', transformedResponse)
+      return transformedResponse
     } catch (error) {
       console.error('Failed to fetch game type leaderboard:', error)
       if (error instanceof LeaderboardApiError) {
@@ -221,16 +227,22 @@ export class LeaderboardService {
       return cached
     }
     
+    // Map frontend period to backend period
+    const backendPeriod = this.mapPeriodToBackend(period)
+    
     try {
       const token = this.getOptionalAccessToken()
       const response = await HttpClient.get<LeaderboardResponse>(
-        `/leaderboard?period=${period}&page=${page}&pageSize=${pageSize}`, 
+        `/leaderboard/period/${backendPeriod}?page=${page}&pageSize=${pageSize}`, 
         token
       )
       
-      this.setCachedData(cacheKey, response)
-      console.log('Period leaderboard retrieved successfully:', response)
-      return response
+      // Transform backend response to frontend format
+      const transformedResponse = this.transformLeaderboardResponse(response)
+      
+      this.setCachedData(cacheKey, transformedResponse)
+      console.log('Period leaderboard retrieved successfully:', transformedResponse)
+      return transformedResponse
     } catch (error) {
       console.error('Failed to fetch period leaderboard:', error)
       if (error instanceof LeaderboardApiError) {
@@ -267,19 +279,22 @@ export class LeaderboardService {
     }
     
     if (period) {
-      params.append('period', period)
+      params.append('period', this.mapPeriodToBackend(period))
     }
     
     try {
       const token = this.getOptionalAccessToken()
       const response = await HttpClient.get<LeaderboardResponse>(
-        `/leaderboard?${params.toString()}`, 
+        `/leaderboard/filtered?${params.toString()}`, 
         token
       )
       
-      this.setCachedData(cacheKey, response)
-      console.log('Filtered leaderboard retrieved successfully:', response)
-      return response
+      // Transform backend response to frontend format
+      const transformedResponse = this.transformLeaderboardResponse(response)
+      
+      this.setCachedData(cacheKey, transformedResponse)
+      console.log('Filtered leaderboard retrieved successfully:', transformedResponse)
+      return transformedResponse
     } catch (error) {
       console.error('Failed to fetch filtered leaderboard:', error)
       if (error instanceof LeaderboardApiError) {
@@ -328,6 +343,66 @@ export class LeaderboardService {
     })
   }
   
+  // Transform backend response to frontend format
+  private transformLeaderboardResponse(backendResponse: any): LeaderboardResponse {
+    const currentUserId = TokenManager.getAccessToken() ? this.getCurrentUserId() : null
+    
+    // Handle both old test format (players) and new backend format (entries)
+    const entries = backendResponse.entries || backendResponse.players || []
+    
+    const transformedEntries = entries.map((entry: any) => ({
+      ...entry,
+      // Add compatibility properties
+      userName: entry.userName || entry.displayName,
+      displayName: entry.displayName || entry.userName,
+      gamesPlayed: entry.gamesPlayed || entry.totalGames,
+      totalGames: entry.totalGames || entry.gamesPlayed,
+      isCurrentUser: currentUserId ? entry.userId === currentUserId : (entry.isCurrentUser || false)
+    }))
+    
+    return {
+      ...backendResponse,
+      // Add compatibility properties
+      players: transformedEntries,
+      entries: transformedEntries,
+      hasNextPage: backendResponse.hasNextPage !== undefined 
+        ? backendResponse.hasNextPage 
+        : (backendResponse.totalPages ? backendResponse.page < backendResponse.totalPages : false),
+      currentUserRank: backendResponse.currentUserRank || backendResponse.currentUserEntry?.rank
+    }
+  }
+  
+  // Map frontend period to backend period
+  private mapPeriodToBackend(period: LeaderboardPeriod): string {
+    switch (period) {
+      case 'all':
+        return 'all-time'
+      case 'week':
+        return 'week'
+      case 'month':
+        return 'month'
+      case 'year':
+        return 'year'
+      default:
+        return 'all-time'
+    }
+  }
+
+  // Get current user ID from token
+  private getCurrentUserId(): string | null {
+    try {
+      const token = TokenManager.getAccessToken()
+      if (!token) return null
+      
+      // Decode JWT token to get user ID (simple base64 decode)
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.sub || payload.nameid || null
+    } catch (error) {
+      console.error('Failed to decode token:', error)
+      return null
+    }
+  }
+
   // Get access token if available (leaderboards can be viewed without authentication)
   private getOptionalAccessToken(): string | undefined {
     const accessToken = TokenManager.getAccessToken()

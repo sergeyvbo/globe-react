@@ -167,23 +167,32 @@ export interface MigrateProgressRequest {
 
 // Leaderboard API Types
 export interface LeaderboardResponse {
-    players: LeaderboardEntryDto[]
+    entries: LeaderboardEntryDto[]
     totalPlayers: number
+    currentUserEntry?: LeaderboardEntryDto
     page: number
     pageSize: number
-    hasNextPage: boolean
+    totalPages: number
+    // Computed properties for compatibility
+    players?: LeaderboardEntryDto[]
+    hasNextPage?: boolean
     currentUserRank?: number
 }
 
 export interface LeaderboardEntryDto {
-    rank: number
-    userId: string
-    userName: string
-    userAvatar?: string
+    userId?: string
+    displayName: string
     totalScore: number
+    totalGames: number
     accuracy: number
-    gamesPlayed: number
-    isCurrentUser: boolean
+    bestStreak: number
+    lastPlayedAt?: string
+    rank: number
+    // Compatibility properties
+    userName?: string
+    userAvatar?: string
+    gamesPlayed?: number
+    isCurrentUser?: boolean
 }
 
 export interface LeaderboardFilter {
@@ -193,4 +202,4 @@ export interface LeaderboardFilter {
     pageSize?: number
 }
 
-export type LeaderboardPeriod = 'all' | 'today' | 'week' | 'month' | 'year'
+export type LeaderboardPeriod = 'all' | 'week' | 'month' | 'year'
