@@ -36,10 +36,18 @@ services:
       - ASPNETCORE_URLS=http://*:5000
       - ConnectionStrings__DefaultConnection=Data Source=/app/data/geoquiz.db
       - JwtSettings__SecretKey=${JWT_SECRET_KEY:-your-super-secret-jwt-key-that-is-at-least-32-characters-long}
-      - CorsSettings__AllowedOrigins__0=http://localhost:8080
-      - CorsSettings__AllowedOrigins__1=http://localhost:6666
+      - CorsSettings__AllowedOrigins__0=https://geoquiz.sergeivbo.ru
+      - CorsSettings__AllowedOrigins__1=http://10.66.66.64:6666
+      - CorsSettings__AllowedOrigins__2=http://localhost:8080
+      - CorsSettings__AllowedOrigins__3=http://localhost:6666
       - SecuritySettings__EnforceHttps=false
       - SecuritySettings__EnableHsts=false
+      # Настройки для работы за прокси
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+      - AllowedHosts=*
+      - ASPNETCORE_PATHBASE=
+      - ASPNETCORE_FORWARDEDHEADERS_FORWARDEDPROTOHEADERNAME=X-Forwarded-Proto
+      - ASPNETCORE_FORWARDEDHEADERS_FORWARDEDHOSTHEADERNAME=X-Forwarded-Host
     networks:
       - geoquiz-network
     restart: unless-stopped
