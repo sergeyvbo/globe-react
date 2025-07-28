@@ -37,26 +37,13 @@ public class LeaderboardController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            var currentUserId = GetCurrentUserId();
-            var leaderboard = await _leaderboardService.GetGlobalLeaderboardAsync(page, pageSize, currentUserId);
-            
-            _logger.LogInformation("Retrieved global leaderboard - Page: {Page}, Size: {PageSize}, Total: {Total}", 
-                page, pageSize, leaderboard.TotalPlayers);
-            
-            return Ok(leaderboard);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid parameters for global leaderboard: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving global leaderboard");
-            return StatusCode(500, new { error = "An error occurred while retrieving the leaderboard" });
-        }
+        var currentUserId = GetCurrentUserId();
+        var leaderboard = await _leaderboardService.GetGlobalLeaderboardAsync(page, pageSize, currentUserId);
+        
+        _logger.LogInformation("Retrieved global leaderboard - Page: {Page}, Size: {PageSize}, Total: {Total}", 
+            page, pageSize, leaderboard.TotalPlayers);
+        
+        return Ok(leaderboard);
     }
 
     /// <summary>
@@ -74,26 +61,13 @@ public class LeaderboardController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            var currentUserId = GetCurrentUserId();
-            var leaderboard = await _leaderboardService.GetLeaderboardByGameTypeAsync(gameType, page, pageSize, currentUserId);
-            
-            _logger.LogInformation("Retrieved leaderboard for game type {GameType} - Page: {Page}, Size: {PageSize}, Total: {Total}", 
-                gameType, page, pageSize, leaderboard.TotalPlayers);
-            
-            return Ok(leaderboard);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid parameters for game type leaderboard: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving leaderboard for game type {GameType}", gameType);
-            return StatusCode(500, new { error = "An error occurred while retrieving the leaderboard" });
-        }
+        var currentUserId = GetCurrentUserId();
+        var leaderboard = await _leaderboardService.GetLeaderboardByGameTypeAsync(gameType, page, pageSize, currentUserId);
+        
+        _logger.LogInformation("Retrieved leaderboard for game type {GameType} - Page: {Page}, Size: {PageSize}, Total: {Total}", 
+            gameType, page, pageSize, leaderboard.TotalPlayers);
+        
+        return Ok(leaderboard);
     }
 
     /// <summary>
@@ -111,26 +85,13 @@ public class LeaderboardController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            var currentUserId = GetCurrentUserId();
-            var leaderboard = await _leaderboardService.GetLeaderboardByPeriodAsync(period, page, pageSize, currentUserId);
-            
-            _logger.LogInformation("Retrieved leaderboard for period {Period} - Page: {Page}, Size: {PageSize}, Total: {Total}", 
-                period, page, pageSize, leaderboard.TotalPlayers);
-            
-            return Ok(leaderboard);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid parameters for period leaderboard: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving leaderboard for period {Period}", period);
-            return StatusCode(500, new { error = "An error occurred while retrieving the leaderboard" });
-        }
+        var currentUserId = GetCurrentUserId();
+        var leaderboard = await _leaderboardService.GetLeaderboardByPeriodAsync(period, page, pageSize, currentUserId);
+        
+        _logger.LogInformation("Retrieved leaderboard for period {Period} - Page: {Page}, Size: {PageSize}, Total: {Total}", 
+            period, page, pageSize, leaderboard.TotalPlayers);
+        
+        return Ok(leaderboard);
     }
 
     /// <summary>
@@ -150,26 +111,13 @@ public class LeaderboardController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 50)
     {
-        try
-        {
-            var currentUserId = GetCurrentUserId();
-            var leaderboard = await _leaderboardService.GetFilteredLeaderboardAsync(gameType, period, page, pageSize, currentUserId);
-            
-            _logger.LogInformation("Retrieved filtered leaderboard - GameType: {GameType}, Period: {Period}, Page: {Page}, Size: {PageSize}, Total: {Total}", 
-                gameType ?? "all", period ?? "all-time", page, pageSize, leaderboard.TotalPlayers);
-            
-            return Ok(leaderboard);
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Invalid parameters for filtered leaderboard: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving filtered leaderboard");
-            return StatusCode(500, new { error = "An error occurred while retrieving the leaderboard" });
-        }
+        var currentUserId = GetCurrentUserId();
+        var leaderboard = await _leaderboardService.GetFilteredLeaderboardAsync(gameType, period, page, pageSize, currentUserId);
+        
+        _logger.LogInformation("Retrieved filtered leaderboard - GameType: {GameType}, Period: {Period}, Page: {Page}, Size: {PageSize}, Total: {Total}", 
+            gameType ?? "all", period ?? "all-time", page, pageSize, leaderboard.TotalPlayers);
+        
+        return Ok(leaderboard);
     }
 
     /// <summary>
@@ -182,17 +130,9 @@ public class LeaderboardController : ControllerBase
     [Authorize]
     public ActionResult ClearLeaderboardCache()
     {
-        try
-        {
-            _leaderboardService.ClearCache();
-            _logger.LogInformation("Leaderboard cache cleared by user {UserId}", GetCurrentUserId());
-            return Ok(new { message = "Leaderboard cache cleared successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error clearing leaderboard cache");
-            return StatusCode(500, new { error = "An error occurred while clearing the cache" });
-        }
+        _leaderboardService.ClearCache();
+        _logger.LogInformation("Leaderboard cache cleared by user {UserId}", GetCurrentUserId());
+        return Ok(new { message = "Leaderboard cache cleared successfully" });
     }
 
     /// <summary>

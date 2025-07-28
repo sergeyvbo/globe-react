@@ -12,6 +12,8 @@ using GeoQuizApi.Services;
 using GeoQuizApi.Middleware;
 using GeoQuizApi.Models;
 using Microsoft.OpenApi.Models.References;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,30 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.WriteIndented = false;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Configure model validation to use ProblemDetails format
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var problemDetails = new ValidationProblemDetails(context.ModelState)
+            {
+                Type = ProblemTypes.ValidationError,
+                Title = ProblemTypes.GetTitle(ProblemTypes.ValidationError),
+                Status = StatusCodes.Status400BadRequest,
+                Detail = "One or more validation errors occurred.",
+                Instance = context.HttpContext.Request.Path
+            };
+
+            // Add additional fields
+            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+            return new BadRequestObjectResult(problemDetails)
+            {
+                ContentTypes = { "application/problem+json" }
+            };
+        };
     });
 
 // Configure OpenAPI with Scalar
@@ -146,6 +172,64 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+
+    // Configure JWT events to use RFC 9457 ProblemDetails format
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = context =>
+        {
+            // Skip the default logic
+            context.HandleResponse();
+
+            // Create a ProblemDetails response for authentication failures
+            var problemDetails = new ProblemDetails
+            {
+                Type = ProblemTypes.AuthenticationError,
+                Title = ProblemTypes.GetTitle(ProblemTypes.AuthenticationError),
+                Status = StatusCodes.Status401Unauthorized,
+                Detail = "Authentication required",
+                Instance = context.Request.Path
+            };
+
+            // Add additional fields
+            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.ContentType = "application/problem+json";
+
+            return context.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            });
+        },
+        OnForbidden = context =>
+        {
+            // Create a ProblemDetails response for authorization failures
+            var problemDetails = new ProblemDetails
+            {
+                Type = ProblemTypes.AuthorizationError,
+                Title = ProblemTypes.GetTitle(ProblemTypes.AuthorizationError),
+                Status = StatusCodes.Status403Forbidden,
+                Detail = "Access denied",
+                Instance = context.Request.Path
+            };
+
+            // Add additional fields
+            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/problem+json";
+
+            return context.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            });
+        }
     };
 });
 

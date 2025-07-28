@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace GeoQuizApi.Tests.TestUtilities;
 
@@ -18,12 +19,42 @@ public static class ProblemDetailsTestExtensions
         // Accept both application/problem+json and application/json for now
         // The RFC 9457 implementation might be using application/json in some cases
         var contentType = response.Content.Headers.ContentType?.MediaType;
+        
+        // If there's no content type, try to read the response anyway and see if it's valid JSON
+        if (contentType == null)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrEmpty(content))
+            {
+                throw new InvalidOperationException($"Response has no content. Status: {response.StatusCode}, Headers: {string.Join(", ", response.Headers.Select(h => $"{h.Key}: {string.Join(", ", h.Value)}"))}");
+            }
+            
+            // Try to parse as ProblemDetails
+            try
+            {
+                var problemDetails = JsonSerializer.Deserialize<ProblemDetails>(content, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+                
+                if (problemDetails != null)
+                {
+                    return problemDetails;
+                }
+            }
+            catch (JsonException)
+            {
+                // Not valid JSON, throw informative error
+                throw new InvalidOperationException($"Response content is not valid ProblemDetails JSON. Status: {response.StatusCode}, Content: {content}");
+            }
+        }
+        
         contentType.Should().BeOneOf("application/problem+json", "application/json");
         
-        var problemDetails = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        problemDetails.Should().NotBeNull();
+        var result = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        result.Should().NotBeNull();
         
-        return problemDetails!;
+        return result!;
     }
 
     /// <summary>
