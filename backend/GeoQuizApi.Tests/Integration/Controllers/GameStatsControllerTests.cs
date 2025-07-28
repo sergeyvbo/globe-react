@@ -1,9 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using GeoQuizApi.Models;
 using GeoQuizApi.Models.DTOs.Auth;
 using GeoQuizApi.Models.DTOs.GameStats;
 using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
@@ -79,6 +82,16 @@ public class GameStatsControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/game-stats"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -105,6 +118,17 @@ public class GameStatsControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        
+        var validationProblemDetails = await response.ReadValidationProblemDetailsAsync();
+        validationProblemDetails.ShouldBeValidRfc9457ValidationProblemDetails(
+            ProblemTypes.ValidationError,
+            "One or more validation errors occurred.",
+            (int)HttpStatusCode.UnprocessableEntity,
+            expectedInstance: "/api/game-stats"
+        );
+        validationProblemDetails.Errors.Should().ContainKey("GameType");
+        validationProblemDetails.ShouldHaveTimestamp();
+        validationProblemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -360,6 +384,16 @@ public class GameStatsControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/game-stats/me"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -370,6 +404,16 @@ public class GameStatsControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/game-stats/me/history"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -386,5 +430,15 @@ public class GameStatsControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/game-stats/migrate"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 }

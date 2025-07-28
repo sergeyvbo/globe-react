@@ -59,7 +59,12 @@
   - Update error creation logic in services to use new format
   - _Requirements: 1.2, 5.1, 5.2, 5.3_
 
-- [ ] 6. Update existing unit tests to work with ProblemDetails format
+- [x] 6. Update existing unit tests to work with ProblemDetails format
+
+
+
+
+
   - Modify test assertions to check ProblemDetails properties instead of ErrorResponse
   - Update JSON parsing logic in tests to handle RFC 9457 format
   - Ensure all existing error handling tests pass with new format

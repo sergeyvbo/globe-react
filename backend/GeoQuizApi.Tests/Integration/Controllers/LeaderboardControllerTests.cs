@@ -1,9 +1,13 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using GeoQuizApi.Models;
 using GeoQuizApi.Models.DTOs.Auth;
 using GeoQuizApi.Models.DTOs.GameStats;
 using GeoQuizApi.Models.DTOs.Leaderboard;
+using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
@@ -193,6 +197,17 @@ public class LeaderboardControllerTests : BaseIsolatedIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.BadRequestError,
+            "Invalid request",
+            (int)HttpStatusCode.BadRequest,
+            expectedInstance: "/api/leaderboard/game-type/invalid-game-type"
+        );
+        problemDetails.Detail.Should().Contain("Invalid game type");
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -254,6 +269,17 @@ public class LeaderboardControllerTests : BaseIsolatedIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.BadRequestError,
+            "Invalid request",
+            (int)HttpStatusCode.BadRequest,
+            expectedInstance: "/api/leaderboard/period/invalid-period"
+        );
+        problemDetails.Detail.Should().Contain("Invalid period");
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]

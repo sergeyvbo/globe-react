@@ -1,7 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using GeoQuizApi.Models;
 using GeoQuizApi.Models.DTOs.Auth;
+using GeoQuizApi.Services;
+using GeoQuizApi.Tests.TestUtilities;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GeoQuizApi.Tests.Integration.Controllers;
 
@@ -65,6 +69,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.BadRequestError,
+            "Invalid request",
+            (int)HttpStatusCode.BadRequest,
+            expectedInstance: "/api/auth/register"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -82,6 +96,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.BadRequestError,
+            "Invalid request",
+            (int)HttpStatusCode.BadRequest,
+            expectedInstance: "/api/auth/register"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -110,6 +134,17 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.ConflictError,
+            "Resource conflict",
+            (int)HttpStatusCode.Conflict,
+            expectedInstance: "/api/auth/register"
+        );
+        problemDetails.Detail.Should().Contain("already exists");
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -163,6 +198,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/auth/login"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -192,6 +237,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/auth/login"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -243,6 +298,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/auth/refresh"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -287,6 +352,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/auth/me"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
@@ -408,6 +483,16 @@ public class AuthControllerTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        
+        var problemDetails = await response.ReadProblemDetailsAsync();
+        problemDetails.ShouldBeValidRfc9457ProblemDetails(
+            ProblemTypes.AuthenticationError,
+            "Authentication required",
+            (int)HttpStatusCode.Unauthorized,
+            expectedInstance: "/api/auth/change-password"
+        );
+        problemDetails.ShouldHaveTimestamp();
+        problemDetails.ShouldHaveTraceId();
     }
 
     [Fact]
