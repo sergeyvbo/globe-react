@@ -44,39 +44,23 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
     {
-        try
-        {
-            var (user, accessToken, refreshToken) = await _authService.RegisterAsync(
-                request.Email, 
-                request.Password, 
-                request.Name);
+        var (user, accessToken, refreshToken) = await _authService.RegisterAsync(
+            request.Email, 
+            request.Password, 
+            request.Name);
 
-            var response = new AuthResponse
-            {
-                User = MapToUserDto(user),
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
-            };
+        var response = new AuthResponse
+        {
+            User = MapToUserDto(user),
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
+        };
 
-            _logger.LogInformation("Registration successful for {Email}, AccessToken length: {TokenLength}", 
-                request.Email, accessToken?.Length ?? 0);
+        _logger.LogInformation("Registration successful for {Email}, AccessToken length: {TokenLength}", 
+            request.Email, accessToken?.Length ?? 0);
 
-            return StatusCode(201, response);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during user registration");
-            return StatusCode(500, new { error = "An error occurred during registration" });
-        }
+        return StatusCode(201, response);
     }
 
     /// <summary>
@@ -99,40 +83,24 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
     {
-        try
-        {
-            _logger.LogInformation("Login attempt for email: {Email}", request.Email);
-            
-            var (user, accessToken, refreshToken) = await _authService.LoginAsync(
-                request.Email, 
-                request.Password);
+        _logger.LogInformation("Login attempt for email: {Email}", request.Email);
+        
+        var (user, accessToken, refreshToken) = await _authService.LoginAsync(
+            request.Email, 
+            request.Password);
 
-            var response = new AuthResponse
-            {
-                User = MapToUserDto(user),
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
-            };
+        var response = new AuthResponse
+        {
+            User = MapToUserDto(user),
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
+        };
 
-            _logger.LogInformation("Login response created for user: {UserId}, AccessToken length: {TokenLength}", 
-                user.Id, accessToken?.Length ?? 0);
+        _logger.LogInformation("Login response created for user: {UserId}, AccessToken length: {TokenLength}", 
+            user.Id, accessToken?.Length ?? 0);
 
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during user login");
-            return StatusCode(500, new { error = "An error occurred during login" });
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -146,33 +114,17 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        try
-        {
-            var (user, accessToken, refreshToken) = await _authService.RefreshTokenAsync(request.RefreshToken);
+        var (user, accessToken, refreshToken) = await _authService.RefreshTokenAsync(request.RefreshToken);
 
-            var response = new AuthResponse
-            {
-                User = MapToUserDto(user),
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
-            };
+        var response = new AuthResponse
+        {
+            User = MapToUserDto(user),
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresIn = _jwtSettings.AccessTokenExpirationMinutes * 60
+        };
 
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during token refresh");
-            return StatusCode(500, new { error = "An error occurred during token refresh" });
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -186,16 +138,8 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult> Logout([FromBody] RefreshTokenRequest request)
     {
-        try
-        {
-            await _authService.RevokeRefreshTokenAsync(request.RefreshToken);
-            return Ok(new { message = "Logged out successfully" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during logout");
-            return StatusCode(500, new { error = "An error occurred during logout" });
-        }
+        await _authService.RevokeRefreshTokenAsync(request.RefreshToken);
+        return Ok(new { message = "Logged out successfully" });
     }
 
     /// <summary>
@@ -209,23 +153,15 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserDto>> GetMe()
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var user = await _authService.GetUserByIdAsync(userId);
+        var userId = GetCurrentUserId();
+        var user = await _authService.GetUserByIdAsync(userId);
 
-            if (user == null)
-            {
-                return NotFound(new { error = "User not found" });
-            }
-
-            return Ok(MapToUserDto(user));
-        }
-        catch (Exception ex)
+        if (user == null)
         {
-            _logger.LogError(ex, "Error getting current user");
-            return StatusCode(500, new { error = "An error occurred while getting user information" });
+            throw new KeyNotFoundException("User not found");
         }
+
+        return Ok(MapToUserDto(user));
     }
 
     /// <summary>
@@ -240,24 +176,16 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<UserDto>> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var success = await _authService.UpdateUserProfileAsync(userId, request.Name, request.Avatar);
+        var userId = GetCurrentUserId();
+        var success = await _authService.UpdateUserProfileAsync(userId, request.Name, request.Avatar);
 
-            if (!success)
-            {
-                return NotFound(new { error = "User not found" });
-            }
-
-            var user = await _authService.GetUserByIdAsync(userId);
-            return Ok(MapToUserDto(user!));
-        }
-        catch (Exception ex)
+        if (!success)
         {
-            _logger.LogError(ex, "Error updating user profile");
-            return StatusCode(500, new { error = "An error occurred while updating profile" });
+            throw new KeyNotFoundException("User not found");
         }
+
+        var user = await _authService.GetUserByIdAsync(userId);
+        return Ok(MapToUserDto(user!));
     }
 
     /// <summary>
@@ -273,31 +201,15 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var success = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+        var userId = GetCurrentUserId();
+        var success = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
 
-            if (!success)
-            {
-                return NotFound(new { error = "User not found" });
-            }
+        if (!success)
+        {
+            throw new KeyNotFoundException("User not found");
+        }
 
-            return Ok(new { message = "Password changed successfully" });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error changing password");
-            return StatusCode(500, new { error = "An error occurred while changing password" });
-        }
+        return Ok(new { message = "Password changed successfully" });
     }
 
     private Guid GetCurrentUserId()

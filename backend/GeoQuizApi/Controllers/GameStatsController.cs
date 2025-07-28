@@ -41,52 +41,34 @@ public class GameStatsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GameSessionDto>> SaveGameSession([FromBody] GameSessionRequest request)
     {
-        try
-        {
-            _logger.LogInformation("SaveGameSession called with GameType: {GameType}, CorrectAnswers: {CorrectAnswers}, WrongAnswers: {WrongAnswers}", 
-                request?.GameType, request?.CorrectAnswers, request?.WrongAnswers);
+        _logger.LogInformation("SaveGameSession called with GameType: {GameType}, CorrectAnswers: {CorrectAnswers}, WrongAnswers: {WrongAnswers}", 
+            request?.GameType, request?.CorrectAnswers, request?.WrongAnswers);
 
-            // Check model state first
-            if (!ModelState.IsValid)
-            {
-                _logger.LogWarning("Invalid model state for SaveGameSession: {Errors}", 
-                    string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
-                return BadRequest(ModelState);
-            }
-
-            var userId = GetCurrentUserId();
-            _logger.LogInformation("SaveGameSession for user: {UserId}", userId);
-            
-            _logger.LogInformation("Calling SaveGameSessionAsync with GameType: {GameType}", request.GameType);
-            
-            var gameSession = await _gameStatsService.SaveGameSessionAsync(
-                userId,
-                request.GameType,
-                request.CorrectAnswers,
-                request.WrongAnswers,
-                request.SessionStartTime,
-                request.SessionEndTime);
-
-            _logger.LogInformation("SaveGameSessionAsync completed successfully");
-
-            var response = MapToGameSessionDto(gameSession);
-            return Ok(response);
-        }
-        catch (ValidationException ex)
+        // Check model state first
+        if (!ModelState.IsValid)
         {
-            _logger.LogWarning("Validation error in SaveGameSession: {Message}, Details: {Details}", ex.Message, ex.Errors);
-            return UnprocessableEntity(new { error = ex.Message, details = ex.Errors });
+            _logger.LogWarning("Invalid model state for SaveGameSession: {Errors}", 
+                string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+            return BadRequest(ModelState);
         }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning("Argument error in SaveGameSession: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error saving game session for user {UserId}", GetCurrentUserId());
-            return StatusCode(500, new { error = "An error occurred while saving the game session" });
-        }
+
+        var userId = GetCurrentUserId();
+        _logger.LogInformation("SaveGameSession for user: {UserId}", userId);
+        
+        _logger.LogInformation("Calling SaveGameSessionAsync with GameType: {GameType}", request.GameType);
+        
+        var gameSession = await _gameStatsService.SaveGameSessionAsync(
+            userId,
+            request.GameType,
+            request.CorrectAnswers,
+            request.WrongAnswers,
+            request.SessionStartTime,
+            request.SessionEndTime);
+
+        _logger.LogInformation("SaveGameSessionAsync completed successfully");
+
+        var response = MapToGameSessionDto(gameSession);
+        return Ok(response);
     }
 
     /// <summary>
@@ -98,38 +80,30 @@ public class GameStatsController : ControllerBase
     [HttpGet("me")]
     public async Task<ActionResult<GameStatsResponse>> GetUserStats()
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var stats = await _gameStatsService.GetUserStatsAsync(userId);
+        var userId = GetCurrentUserId();
+        var stats = await _gameStatsService.GetUserStatsAsync(userId);
 
-            var response = new GameStatsResponse
-            {
-                TotalGames = stats.TotalGames,
-                TotalCorrectAnswers = stats.TotalCorrectAnswers,
-                TotalWrongAnswers = stats.TotalWrongAnswers,
-                BestStreak = stats.BestStreak,
-                AverageAccuracy = stats.AverageAccuracy,
-                LastPlayedAt = stats.LastPlayedAt,
-                GameTypeStats = stats.GameTypeStats.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => new GameTypeStatsDto
-                    {
-                        Games = kvp.Value.Games,
-                        CorrectAnswers = kvp.Value.CorrectAnswers,
-                        WrongAnswers = kvp.Value.WrongAnswers,
-                        Accuracy = kvp.Value.Accuracy,
-                        BestStreak = kvp.Value.BestStreak
-                    })
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
+        var response = new GameStatsResponse
         {
-            _logger.LogError(ex, "Error getting user stats for user {UserId}", GetCurrentUserId());
-            return StatusCode(500, new { error = "An error occurred while retrieving user statistics" });
-        }
+            TotalGames = stats.TotalGames,
+            TotalCorrectAnswers = stats.TotalCorrectAnswers,
+            TotalWrongAnswers = stats.TotalWrongAnswers,
+            BestStreak = stats.BestStreak,
+            AverageAccuracy = stats.AverageAccuracy,
+            LastPlayedAt = stats.LastPlayedAt,
+            GameTypeStats = stats.GameTypeStats.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new GameTypeStatsDto
+                {
+                    Games = kvp.Value.Games,
+                    CorrectAnswers = kvp.Value.CorrectAnswers,
+                    WrongAnswers = kvp.Value.WrongAnswers,
+                    Accuracy = kvp.Value.Accuracy,
+                    BestStreak = kvp.Value.BestStreak
+                })
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -145,36 +119,28 @@ public class GameStatsController : ControllerBase
         [FromQuery] int page = 1, 
         [FromQuery] int pageSize = 20)
     {
-        try
+        var userId = GetCurrentUserId();
+        
+        // Validate pagination parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+        var sessions = await _gameStatsService.GetUserGameHistoryAsync(userId, page, pageSize);
+        
+        // Get total count for pagination info (this could be optimized with a separate count query)
+        var allUserStats = await _gameStatsService.GetUserStatsAsync(userId);
+        var totalCount = allUserStats.TotalGames;
+
+        var response = new GameHistoryResponse
         {
-            var userId = GetCurrentUserId();
-            
-            // Validate pagination parameters
-            if (page < 1) page = 1;
-            if (pageSize < 1 || pageSize > 100) pageSize = 20;
+            Sessions = sessions.Select(MapToGameSessionDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            HasNextPage = (page * pageSize) < totalCount
+        };
 
-            var sessions = await _gameStatsService.GetUserGameHistoryAsync(userId, page, pageSize);
-            
-            // Get total count for pagination info (this could be optimized with a separate count query)
-            var allUserStats = await _gameStatsService.GetUserStatsAsync(userId);
-            var totalCount = allUserStats.TotalGames;
-
-            var response = new GameHistoryResponse
-            {
-                Sessions = sessions.Select(MapToGameSessionDto).ToList(),
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize,
-                HasNextPage = (page * pageSize) < totalCount
-            };
-
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting game history for user {UserId}", GetCurrentUserId());
-            return StatusCode(500, new { error = "An error occurred while retrieving game history" });
-        }
+        return Ok(response);
     }
 
     /// <summary>
@@ -188,41 +154,29 @@ public class GameStatsController : ControllerBase
     [HttpPost("migrate")]
     public async Task<ActionResult> MigrateAnonymousProgress([FromBody] MigrateProgressRequest request)
     {
-        try
+        var userId = GetCurrentUserId();
+
+        // Convert DTOs to service models
+        var anonymousSessions = request.AnonymousSessions.Select(dto => new AnonymousGameSession
         {
-            var userId = GetCurrentUserId();
+            GameType = dto.GameType,
+            CorrectAnswers = dto.CorrectAnswers,
+            WrongAnswers = dto.WrongAnswers,
+            SessionStartTime = dto.SessionStartTime,
+            SessionEndTime = dto.SessionEndTime
+        }).ToList();
 
-            // Convert DTOs to service models
-            var anonymousSessions = request.AnonymousSessions.Select(dto => new AnonymousGameSession
-            {
-                GameType = dto.GameType,
-                CorrectAnswers = dto.CorrectAnswers,
-                WrongAnswers = dto.WrongAnswers,
-                SessionStartTime = dto.SessionStartTime,
-                SessionEndTime = dto.SessionEndTime
-            }).ToList();
+        var success = await _gameStatsService.MigrateAnonymousProgressAsync(userId, anonymousSessions);
 
-            var success = await _gameStatsService.MigrateAnonymousProgressAsync(userId, anonymousSessions);
-
-            if (!success)
-            {
-                return BadRequest(new { error = "No valid sessions to migrate" });
-            }
-
-            return Ok(new { 
-                message = "Anonymous progress migrated successfully",
-                migratedSessions = anonymousSessions.Count
-            });
-        }
-        catch (ArgumentException ex)
+        if (!success)
         {
-            return BadRequest(new { error = ex.Message });
+            return BadRequest(new { error = "No valid sessions to migrate" });
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error migrating anonymous progress for user {UserId}", GetCurrentUserId());
-            return StatusCode(500, new { error = "An error occurred while migrating anonymous progress" });
-        }
+
+        return Ok(new { 
+            message = "Anonymous progress migrated successfully",
+            migratedSessions = anonymousSessions.Count
+        });
     }
 
     private Guid GetCurrentUserId()

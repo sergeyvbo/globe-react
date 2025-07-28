@@ -27,35 +27,18 @@ public class HealthController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        try
+        // Check database connectivity
+        await _context.Database.CanConnectAsync();
+        
+        var healthStatus = new
         {
-            // Check database connectivity
-            await _context.Database.CanConnectAsync();
-            
-            var healthStatus = new
-            {
-                Status = "Healthy",
-                Timestamp = DateTime.UtcNow,
-                Version = "1.0.0",
-                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
-            };
+            Status = "Healthy",
+            Timestamp = DateTime.UtcNow,
+            Version = "1.0.0",
+            Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
+        };
 
-            return Ok(healthStatus);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Health check failed");
-            
-            var healthStatus = new
-            {
-                Status = "Unhealthy",
-                Timestamp = DateTime.UtcNow,
-                Error = ex.Message,
-                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
-            };
-
-            return StatusCode(503, healthStatus);
-        }
+        return Ok(healthStatus);
     }
 
     /// <summary>
@@ -68,48 +51,38 @@ public class HealthController : ControllerBase
         var healthChecks = new Dictionary<string, object>();
         var overallStatus = "Healthy";
 
-        try
+        // Database health check
+        var dbStartTime = DateTime.UtcNow;
+        var canConnect = await _context.Database.CanConnectAsync();
+        var dbResponseTime = (DateTime.UtcNow - dbStartTime).TotalMilliseconds;
+        
+        healthChecks["Database"] = new
         {
-            // Database health check
-            var dbStartTime = DateTime.UtcNow;
-            var canConnect = await _context.Database.CanConnectAsync();
-            var dbResponseTime = (DateTime.UtcNow - dbStartTime).TotalMilliseconds;
-            
-            healthChecks["Database"] = new
-            {
-                Status = canConnect ? "Healthy" : "Unhealthy",
-                ResponseTime = $"{dbResponseTime:F2}ms"
-            };
+            Status = canConnect ? "Healthy" : "Unhealthy",
+            ResponseTime = $"{dbResponseTime:F2}ms"
+        };
 
-            if (!canConnect)
-            {
-                overallStatus = "Unhealthy";
-            }
-
-            // Memory usage check
-            var workingSet = GC.GetTotalMemory(false);
-            healthChecks["Memory"] = new
-            {
-                Status = "Healthy",
-                WorkingSet = $"{workingSet / 1024 / 1024:F2} MB"
-            };
-
-            // Application uptime
-            var processStartTime = Environment.TickCount64;
-            var uptime = TimeSpan.FromMilliseconds(processStartTime);
-            healthChecks["Uptime"] = new
-            {
-                Status = "Healthy",
-                Duration = uptime.ToString(@"dd\.hh\:mm\:ss")
-            };
-
-        }
-        catch (Exception ex)
+        if (!canConnect)
         {
-            _logger.LogError(ex, "Detailed health check failed");
             overallStatus = "Unhealthy";
-            healthChecks["Error"] = ex.Message;
         }
+
+        // Memory usage check
+        var workingSet = GC.GetTotalMemory(false);
+        healthChecks["Memory"] = new
+        {
+            Status = "Healthy",
+            WorkingSet = $"{workingSet / 1024 / 1024:F2} MB"
+        };
+
+        // Application uptime
+        var processStartTime = Environment.TickCount64;
+        var uptime = TimeSpan.FromMilliseconds(processStartTime);
+        healthChecks["Uptime"] = new
+        {
+            Status = "Healthy",
+            Duration = uptime.ToString(@"dd\.hh\:mm\:ss")
+        };
 
         var response = new
         {

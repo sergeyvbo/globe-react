@@ -83,6 +83,8 @@
 
 
 
+
+
   - Modify controller integration tests to expect ProblemDetails responses
   - Test all HTTP status codes return correct problem details format
   - Verify Content-Type headers are set to "application/problem+json"
