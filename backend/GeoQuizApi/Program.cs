@@ -89,6 +89,24 @@ builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 // Add Memory Cache for leaderboard caching
 builder.Services.AddMemoryCache();
 
+// Configure ASP.NET Core ProblemDetails services
+builder.Services.AddProblemDetails(options =>
+{
+    // Customize ProblemDetails with additional fields
+    options.CustomizeProblemDetails = (context) =>
+    {
+        // Add timestamp and trace ID to all problem details
+        context.ProblemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        
+        // Set instance to the current request path
+        context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+    };
+});
+
+// Register custom ProblemDetails service
+builder.Services.AddScoped<ICustomProblemDetailsService, CustomProblemDetailsService>();
+
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>();
 if (jwtSettings == null)

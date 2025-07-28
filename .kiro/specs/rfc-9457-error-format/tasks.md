@@ -11,7 +11,12 @@
   - Include mapping from exception types to problem types
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 2. Implement CustomProblemDetailsService using ASP.NET Core built-in services
+- [x] 2. Implement CustomProblemDetailsService using ASP.NET Core built-in services
+
+
+
+
+
   - Create interface ICustomProblemDetailsService
   - Implement service that wraps IProblemDetailsService
   - Add methods for creating ProblemDetails from exceptions
