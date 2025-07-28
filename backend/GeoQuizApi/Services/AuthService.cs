@@ -5,7 +5,7 @@ using BCrypt.Net;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Configuration;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 
 namespace GeoQuizApi.Services;
 

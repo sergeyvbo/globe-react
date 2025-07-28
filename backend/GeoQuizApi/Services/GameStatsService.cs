@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using GeoQuizApi.Data;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Models;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 
 namespace GeoQuizApi.Services;
 

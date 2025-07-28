@@ -92,6 +92,11 @@
   - _Requirements: 1.1, 1.2, 5.1, 5.2_
 
 - [ ] 9. Remove old ErrorResponse and ErrorDetails classes
+
+
+
+
+
   - Delete ErrorResponse, ErrorDetails, and ValidationException classes from middleware
   - Clean up any unused imports and references
   - Ensure no remaining code depends on old error format

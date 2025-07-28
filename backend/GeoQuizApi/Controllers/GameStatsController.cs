@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using GeoQuizApi.Models.DTOs.GameStats;
 using GeoQuizApi.Models.Entities;
 using GeoQuizApi.Services;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 
 namespace GeoQuizApi.Controllers;
 

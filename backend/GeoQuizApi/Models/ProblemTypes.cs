@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 
 namespace GeoQuizApi.Models;
 

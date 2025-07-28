@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using GeoQuizApi.Services;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 using GeoQuizApi.Models;
 using System.Net;
 

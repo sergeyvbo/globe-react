@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 using GeoQuizApi.Models;
 using GeoQuizApi.Services;
 using GeoQuizApi.Tests.TestUtilities;

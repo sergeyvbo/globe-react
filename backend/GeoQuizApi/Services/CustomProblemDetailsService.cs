@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GeoQuizApi.Models;
-using GeoQuizApi.Middleware;
+using GeoQuizApi.Models.Exceptions;
 using System.Net;
 
 namespace GeoQuizApi.Services;
