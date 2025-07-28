@@ -34,16 +34,16 @@ public class AuthService : IAuthService
     public async Task<(User user, string accessToken, string refreshToken)> RegisterAsync(string email, string password, string? name = null)
     {
         // Validate input
-        var validationErrors = new Dictionary<string, object>();
+        var validationErrors = new Dictionary<string, string[]>();
         
         if (!ValidateEmail(email))
         {
-            validationErrors["email"] = "Invalid email format";
+            validationErrors["email"] = new[] { "Invalid email format" };
         }
 
         if (!ValidatePassword(password))
         {
-            validationErrors["password"] = "Password must be at least 8 characters long and contain letters and numbers";
+            validationErrors["password"] = new[] { "Password must be at least 8 characters long and contain letters and numbers" };
         }
 
         if (validationErrors.Any())
@@ -95,16 +95,16 @@ public class AuthService : IAuthService
     public async Task<(User user, string accessToken, string refreshToken)> LoginAsync(string email, string password)
     {
         // Validate input
-        var validationErrors = new Dictionary<string, object>();
+        var validationErrors = new Dictionary<string, string[]>();
         
         if (!ValidateEmail(email))
         {
-            validationErrors["email"] = "Invalid email format";
+            validationErrors["email"] = new[] { "Invalid email format" };
         }
 
         if (string.IsNullOrWhiteSpace(password))
         {
-            validationErrors["password"] = "Password is required";
+            validationErrors["password"] = new[] { "Password is required" };
         }
 
         if (validationErrors.Any())
@@ -294,20 +294,20 @@ public class AuthService : IAuthService
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)
     {
-        var validationErrors = new Dictionary<string, object>();
+        var validationErrors = new Dictionary<string, string[]>();
         
         if (string.IsNullOrWhiteSpace(currentPassword))
         {
-            validationErrors["currentPassword"] = "Current password is required";
+            validationErrors["currentPassword"] = new[] { "Current password is required" };
         }
 
         if (string.IsNullOrWhiteSpace(newPassword))
         {
-            validationErrors["newPassword"] = "New password is required";
+            validationErrors["newPassword"] = new[] { "New password is required" };
         }
         else if (!ValidatePassword(newPassword))
         {
-            validationErrors["newPassword"] = "New password must be at least 8 characters long and contain letters and numbers";
+            validationErrors["newPassword"] = new[] { "New password must be at least 8 characters long and contain letters and numbers" };
         }
 
         if (validationErrors.Any())

@@ -44,11 +44,16 @@ public class ErrorHandlingMiddleware
         {
             case ValidationException validationEx:
                 response.StatusCode = (int)HttpStatusCode.UnprocessableEntity;
+                // Convert string[] values back to object for backward compatibility
+                var legacyErrors = validationEx.Errors.ToDictionary(
+                    kvp => kvp.Key, 
+                    kvp => (object)(kvp.Value.Length == 1 ? kvp.Value[0] : kvp.Value)
+                );
                 errorResponse.Error = new ErrorDetails
                 {
                     Type = "ValidationError",
                     Message = "Validation failed",
-                    Details = validationEx.Errors
+                    Details = legacyErrors
                 };
                 _logger.LogWarning(exception, "Validation error occurred at {Path}", context.Request.Path);
                 break;
@@ -142,15 +147,39 @@ public class ErrorDetails
 
 public class ValidationException : Exception
 {
-    public Dictionary<string, object> Errors { get; }
+    public Dictionary<string, string[]> Errors { get; }
 
-    public ValidationException(Dictionary<string, object> errors) : base("Validation failed")
+    public ValidationException(Dictionary<string, string[]> errors) : base("Validation failed")
     {
         Errors = errors;
     }
 
     public ValidationException(string field, string message) : base("Validation failed")
     {
-        Errors = new Dictionary<string, object> { [field] = message };
+        Errors = new Dictionary<string, string[]> { [field] = new[] { message } };
+    }
+
+    public ValidationException(string field, string[] messages) : base("Validation failed")
+    {
+        Errors = new Dictionary<string, string[]> { [field] = messages };
+    }
+
+    // Convenience constructor for backward compatibility with Dictionary<string, object>
+    public ValidationException(Dictionary<string, object> errors) : base("Validation failed")
+    {
+        Errors = new Dictionary<string, string[]>();
+        
+        foreach (var error in errors)
+        {
+            var errorMessages = error.Value switch
+            {
+                string stringValue => new[] { stringValue },
+                string[] arrayValue => arrayValue,
+                IEnumerable<string> enumerableValue => enumerableValue.ToArray(),
+                _ => new[] { error.Value?.ToString() ?? "Invalid value" }
+            };
+
+            Errors[error.Key] = errorMessages;
+        }
     }
 }

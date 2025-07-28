@@ -239,7 +239,7 @@ app.UseSerilogRequestLogging();
 // Add custom middleware
 // Temporarily disabled RequestLoggingMiddleware to debug empty response issue
 // app.UseMiddleware<RequestLoggingMiddleware>();
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<Rfc9457ErrorHandlingMiddleware>();
 
 // Add security middleware conditionally based on settings
 if (securitySettings?.EnableSecurityHeaders == true)

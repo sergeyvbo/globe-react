@@ -79,18 +79,10 @@ public class CustomProblemDetailsService : ICustomProblemDetailsService
             Instance = context.Request.Path
         };
 
-        // Convert ValidationException.Errors to the format expected by ValidationProblemDetails
+        // ValidationException.Errors now directly matches ValidationProblemDetails.Errors format
         foreach (var error in exception.Errors)
         {
-            var errorMessages = error.Value switch
-            {
-                string stringValue => new[] { stringValue },
-                string[] arrayValue => arrayValue,
-                IEnumerable<string> enumerableValue => enumerableValue.ToArray(),
-                _ => new[] { error.Value?.ToString() ?? "Invalid value" }
-            };
-
-            validationProblemDetails.Errors[error.Key] = errorMessages;
+            validationProblemDetails.Errors[error.Key] = error.Value;
         }
 
         // Add additional fields
