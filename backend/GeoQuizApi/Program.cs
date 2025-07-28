@@ -10,6 +10,7 @@ using GeoQuizApi.Data;
 using GeoQuizApi.Configuration;
 using GeoQuizApi.Services;
 using GeoQuizApi.Middleware;
+using GeoQuizApi.Models;
 using Microsoft.OpenApi.Models.References;
 
 var builder = WebApplication.CreateBuilder(args);
