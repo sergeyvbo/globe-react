@@ -88,6 +88,9 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
       console.error('Failed to load game history:', err)
       
       if (err instanceof GameStatsApiError) {
+        // Use the RFC 9457 error message directly for better user experience
+        const errorMessage = err.message || 'Failed to load game history. Please try again later.'
+        
         switch (err.type) {
           case AuthErrorType.TOKEN_EXPIRED:
             setError('Your session has expired. Please log in again.')
@@ -95,8 +98,13 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
           case AuthErrorType.NETWORK_ERROR:
             setError('Unable to connect to the server. Please check your internet connection and try again.')
             break
+          case AuthErrorType.VALIDATION_ERROR:
+            // Handle validation errors from RFC 9457
+            setError(errorMessage)
+            break
           default:
-            setError('Failed to load game history. Please try again later.')
+            // Use the RFC 9457 error message for better context
+            setError(errorMessage)
         }
       } else {
         setError('An unexpected error occurred. Please try again later.')

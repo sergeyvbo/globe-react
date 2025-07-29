@@ -236,6 +236,58 @@ describe('UserStats Component', () => {
     })
   })
 
+  it('shows RFC 9457 error message for validation errors', async () => {
+    vi.mocked(mockUseAuth).mockReturnValue({
+      user: mockUser,
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    // Import the actual GameStatsApiError class from the mock
+    const { GameStatsApiError } = await import('../Common/GameProgress/GameStatsApiService')
+    const rfc9457Message = 'The request contains invalid data'
+    const error = new GameStatsApiError(AuthErrorType.VALIDATION_ERROR, rfc9457Message)
+
+    vi.mocked(mockGameStatsApiService.getUserStats).mockRejectedValue(error)
+
+    render(<UserStats />)
+
+    await waitFor(() => {
+      expect(screen.getByText(rfc9457Message)).toBeInTheDocument()
+    })
+  })
+
+  it('shows RFC 9457 error message for unknown error types', async () => {
+    vi.mocked(mockUseAuth).mockReturnValue({
+      user: mockUser,
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    // Import the actual GameStatsApiError class from the mock
+    const { GameStatsApiError } = await import('../Common/GameProgress/GameStatsApiService')
+    const rfc9457Message = 'A specific error occurred on the server'
+    const error = new GameStatsApiError('UNKNOWN_ERROR' as AuthErrorType, rfc9457Message)
+
+    vi.mocked(mockGameStatsApiService.getUserStats).mockRejectedValue(error)
+
+    render(<UserStats />)
+
+    await waitFor(() => {
+      expect(screen.getByText(rfc9457Message)).toBeInTheDocument()
+    })
+  })
+
   it('applies custom className when provided', () => {
     vi.mocked(mockUseAuth).mockReturnValue({
       user: null,

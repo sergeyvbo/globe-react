@@ -294,6 +294,58 @@ describe('GameHistory Component', () => {
     })
   })
 
+  it('shows RFC 9457 error message for validation errors', async () => {
+    vi.mocked(mockUseAuth).mockReturnValue({
+      user: mockUser,
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    // Import the actual GameStatsApiError class from the mock
+    const { GameStatsApiError } = await import('../Common/GameProgress/GameStatsApiService')
+    const rfc9457Message = 'Invalid pagination parameters provided'
+    const error = new GameStatsApiError(AuthErrorType.VALIDATION_ERROR, rfc9457Message)
+
+    vi.mocked(mockGameStatsApiService.getUserGameHistory).mockRejectedValue(error)
+
+    render(<GameHistory />)
+
+    await waitFor(() => {
+      expect(screen.getByText(rfc9457Message)).toBeInTheDocument()
+    })
+  })
+
+  it('shows RFC 9457 error message for unknown error types', async () => {
+    vi.mocked(mockUseAuth).mockReturnValue({
+      user: mockUser,
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    // Import the actual GameStatsApiError class from the mock
+    const { GameStatsApiError } = await import('../Common/GameProgress/GameStatsApiService')
+    const rfc9457Message = 'Server encountered an unexpected condition'
+    const error = new GameStatsApiError('UNKNOWN_ERROR' as AuthErrorType, rfc9457Message)
+
+    vi.mocked(mockGameStatsApiService.getUserGameHistory).mockRejectedValue(error)
+
+    render(<GameHistory />)
+
+    await waitFor(() => {
+      expect(screen.getByText(rfc9457Message)).toBeInTheDocument()
+    })
+  })
+
   it('handles refresh button click', async () => {
     vi.mocked(mockUseAuth).mockReturnValue({
       user: mockUser,
