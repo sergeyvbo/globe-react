@@ -198,17 +198,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       // Map server validation errors to form fields
       Object.entries(error.details.errors).forEach(([field, messages]) => {
         if (Array.isArray(messages) && messages.length > 0) {
-          // Normalize field names to lowercase to match form field names
+          // Normalize field names to lowercase for case-insensitive matching
           const normalizedField = field.toLowerCase()
           
-          // Map server field names to form field names
-          let formFieldName = normalizedField
+          // Map server field names to form field names with improved mapping
+          let formFieldName: string
+          
           if (normalizedField === 'password') {
             formFieldName = 'password'
           } else if (normalizedField === 'email') {
             formFieldName = 'email'
-          } else if (normalizedField === 'confirmpassword') {
+          } else if (normalizedField === 'confirmpassword' || normalizedField === 'confirm_password') {
             formFieldName = 'confirmPassword'
+          } else {
+            // For any other field, try to match it directly or use the normalized version
+            formFieldName = normalizedField
           }
           
           // Use the first error message for each field

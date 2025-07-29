@@ -750,5 +750,114 @@ describe('AuthModal', () => {
         expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
       })
     })
+
+    it('handles RFC 9457 validation errors with mixed case and underscore field names', async () => {
+      const user = userEvent.setup()
+      
+      // Mock the register function to throw RFC 9457 validation error with various field name formats
+      const mockRegister = vi.fn().mockRejectedValue({
+        type: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: {
+          errors: {
+            'Email': ['Email is already in use'],
+            'PASSWORD': ['Password is too weak'],
+            'confirm_password': ['Passwords do not match']
+          }
+        }
+      })
+
+      // Create a custom auth context with the mocked register function
+      const mockAuthContextValue = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: mockRegister,
+        loginWithOAuth: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        clearAuthData: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+        </AuthContext.Provider>
+      )
+
+      // Fill in the form with data that passes client validation
+      await user.type(screen.getByLabelText('Email'), 'test@example.com')
+      await user.type(screen.getByLabelText('Password'), 'Password123')
+      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+
+      // Submit the form
+      await user.click(screen.getByRole('button', { name: 'Register' }))
+
+      // Wait for the error handling
+      await waitFor(() => {
+        expect(mockRegister).toHaveBeenCalled()
+      })
+
+      // Check that field-specific validation errors are displayed correctly
+      await waitFor(() => {
+        expect(screen.getByText('Email is already in use')).toBeInTheDocument()
+        expect(screen.getByText('Password is too weak')).toBeInTheDocument()
+        expect(screen.getByText('Passwords do not match')).toBeInTheDocument()
+      })
+
+      // Ensure no general error message is shown when validation errors are present
+      expect(screen.queryByText('Registration failed')).not.toBeInTheDocument()
+    })
+
+    it('handles empty validation errors gracefully', async () => {
+      const user = userEvent.setup()
+      
+      // Mock the register function to throw RFC 9457 validation error with empty errors
+      const mockRegister = vi.fn().mockRejectedValue({
+        type: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: {
+          errors: {}
+        }
+      })
+
+      // Create a custom auth context with the mocked register function
+      const mockAuthContextValue = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: mockRegister,
+        loginWithOAuth: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        clearAuthData: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+        </AuthContext.Provider>
+      )
+
+      // Fill in the form with data that passes client validation
+      await user.type(screen.getByLabelText('Email'), 'test@example.com')
+      await user.type(screen.getByLabelText('Password'), 'Password123')
+      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+
+      // Submit the form
+      await user.click(screen.getByRole('button', { name: 'Register' }))
+
+      // Wait for the error handling
+      await waitFor(() => {
+        expect(mockRegister).toHaveBeenCalled()
+      })
+
+      // Check that general error message is shown when no specific validation errors are present
+      await waitFor(() => {
+        expect(screen.getByText('Validation failed')).toBeInTheDocument()
+      })
+    })
   })
 })
