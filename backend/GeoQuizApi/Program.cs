@@ -325,6 +325,36 @@ app.UseSerilogRequestLogging();
 // app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<Rfc9457ErrorHandlingMiddleware>();
 
+// Add status code pages middleware to handle 404s and other status codes
+app.UseStatusCodePages(async context =>
+{
+    var response = context.HttpContext.Response;
+    var request = context.HttpContext.Request;
+
+    if (response.StatusCode == 404)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Type = ProblemTypes.NotFoundError,
+            Title = ProblemTypes.GetTitle(ProblemTypes.NotFoundError),
+            Status = 404,
+            Detail = $"The requested resource '{request.Path}' was not found.",
+            Instance = request.Path
+        };
+
+        // Add additional fields
+        problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+        problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+        response.ContentType = "application/problem+json";
+        await response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        });
+    }
+});
+
 // Add security middleware conditionally based on settings
 if (securitySettings?.EnableSecurityHeaders == true)
 {

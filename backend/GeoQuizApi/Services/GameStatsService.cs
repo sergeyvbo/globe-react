@@ -23,12 +23,20 @@ public class GameStatsService : IGameStatsService
         // Validate input
         if (string.IsNullOrWhiteSpace(gameType))
         {
-            throw new ValidationException("gameType", "Game type is required");
+            throw new ValidationException("GameType", "Game type is required");
         }
 
         if (!GeoQuizApi.Models.GameTypes.IsValid(gameType))
         {
-            throw new ValidationException("gameType", $"Invalid game type. Valid types: {string.Join(", ", GeoQuizApi.Models.GameTypes.ValidGameTypes)}");
+            var errorMessage = $"Invalid game type. Valid types: {string.Join(", ", GeoQuizApi.Models.GameTypes.ValidGameTypes)}";
+            _logger.LogDebug("Creating ValidationException for GameType with message: {Message}", errorMessage);
+            var validationException = new ValidationException("GameType", errorMessage);
+            _logger.LogDebug("ValidationException created with {ErrorCount} errors", validationException.Errors.Count);
+            foreach (var error in validationException.Errors)
+            {
+                _logger.LogDebug("ValidationException Error: {Key} = [{Values}]", error.Key, string.Join(", ", error.Value));
+            }
+            throw validationException;
         }
 
         if (correctAnswers < 0 || wrongAnswers < 0)

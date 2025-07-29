@@ -55,6 +55,13 @@ public class Rfc9457ErrorHandlingMiddleware
         // Set the response status code
         context.Response.StatusCode = problemDetails.Status ?? 500;
 
+        // For ValidationException, always write manually to ensure errors are preserved
+        if (exception is ValidationException)
+        {
+            await WriteProblemDetailsManually(context, problemDetails);
+            return;
+        }
+
         // Create ProblemDetailsContext for the built-in service
         var problemDetailsContext = new ProblemDetailsContext
         {
@@ -118,10 +125,33 @@ public class Rfc9457ErrorHandlingMiddleware
     {
         context.Response.ContentType = "application/problem+json";
         
-        await context.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
+        var jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
-        });
+        };
+        
+        // Special handling for ValidationProblemDetails to ensure Errors property is serialized
+        if (problemDetails is ValidationProblemDetails validationProblemDetails)
+        {
+            // Create a custom object that includes all properties including Errors
+            var responseObject = new
+            {
+                type = validationProblemDetails.Type,
+                title = validationProblemDetails.Title,
+                status = validationProblemDetails.Status,
+                detail = validationProblemDetails.Detail,
+                instance = validationProblemDetails.Instance,
+                errors = validationProblemDetails.Errors,
+                timestamp = validationProblemDetails.Extensions.ContainsKey("timestamp") ? validationProblemDetails.Extensions["timestamp"] : null,
+                traceId = validationProblemDetails.Extensions.ContainsKey("traceId") ? validationProblemDetails.Extensions["traceId"] : null
+            };
+            
+            await context.Response.WriteAsJsonAsync(responseObject, jsonOptions);
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(problemDetails, jsonOptions);
+        }
     }
 }

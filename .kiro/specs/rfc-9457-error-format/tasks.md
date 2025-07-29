@@ -91,7 +91,16 @@
   - Test validation errors return ValidationProblemDetails with errors array
   - _Requirements: 1.1, 1.2, 5.1, 5.2_
 
-- [ ] 9. Remove old ErrorResponse and ErrorDetails classes
+- [x] 9. Remove old ErrorResponse and ErrorDetails classes
+
+
+
+
+
+
+
+
+
 
 
 
@@ -102,7 +111,16 @@
   - Ensure no remaining code depends on old error format
   - _Requirements: 2.2, 3.2_
 
-- [ ] 10. Verify all API endpoints return RFC 9457 compliant error responses
+- [x] 10. Verify all API endpoints return RFC 9457 compliant error responses
+
+
+
+
+
+
+
+
+
   - Test authentication endpoints (register, login, refresh)
   - Test game statistics endpoints with various error scenarios
   - Test leaderboard endpoints error handling
