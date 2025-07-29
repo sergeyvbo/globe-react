@@ -24,7 +24,13 @@
   - Write unit tests for all parser methods
   - _Requirements: 3.1, 3.2, 5.1, 5.4_
 
-- [ ] 3. Implement ErrorTypeMapper utility class
+- [x] 3. Implement ErrorTypeMapper utility class
+
+
+
+
+
+
   - Create ErrorTypeMapper class with mapToAuthErrorType method
   - Implement mapping logic for all RFC 9457 problem types
   - Add createErrorDetails method for backward compatibility
