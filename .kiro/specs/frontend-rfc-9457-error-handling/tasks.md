@@ -75,7 +75,12 @@
   - Test all GameStatsApiService error scenarios
   - _Requirements: 2.1, 2.3_
 
-- [ ] 7. Update LeaderboardService to use new error handling
+- [x] 7. Update LeaderboardService to use new error handling
+
+
+
+
+
   - Update HttpClient usage in LeaderboardService
   - Ensure proper error type mapping for leaderboard errors
   - Update token expiration error handling
