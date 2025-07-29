@@ -13,19 +13,13 @@ public class Rfc9457ErrorHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<Rfc9457ErrorHandlingMiddleware> _logger;
-    private readonly IProblemDetailsService _problemDetailsService;
-    private readonly ICustomProblemDetailsService _customProblemDetailsService;
 
     public Rfc9457ErrorHandlingMiddleware(
         RequestDelegate next,
-        ILogger<Rfc9457ErrorHandlingMiddleware> logger,
-        IProblemDetailsService problemDetailsService,
-        ICustomProblemDetailsService customProblemDetailsService)
+        ILogger<Rfc9457ErrorHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _problemDetailsService = problemDetailsService;
-        _customProblemDetailsService = customProblemDetailsService;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -45,11 +39,15 @@ public class Rfc9457ErrorHandlingMiddleware
         // Log the exception with appropriate level based on exception type
         LogException(exception, context);
 
+        // Get services from the request scope
+        var problemDetailsService = context.RequestServices.GetRequiredService<IProblemDetailsService>();
+        var customProblemDetailsService = context.RequestServices.GetRequiredService<ICustomProblemDetailsService>();
+
         // Create appropriate ProblemDetails based on exception type
         ProblemDetails problemDetails = exception switch
         {
-            ValidationException validationEx => _customProblemDetailsService.CreateValidationProblemDetails(validationEx, context),
-            _ => _customProblemDetailsService.CreateProblemDetails(exception, context)
+            ValidationException validationEx => customProblemDetailsService.CreateValidationProblemDetails(validationEx, context),
+            _ => customProblemDetailsService.CreateProblemDetails(exception, context)
         };
 
         // Set the response status code
@@ -70,7 +68,7 @@ public class Rfc9457ErrorHandlingMiddleware
         };
 
         // Try to use the built-in IProblemDetailsService to write the response
-        if (!await _problemDetailsService.TryWriteAsync(problemDetailsContext))
+        if (!await problemDetailsService.TryWriteAsync(problemDetailsContext))
         {
             // Fallback: manually write the response if the built-in service couldn't handle it
             await WriteProblemDetailsManually(context, problemDetails);

@@ -5,12 +5,17 @@
 @testPassword = TestPassword123
 @testName = Test User
 
-@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhZGIxMGIwYi1iOTNlLTRmODUtYjFhZi1lZTViOWU2MDJiMGIiLCJlbWFpbCI6InRlc3RodHRwQGV4YW1wbGUuY29tIiwianRpIjoiOGI0NTRmZjMtMGI2MC00NGU4LWI1OTktMmNhYzY4ZDBmMzg0IiwidW5pcXVlX25hbWUiOiJVcGRhdGVkIFRlc3QgVXNlciIsIm5iZiI6MTc1MzU5NDkwMywiZXhwIjoxNzUzNTk1ODAzLCJpYXQiOjE3NTM1OTQ5MDMsImlzcyI6Ikdlb1F1aXpBcGkiLCJhdWQiOiJHZW9RdWl6Q2xpZW50In0.jl4-ocICpZoFvuszNTdC8bX3K8EJqT2Hq8S95eK_h8k
-@refreshToken = sDDYhjx4qufYzWLmX/kYaRvphePnsjpcwBzAdq9hkTCO0Ox01eyCrQ6tKOKFINrUj67DvCX8Zc9c95CyprqSlw==
+@jwtToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJhZGIxMGIwYi1iOTNlLTRmODUtYjFhZi1lZTViOWU2MDJiMGIiLCJlbWFpbCI6InRlc3RodHRwQGV4YW1wbGUuY29tIiwianRpIjoiMmVlODQzMTItYjFjNi00Y2U1LTkxYzYtMjZhZTExMjlkYjZkIiwidW5pcXVlX25hbWUiOiJVcGRhdGVkIFRlc3QgVXNlciIsIm5iZiI6MTc1MzgwMzU2OSwiZXhwIjoxNzUzODA0NDY5LCJpYXQiOjE3NTM4MDM1NjksImlzcyI6Ikdlb1F1aXpBcGkiLCJhdWQiOiJHZW9RdWl6Q2xpZW50In0.Pt_3ihMi6EzQcPZ1QhXCLJdUVcRjsPT_iV_Cl5Vr7YE
+@refreshToken = xO9tHx3sFwjrwbNr1qAj+C2oi7EWJfqCx8Z/jd/2LDkr+mtBId/pPA5k5tmii/0Y0DCua18G756iv8FnkzUMHw==
 
 ### 0. Test API connectivity
 GET {{GeoQuizApi_HostAddress}}/api/auth/test
 Accept: application/json
+
+###
+GET {{GeoQuizApi_HostAddress}}/health
+###
+GET {{GeoQuizApi_HostAddress}}/health/detailed
 
 ### 1. Register a new user
 POST {{GeoQuizApi_HostAddress}}/api/auth/register
