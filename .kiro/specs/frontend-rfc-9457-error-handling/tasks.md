@@ -63,7 +63,12 @@
   - Test login and registration error scenarios
   - _Requirements: 1.1, 1.2, 1.3, 5.1, 5.2, 5.3_
 
-- [ ] 6. Update GameStatsApiService to use new error handling
+- [x] 6. Update GameStatsApiService to use new error handling
+
+
+
+
+
   - Update HttpClient usage in GameStatsApiService
   - Ensure proper error type mapping for statistics errors
   - Update token expiration error handling
