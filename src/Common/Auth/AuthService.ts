@@ -3,11 +3,14 @@ import {
   User, 
   AuthErrorType,
   AuthSession,
-  OAuthProvider 
+  OAuthProvider,
+  RFC9457Error
 } from '../types'
 import { oauth2Service } from './OAuth2Service'
 import { getAuthString } from '../../Localization/strings'
 import { API_CONFIG } from '../config/api'
+import { RFC9457ErrorParser } from '../RFC9457ErrorParser'
+import { ErrorTypeMapper } from '../ErrorTypeMapper'
 
 // Custom AuthError class
 export class AuthServiceError extends Error {
@@ -118,6 +121,7 @@ class HttpClient {
     
     const defaultHeaders = {
       'Content-Type': 'application/json',
+      'Accept': 'application/problem+json, application/json', // Support RFC 9457
     }
     
     const config: RequestInit = {
@@ -132,12 +136,11 @@ class HttpClient {
       const response = await fetch(url, config)
       
       if (!response.ok) {
+        // Parse RFC 9457 error response
         const errorData = await response.json().catch(() => ({}))
-        throw new AuthServiceError({
-          type: this.getErrorTypeFromStatus(response.status),
-          message: errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-          details: { status: response.status, ...errorData }
-        })
+        const rfc9457Error = RFC9457ErrorParser.parseError(errorData)
+        
+        throw this.createServiceError(rfc9457Error, response.status)
       }
       
       return await response.json()
@@ -147,25 +150,31 @@ class HttpClient {
       }
       
       // Network or other errors
-      throw new AuthServiceError({
-        type: AuthErrorType.NETWORK_ERROR,
-        message: 'Network error occurred. Please check your connection.',
-        details: error
-      })
+      const networkError: RFC9457Error = {
+        type: 'about:blank',
+        title: 'Network Error',
+        status: 0,
+        detail: 'Network error occurred. Please check your connection.',
+        instance: endpoint
+      }
+      
+      throw this.createServiceError(networkError, 0)
     }
   }
   
-  private static getErrorTypeFromStatus(status: number): AuthErrorType {
-    switch (status) {
-      case 401:
-        return AuthErrorType.INVALID_CREDENTIALS
-      case 409:
-        return AuthErrorType.USER_EXISTS
-      case 422:
-        return AuthErrorType.VALIDATION_ERROR
-      default:
-        return AuthErrorType.NETWORK_ERROR
-    }
+  /**
+   * Creates AuthServiceError from RFC 9457 error using new parsers
+   */
+  private static createServiceError(rfc9457Error: RFC9457Error, status: number): AuthServiceError {
+    const authErrorType = ErrorTypeMapper.mapToAuthErrorType(rfc9457Error)
+    const message = RFC9457ErrorParser.getDisplayMessage(rfc9457Error)
+    const details = ErrorTypeMapper.createErrorDetails(rfc9457Error)
+    
+    return new AuthServiceError({
+      type: authErrorType,
+      message,
+      details
+    })
   }
   
   static get<T>(endpoint: string, token?: string): Promise<T> {

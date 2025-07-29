@@ -38,7 +38,12 @@
   - Write unit tests for all mapping scenarios
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
-- [ ] 4. Update HttpClient base class to support RFC 9457
+- [x] 4. Update HttpClient base class to support RFC 9457
+
+
+
+
+
   - Modify request method to parse RFC 9457 errors
   - Update Accept header to include application/problem+json
   - Integrate RFC9457ErrorParser and ErrorTypeMapper
