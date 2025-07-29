@@ -204,10 +204,10 @@ describe('AuthModal', () => {
       const loginButton = screen.getByRole('button', { name: 'Login' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'password123')
+      await user.type(passwordInput, 'Password123')
       await user.click(loginButton)
 
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123')
+      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123')
     })
 
     it('handles login error', async () => {
@@ -236,7 +236,7 @@ describe('AuthModal', () => {
       const loginButton = screen.getByRole('button', { name: 'Login' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'wrongpassword123')
+      await user.type(passwordInput, 'wrongPassword123')
       await user.click(loginButton)
 
       await waitFor(() => {
@@ -376,7 +376,7 @@ describe('AuthModal', () => {
       const confirmPasswordInput = screen.getByLabelText('Confirm Password')
       
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'password123')
+      await user.type(passwordInput, 'Password123')
       await user.type(confirmPasswordInput, 'different123')
 
       const registerButton = screen.getByRole('button', { name: 'Register' })
@@ -412,11 +412,11 @@ describe('AuthModal', () => {
       const registerButton = screen.getByRole('button', { name: 'Register' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'password123')
-      await user.type(confirmPasswordInput, 'password123')
+      await user.type(passwordInput, 'Password123')
+      await user.type(confirmPasswordInput, 'Password123')
       await user.click(registerButton)
 
-      expect(mockRegister).toHaveBeenCalledWith('test@example.com', 'password123', 'password123')
+      expect(mockRegister).toHaveBeenCalledWith('test@example.com', 'Password123', 'Password123')
     })
 
     it('handles registration error', async () => {
@@ -446,8 +446,8 @@ describe('AuthModal', () => {
       const registerButton = screen.getByRole('button', { name: 'Register' })
 
       await user.type(emailInput, 'existing@example.com')
-      await user.type(passwordInput, 'password123')
-      await user.type(confirmPasswordInput, 'password123')
+      await user.type(passwordInput, 'Password123')
+      await user.type(confirmPasswordInput, 'Password123')
       await user.click(registerButton)
 
       await waitFor(() => {
@@ -574,6 +574,181 @@ describe('AuthModal', () => {
       )
 
       expect(screen.queryByText('Welcome!')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('RFC 9457 Error Handling', () => {
+    it('handles RFC 9457 validation errors in registration form', async () => {
+      const user = userEvent.setup()
+      
+      // Mock the register function to throw RFC 9457 validation error
+      const mockRegister = vi.fn().mockRejectedValue({
+        type: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: {
+          errors: {
+            email: ['Invalid email format'],
+            password: ['Password must be at least 8 characters long']
+          }
+        }
+      })
+
+      // Create a custom auth context with the mocked register function
+      const mockAuthContextValue = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: mockRegister,
+        loginWithOAuth: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        clearAuthData: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+        </AuthContext.Provider>
+      )
+
+      // Fill in the form with data that passes client validation but will trigger server validation errors
+      await user.type(screen.getByLabelText('Email'), 'test@example.com')
+      await user.type(screen.getByLabelText('Password'), 'Password123')
+      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+
+      // Submit the form
+      await user.click(screen.getByRole('button', { name: 'Register' }))
+
+      // Wait for the error handling
+      await waitFor(() => {
+        expect(mockRegister).toHaveBeenCalled()
+      })
+
+      // Check that field-specific validation errors are displayed
+      await waitFor(() => {
+        expect(screen.getByText('Invalid email format')).toBeInTheDocument()
+        expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument()
+      })
+
+      // Ensure no general error message is shown when validation errors are present
+      expect(screen.queryByText('Registration failed')).not.toBeInTheDocument()
+    })
+
+    it('handles RFC 9457 validation errors with capitalized field names from server', async () => {
+      const user = userEvent.setup()
+      
+      // Mock the register function to throw RFC 9457 validation error with capitalized field names (like from real API)
+      const mockRegister = vi.fn().mockRejectedValue({
+        type: 'VALIDATION_ERROR',
+        message: 'One or more validation errors occurred.',
+        details: {
+          status: 400,
+          type: 'https://geoquiz.sergeivbo.ru/problems/validation-error',
+          title: 'One or more validation errors occurred.',
+          detail: 'One or more validation errors occurred.',
+          instance: '/api/auth/register',
+          errors: {
+            Password: ['Password must contain at least one lowercase letter, one uppercase letter, and one digit'],
+            Email: ['Invalid email format']
+          },
+          timestamp: '2025-07-29T18:52:16.4525601Z',
+          traceId: '0HNEEQ1A1RIEM:00000002'
+        }
+      })
+
+      // Create a custom auth context with the mocked register function
+      const mockAuthContextValue = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: mockRegister,
+        loginWithOAuth: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        clearAuthData: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+        </AuthContext.Provider>
+      )
+
+      // Fill in the form with data that passes client validation but will trigger server validation errors
+      await user.type(screen.getByLabelText('Email'), 'test@example.com')
+      await user.type(screen.getByLabelText('Password'), 'Password123')
+      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+
+      // Submit the form
+      await user.click(screen.getByRole('button', { name: 'Register' }))
+
+      // Wait for the error handling
+      await waitFor(() => {
+        expect(mockRegister).toHaveBeenCalled()
+      })
+
+      // Check that field-specific validation errors are displayed (should work even with capitalized field names from server)
+      await waitFor(() => {
+        expect(screen.getByText('Password must contain at least one lowercase letter, one uppercase letter, and one digit')).toBeInTheDocument()
+        expect(screen.getByText('Invalid email format')).toBeInTheDocument()
+      })
+
+      // Ensure no general error message is shown when validation errors are present
+      expect(screen.queryByText('Registration failed')).not.toBeInTheDocument()
+    })
+
+    it('handles RFC 9457 authentication errors', async () => {
+      const user = userEvent.setup()
+      
+      // Mock the login function to throw RFC 9457 authentication error
+      const mockLogin = vi.fn().mockRejectedValue({
+        type: 'INVALID_CREDENTIALS',
+        message: 'Invalid credentials',
+        details: {
+          type: 'http://localhost:5000/problems/authentication-error',
+          title: 'Authentication Error',
+          status: 400,
+          detail: 'Invalid credentials'
+        }
+      })
+
+      // Create a custom auth context with the mocked login function
+      const mockAuthContextValue = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: mockLogin,
+        register: vi.fn(),
+        loginWithOAuth: vi.fn(),
+        logout: vi.fn(),
+        refreshToken: vi.fn(),
+        clearAuthData: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContextValue}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+        </AuthContext.Provider>
+      )
+
+      // Fill in the form
+      await user.type(screen.getByLabelText('Email'), 'test@example.com')
+      await user.type(screen.getByLabelText('Password'), 'wrongPassword123')
+
+      // Submit the form
+      await user.click(screen.getByText('Login'))
+
+      // Wait for the error handling
+      await waitFor(() => {
+        expect(mockLogin).toHaveBeenCalled()
+      })
+
+      // Check that general error message is displayed
+      await waitFor(() => {
+        expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
+      })
     })
   })
 })

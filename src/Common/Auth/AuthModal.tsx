@@ -51,10 +51,12 @@ const validatePassword = (password: string): { isValid: boolean; message?: strin
   if (password.length < 8) {
     return { isValid: false, message: getAuthString('passwordTooShort') }
   }
-  // Check if password contains at least one letter and one number
-  const hasLetter = /[a-zA-Z]/.test(password)
+  // Check if password contains at least one lowercase letter, one uppercase letter, and one digit
+  const hasLowercase = /[a-z]/.test(password)
+  const hasUppercase = /[A-Z]/.test(password)
   const hasNumber = /\d/.test(password)
-  if (!hasLetter || !hasNumber) {
+  
+  if (!hasLowercase || !hasUppercase || !hasNumber) {
     return { isValid: false, message: getAuthString('passwordMustContainLetterAndNumber') }
   }
   return { isValid: true }
@@ -153,7 +155,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       await login(formData.email, formData.password)
       onClose()
     } catch (error: any) {
-      setAuthError(getErrorMessage(error))
+      handleAuthError(error)
     }
   }
 
@@ -165,7 +167,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       await register(formData.email, formData.password, formData.confirmPassword)
       onClose()
     } catch (error: any) {
-      setAuthError(getErrorMessage(error))
+      handleAuthError(error)
     }
   }
 
@@ -177,10 +179,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       await loginWithOAuth(provider)
       onClose()
     } catch (error: any) {
-      setAuthError(getErrorMessage(error))
+      handleAuthError(error)
     } finally {
       setOauthLoading(null)
     }
+  }
+
+  // Handle authentication errors including RFC 9457 validation errors
+  const handleAuthError = (error: any) => {
+    // Clear previous validation errors
+    setValidationErrors({})
+    setAuthError(null)
+
+    // Handle RFC 9457 validation errors
+    if (error?.type === 'VALIDATION_ERROR' && error?.details?.errors) {
+      const serverValidationErrors: ValidationErrors = {}
+      
+      // Map server validation errors to form fields
+      Object.entries(error.details.errors).forEach(([field, messages]) => {
+        if (Array.isArray(messages) && messages.length > 0) {
+          // Normalize field names to lowercase to match form field names
+          const normalizedField = field.toLowerCase()
+          
+          // Map server field names to form field names
+          let formFieldName = normalizedField
+          if (normalizedField === 'password') {
+            formFieldName = 'password'
+          } else if (normalizedField === 'email') {
+            formFieldName = 'email'
+          } else if (normalizedField === 'confirmpassword') {
+            formFieldName = 'confirmPassword'
+          }
+          
+          // Use the first error message for each field
+          serverValidationErrors[formFieldName] = messages[0]
+        }
+      })
+      
+      setValidationErrors(serverValidationErrors)
+      
+      // If there are validation errors, don't show a general error message
+      if (Object.keys(serverValidationErrors).length > 0) {
+        return
+      }
+    }
+
+    // For non-validation errors, show general error message
+    setAuthError(getErrorMessage(error))
   }
 
   // Get error message based on error type

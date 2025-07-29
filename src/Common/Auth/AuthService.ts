@@ -49,11 +49,12 @@ export class ValidationUtils {
       return { isValid: false, message: getAuthString('passwordTooShort') }
     }
     
-    // Check for at least one letter and one number
-    const hasLetter = /[a-zA-Z]/.test(password)
+    // Check for at least one lowercase letter, one uppercase letter, and one digit
+    const hasLowercase = /[a-z]/.test(password)
+    const hasUppercase = /[A-Z]/.test(password)
     const hasNumber = /\d/.test(password)
     
-    if (!hasLetter || !hasNumber) {
+    if (!hasLowercase || !hasUppercase || !hasNumber) {
       return { isValid: false, message: getAuthString('passwordMustContainLetterAndNumber') }
     }
     

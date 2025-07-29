@@ -51,7 +51,12 @@
   - Maintain backward compatibility with existing error classes
   - _Requirements: 3.1, 3.2, 3.3_
 
-- [ ] 5. Update AuthService to use new error handling
+- [x] 5. Update AuthService to use new error handling
+
+
+
+
+
   - Update HttpClient usage in AuthService
   - Ensure proper error type mapping for authentication errors
   - Update validation error handling for registration

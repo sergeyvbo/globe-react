@@ -69,7 +69,7 @@ describe('ValidationUtils', () => {
 
   describe('validatePassword', () => {
     it('should validate correct password', () => {
-      const result = ValidationUtils.validatePassword('password123')
+      const result = ValidationUtils.validatePassword('Password123')
       expect(result.isValid).toBe(true)
       expect(result.message).toBeUndefined()
     })
@@ -101,13 +101,13 @@ describe('ValidationUtils', () => {
 
   describe('validatePasswordConfirmation', () => {
     it('should validate matching passwords', () => {
-      const result = ValidationUtils.validatePasswordConfirmation('password123', 'password123')
+      const result = ValidationUtils.validatePasswordConfirmation('Password123', 'Password123')
       expect(result.isValid).toBe(true)
       expect(result.message).toBeUndefined()
     })
 
     it('should reject non-matching passwords', () => {
-      const result = ValidationUtils.validatePasswordConfirmation('password123', 'different123')
+      const result = ValidationUtils.validatePasswordConfirmation('Password123', 'Different123')
       expect(result.isValid).toBe(false)
       expect(result.message).toBe('Passwords do not match')
     })
@@ -117,8 +117,8 @@ describe('ValidationUtils', () => {
     it('should validate correct registration data', () => {
       const result = ValidationUtils.validateRegistrationData(
         'test@example.com',
-        'password123',
-        'password123'
+        'Password123',
+        'Password123'
       )
       expect(result.isValid).toBe(true)
       expect(Object.keys(result.errors)).toHaveLength(0)
@@ -139,7 +139,7 @@ describe('ValidationUtils', () => {
 
   describe('validateLoginData', () => {
     it('should validate correct login data', () => {
-      const result = ValidationUtils.validateLoginData('test@example.com', 'password123')
+      const result = ValidationUtils.validateLoginData('test@example.com', 'Password123')
       expect(result.isValid).toBe(true)
       expect(Object.keys(result.errors)).toHaveLength(0)
     })
@@ -191,17 +191,20 @@ describe('AuthService', () => {
         json: vi.fn().mockResolvedValue(mockAuthResponse)
       })
 
-      const result = await authService.register('test@example.com', 'password123', 'password123')
+      const result = await authService.register('test@example.com', 'Password123', 'Password123')
       
       expect(result).toEqual(mockAuthResponse)
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/auth/register'),
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/problem+json, application/json'
+          }),
           body: JSON.stringify({
             email: 'test@example.com',
-            password: 'password123'
+            password: 'Password123'
           })
         })
       )
@@ -224,15 +227,51 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 409,
-        json: vi.fn().mockResolvedValue({ message: 'User already exists' })
+        json: vi.fn().mockResolvedValue({
+          type: 'http://localhost:5000/problems/conflict-error',
+          title: 'Conflict Error',
+          status: 409,
+          detail: 'User already exists',
+          instance: '/api/auth/register'
+        })
       })
 
       try {
-        await authService.register('test@example.com', 'password123', 'password123')
+        await authService.register('test@example.com', 'Password123', 'Password123')
       } catch (error) {
         expect(error).toBeInstanceOf(AuthServiceError)
         expect((error as AuthServiceError).type).toBe(AuthErrorType.USER_EXISTS)
         expect((error as AuthServiceError).message).toBe('User already exists')
+      }
+    })
+
+    it('should handle RFC 9457 validation errors', async () => {
+      const mockFetch = fetch as any
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: vi.fn().mockResolvedValue({
+          type: 'http://localhost:5000/problems/validation-error',
+          title: 'One or more validation errors occurred',
+          status: 422,
+          detail: 'The request contains invalid data',
+          instance: '/api/auth/register',
+          errors: {
+            email: ['Invalid email format'],
+            password: ['Password must be at least 8 characters long']
+          }
+        })
+      })
+
+      try {
+        await authService.register('test@example.com', 'Password123', 'Password123')
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthServiceError)
+        expect((error as AuthServiceError).type).toBe(AuthErrorType.VALIDATION_ERROR)
+        expect((error as AuthServiceError).details.errors).toEqual({
+          email: ['Invalid email format'],
+          password: ['Password must be at least 8 characters long']
+        })
       }
     })
 
@@ -241,7 +280,7 @@ describe('AuthService', () => {
       mockFetch.mockRejectedValue(new Error('Network error'))
 
       try {
-        await authService.register('test@example.com', 'password123', 'password123')
+        await authService.register('test@example.com', 'Password123', 'Password123')
       } catch (error) {
         expect(error).toBeInstanceOf(AuthServiceError)
         expect((error as AuthServiceError).type).toBe(AuthErrorType.NETWORK_ERROR)
@@ -257,17 +296,20 @@ describe('AuthService', () => {
         json: vi.fn().mockResolvedValue(mockAuthResponse)
       })
 
-      const result = await authService.login('test@example.com', 'password123')
+      const result = await authService.login('test@example.com', 'Password123')
       
       expect(result).toEqual(mockAuthResponse)
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/auth/login'),
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/problem+json, application/json'
+          }),
           body: JSON.stringify({
             email: 'test@example.com',
-            password: 'password123'
+            password: 'Password123'
           })
         })
       )
@@ -288,8 +330,14 @@ describe('AuthService', () => {
       const mockFetch = fetch as any
       mockFetch.mockResolvedValue({
         ok: false,
-        status: 401,
-        json: vi.fn().mockResolvedValue({ message: 'Invalid credentials' })
+        status: 400,
+        json: vi.fn().mockResolvedValue({
+          type: 'http://localhost:5000/problems/authentication-error',
+          title: 'Authentication Error',
+          status: 400,
+          detail: 'Invalid credentials',
+          instance: '/api/auth/login'
+        })
       })
 
       try {
@@ -305,7 +353,7 @@ describe('AuthService', () => {
       mockFetch.mockRejectedValue(new Error('Network error'))
 
       try {
-        await authService.login('test@example.com', 'password123')
+        await authService.login('test@example.com', 'Password123')
       } catch (error) {
         expect(error).toBeInstanceOf(AuthServiceError)
         expect((error as AuthServiceError).type).toBe(AuthErrorType.NETWORK_ERROR)
@@ -335,7 +383,10 @@ describe('AuthService', () => {
         expect.stringContaining('/auth/refresh'),
         expect.objectContaining({
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/problem+json, application/json'
+          }),
           body: JSON.stringify({
             refreshToken: 'valid-refresh-token'
           })
@@ -368,14 +419,20 @@ describe('AuthService', () => {
       mockFetch.mockResolvedValue({
         ok: false,
         status: 401,
-        json: vi.fn().mockResolvedValue({ message: 'Invalid refresh token' })
+        json: vi.fn().mockResolvedValue({
+          type: 'http://localhost:5000/problems/authentication-error',
+          title: 'Authentication Error',
+          status: 401,
+          detail: 'Invalid refresh token',
+          instance: '/api/auth/refresh'
+        })
       })
 
       try {
         await authService.refreshToken()
       } catch (error) {
         expect(error).toBeInstanceOf(AuthServiceError)
-        expect((error as AuthServiceError).type).toBe(AuthErrorType.INVALID_CREDENTIALS)
+        expect((error as AuthServiceError).type).toBe(AuthErrorType.TOKEN_EXPIRED)
       }
     })
   })
