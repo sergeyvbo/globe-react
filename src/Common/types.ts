@@ -203,3 +203,21 @@ export interface LeaderboardFilter {
 }
 
 export type LeaderboardPeriod = 'all' | 'week' | 'month' | 'year'
+
+// RFC 9457 Problem Details Types
+export interface ProblemDetails {
+    type?: string
+    title?: string
+    status?: number
+    detail?: string
+    instance?: string
+    [key: string]: any // For additional fields
+}
+
+// Extended interface for validation errors
+export interface ValidationProblemDetails extends ProblemDetails {
+    errors?: Record<string, string[]>
+}
+
+// Union type for all possible RFC 9457 errors
+export type RFC9457Error = ProblemDetails | ValidationProblemDetails
