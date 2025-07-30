@@ -95,12 +95,22 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       console.error('Failed to load leaderboard:', err)
       
       if (err instanceof LeaderboardApiError) {
+        // Use the message from RFC 9457 error parsing for better user experience
+        const errorMessage = err.message || 'Failed to load leaderboard. Please try again later.'
+        
         switch (err.type) {
+          case AuthErrorType.TOKEN_EXPIRED:
+            setError('Your session has expired. Please log in again to view personalized leaderboard data.')
+            break
           case AuthErrorType.NETWORK_ERROR:
             setError('Unable to connect to the server. Please check your internet connection and try again.')
             break
+          case AuthErrorType.VALIDATION_ERROR:
+            setError('Invalid request parameters. Please try refreshing the page.')
+            break
           default:
-            setError('Failed to load leaderboard. Please try again later.')
+            // Use the parsed RFC 9457 error message for better context
+            setError(errorMessage)
         }
       } else {
         setError('An unexpected error occurred. Please try again later.')

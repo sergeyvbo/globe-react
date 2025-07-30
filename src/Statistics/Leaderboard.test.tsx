@@ -225,6 +225,138 @@ describe('Leaderboard Component', () => {
     })
   })
 
+  it('handles RFC 9457 network errors correctly', async () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    const { LeaderboardApiError } = await import('../Common/GameProgress/LeaderboardService')
+    const networkError = new LeaderboardApiError({
+      type: 'NETWORK_ERROR' as any,
+      message: 'Unable to connect to the server. Please check your internet connection and try again.',
+      details: {
+        type: 'about:blank',
+        title: 'Network Error',
+        status: 0,
+        detail: 'Network error occurred. Please check your connection.'
+      }
+    })
+
+    mockLeaderboardService.getGlobalLeaderboard.mockRejectedValue(networkError)
+
+    render(<Leaderboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Unable to connect to the server/)).toBeInTheDocument()
+    })
+  })
+
+  it('handles RFC 9457 token expired errors correctly', async () => {
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user1', email: 'test@example.com', name: 'Test User' } as any,
+      isAuthenticated: true,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    const { LeaderboardApiError } = await import('../Common/GameProgress/LeaderboardService')
+    const tokenExpiredError = new LeaderboardApiError({
+      type: 'TOKEN_EXPIRED' as any,
+      message: 'Your session has expired. Please log in again to view personalized leaderboard data.',
+      details: {
+        type: 'http://localhost:5000/problems/authentication-error',
+        title: 'Authentication Error',
+        status: 401,
+        detail: 'The access token has expired'
+      }
+    })
+
+    mockLeaderboardService.getGlobalLeaderboard.mockRejectedValue(tokenExpiredError)
+
+    render(<Leaderboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Your session has expired/)).toBeInTheDocument()
+    })
+  })
+
+  it('handles RFC 9457 validation errors correctly', async () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    const { LeaderboardApiError } = await import('../Common/GameProgress/LeaderboardService')
+    const validationError = new LeaderboardApiError({
+      type: 'VALIDATION_ERROR' as any,
+      message: 'Invalid request parameters. Please try refreshing the page.',
+      details: {
+        type: 'http://localhost:5000/problems/validation-error',
+        title: 'Validation Error',
+        status: 422,
+        detail: 'Invalid request parameters'
+      }
+    })
+
+    mockLeaderboardService.getGlobalLeaderboard.mockRejectedValue(validationError)
+
+    render(<Leaderboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Invalid request parameters/)).toBeInTheDocument()
+    })
+  })
+
+  it('handles RFC 9457 errors with custom messages correctly', async () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: vi.fn(),
+      register: vi.fn(),
+      loginWithOAuth: vi.fn(),
+      logout: vi.fn(),
+      updateProfile: vi.fn()
+    })
+
+    const { LeaderboardApiError } = await import('../Common/GameProgress/LeaderboardService')
+    const customError = new LeaderboardApiError({
+      type: 'UNKNOWN_ERROR' as any,
+      message: 'Custom RFC 9457 error message from server',
+      details: {
+        type: 'http://localhost:5000/problems/custom-error',
+        title: 'Custom Error',
+        status: 500,
+        detail: 'Custom RFC 9457 error message from server'
+      }
+    })
+
+    mockLeaderboardService.getGlobalLeaderboard.mockRejectedValue(customError)
+
+    render(<Leaderboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Custom RFC 9457 error message from server')).toBeInTheDocument()
+    })
+  })
+
   it('displays correct rank icons for top 3 players', async () => {
     mockUseAuth.mockReturnValue({
       user: null,
