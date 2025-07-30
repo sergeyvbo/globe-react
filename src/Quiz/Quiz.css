@@ -2,8 +2,8 @@
     --bg: #282c34;
     --bg-half: #282c3450;
     --blue: #6CBAE9;
-    --green: #B8DEBD;
-    --red: #FF6347;
+    --green: #4CAF50;  /* Более яркий зеленый */
+    --red: #F44336;    /* Более яркий красный */
 }
 
 .Quiz-container {
@@ -23,23 +23,18 @@
     min-width: fit-content;
     background-color: var(--blue) !important;
     text-transform: none !important;
+    transition: all 0.5s ease-in-out !important;
     /*line-height: 1;
     overflow: hidden; */
-
 }
 
 .Quiz-button-success {
     background-color: var(--green) !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 .Quiz-button-failure {
     background-color: var(--red) !important;
-}
-
-.Quiz-button-success {
-    background-color: var(--green);
-}
-
-.Quiz-button-failure {
-    background-color: var(--red);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
 }

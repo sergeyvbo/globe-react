@@ -182,10 +182,12 @@ const StateQuiz = () => {
             console.error('Failed to save progress after answer:', error)
         }
 
+        // Ensure minimum display time for visual feedback (3.5 seconds total)
+        // This gives enough time for colors to be visible even with fast clicking
         setTimeout(() => {
             startGame()
             setDisabled(false)
-        }, 2000);
+        }, 3500);
     }
 
     if (geoData && options.length) {
