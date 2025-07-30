@@ -76,3 +76,18 @@ body {
   background-color: var(--blue);
   font-size: xx-large;
 }
+
+/* Modal z-index configuration */
+.MuiDialog-root {
+  z-index: 1300 !important;
+}
+
+.MuiBackdrop-root {
+  z-index: 1200 !important;
+}
+
+/* Ensure modals appear above all other content */
+.modal-container {
+  z-index: 1300;
+  position: relative;
+}

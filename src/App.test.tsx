@@ -42,6 +42,14 @@ vi.mock('./Statistics', () => ({
   LeaderboardPage: () => <div data-testid="leaderboard-page">Leaderboard Page</div>
 }))
 
+// Mock the Modal components
+vi.mock('./Common/Modals', () => ({
+  ModalProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="modal-provider">{children}</div>,
+  UserProfileModal: () => <div data-testid="user-profile-modal">User Profile Modal</div>,
+  StatisticsModal: () => <div data-testid="statistics-modal">Statistics Modal</div>,
+  LeaderboardModal: () => <div data-testid="leaderboard-modal">Leaderboard Modal</div>
+}))
+
 describe('App Routing', () => {
   beforeEach(() => {
     // Reset window location hash
@@ -84,6 +92,47 @@ describe('App Routing', () => {
     window.location.hash = '#/leaderboard'
     render(<App />)
     expect(screen.getByTestId('leaderboard-page')).toBeInTheDocument()
+  })
+})
+
+describe('Modal Integration', () => {
+  beforeEach(() => {
+    // Reset window location hash
+    window.location.hash = ''
+  })
+
+  test('renders ModalProvider wrapper', () => {
+    render(<App />)
+    expect(screen.getByTestId('modal-provider')).toBeInTheDocument()
+  })
+
+  test('renders all modal components at app level', () => {
+    render(<App />)
+    expect(screen.getByTestId('user-profile-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('statistics-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('leaderboard-modal')).toBeInTheDocument()
+  })
+
+  test('modals are rendered alongside quiz components', () => {
+    // Reset hash to ensure we're on the default route
+    window.location.hash = ''
+    render(<App />)
+    // Default route shows CountryQuiz
+    expect(screen.getByTestId('country-quiz')).toBeInTheDocument()
+    // Modals should also be present
+    expect(screen.getByTestId('user-profile-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('statistics-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('leaderboard-modal')).toBeInTheDocument()
+  })
+
+  test('modals are available on different quiz pages', () => {
+    // Test on flags page
+    window.location.hash = '#/flags'
+    render(<App />)
+    expect(screen.getByTestId('flag-quiz')).toBeInTheDocument()
+    expect(screen.getByTestId('user-profile-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('statistics-modal')).toBeInTheDocument()
+    expect(screen.getByTestId('leaderboard-modal')).toBeInTheDocument()
   })
 })
 
