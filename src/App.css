@@ -77,13 +77,56 @@ body {
   font-size: xx-large;
 }
 
-/* Modal z-index configuration */
+/* Modal and UI Component z-index configuration
+ * These styles ensure proper layering and interactivity of modal dialogs,
+ * menus, and other UI components. The z-index hierarchy is:
+ * - AppBar: 1100 (navigation bar)
+ * - Backdrop: 1200 (modal backdrop)
+ * - Dialog Paper: 1220 (modal content)
+ * - Menu/Popover: 1300 (dropdown menus and popovers)
+ * - Dialog Root: 1300 (modal container)
+ */
 .MuiDialog-root {
   z-index: 1300 !important;
 }
 
+.MuiDialog-paper {
+  pointer-events: auto !important;
+  z-index: 1220 !important;
+}
+
 .MuiBackdrop-root {
   z-index: 1200 !important;
+}
+
+.MuiDialogTitle-root,
+.MuiDialogContent-root {
+  pointer-events: auto !important;
+}
+
+/* AppBar and Menu components z-index */
+.MuiAppBar-root {
+  z-index: 1100 !important;
+}
+
+.MuiMenu-root,
+.MuiMenu-paper,
+.MuiPopover-root,
+.MuiPopover-paper {
+  z-index: 1300 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure all interactive elements are clickable */
+.MuiMenuItem-root,
+.MuiButton-root,
+.MuiIconButton-root {
+  pointer-events: auto !important;
+}
+
+.MuiToolbar-root,
+.MuiToolbar-root * {
+  pointer-events: auto !important;
 }
 
 /* Ensure modals appear above all other content */
