@@ -6,6 +6,7 @@ import { getSettings } from '../Common/utils'
 import { CountryQuizSettings } from '../Common/types'
 import { useAuth } from '../Common/Auth/AuthContext'
 import { AuthModal } from '../Common/Auth/AuthModal'
+import { useModal } from '../Common/Modals'
 
 
 const MainMenu = () => {
@@ -15,6 +16,7 @@ const MainMenu = () => {
     const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null)
     
     const { user, isAuthenticated, logout } = useAuth()
+    const { openModal } = useModal()
 
     const handleSettingsChange = (key: string, value: string | boolean) => {
         const newSettings = { ...settings, [key]: value }
@@ -44,20 +46,17 @@ const MainMenu = () => {
     }
 
     const handleProfileNavigation = () => {
-        // Navigate to profile page
-        window.location.hash = '/profile'
+        openModal('userProfile')
         handleProfileMenuClose()
     }
 
     const handleStatsNavigation = () => {
-        // Navigate to stats page
-        window.location.hash = '/stats'
+        openModal('statistics')
         handleProfileMenuClose()
     }
 
     const handleLeaderboardNavigation = () => {
-        // Navigate to leaderboard page
-        window.location.hash = '/leaderboard'
+        openModal('leaderboard')
         handleProfileMenuClose()
     }
 

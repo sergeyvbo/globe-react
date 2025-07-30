@@ -58,7 +58,12 @@
   - Ensure data refresh and error handling works in modal context
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 6. Update MainMenu component integration
+- [x] 6. Update MainMenu component integration
+
+
+
+
+
   - Replace navigation handlers with modal opening functions
   - Update profile menu items to open modals instead of navigating
   - Update leaderboard icon click handler to open modal
