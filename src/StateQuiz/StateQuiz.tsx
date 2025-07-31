@@ -181,13 +181,12 @@ const StateQuiz = () => {
         } catch (error) {
             console.error('Failed to save progress after answer:', error)
         }
+    }
 
-        // Ensure minimum display time for visual feedback (3.5 seconds total)
-        // This gives enough time for colors to be visible even with fast clicking
-        setTimeout(() => {
-            startGame()
-            setDisabled(false)
-        }, 3500);
+    // Function to be called when Quiz component is ready for next question
+    const onQuizComplete = () => {
+        startGame()
+        setDisabled(false)
     }
 
     if (geoData && options.length) {
@@ -227,7 +226,8 @@ const StateQuiz = () => {
                     disabled={disabled}
                     options={options.map(x => ({ code: x.code, name: x.name }))}
                     correctOption={correctOption?.name ?? ''}
-                    onSubmit={onSubmit} />
+                    onSubmit={onSubmit}
+                    onComplete={onQuizComplete} />
                 <Score correctScore={correctScore} wrongScore={wrongScore} />
 
             </>
