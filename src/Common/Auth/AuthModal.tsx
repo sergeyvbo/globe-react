@@ -308,14 +308,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
 
 
-  // Render OAuth buttons with mode parameter
+  // Render OAuth buttons with mode parameter for correct button text display
   const renderOAuthButtons = (buttonMode: AuthModalMode = mode) => (
     <Stack spacing={1}>
       {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
         const isProviderLoading = oauthLoading === provider
         const isAnyLoading = isLoading || oauthLoading !== null
 
-        // Get the appropriate text based on mode
+        // Get the appropriate text based on mode for login/register scenarios
         const getButtonText = () => {
           if (buttonMode === 'register') {
             switch (provider) {
@@ -329,6 +329,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 return ''
             }
           } else {
+            // Default to login mode
             switch (provider) {
               case 'google':
                 return getAuthString('loginWithGoogle')
@@ -354,17 +355,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             sx={{
               borderColor: getOAuthColor(provider),
               color: getOAuthColor(provider),
-              py: 1.5, // Increased height for better UX
+              py: 1.5, // Increased height for better UX as per requirements
+              fontSize: '0.95rem', // Slightly larger text for better readability
+              fontWeight: 500, // Medium weight for better visibility
               '&:hover': {
                 borderColor: getOAuthColor(provider),
-                backgroundColor: `${getOAuthColor(provider)}10`
+                backgroundColor: `${getOAuthColor(provider)}10`,
+                transform: 'translateY(-1px)', // Subtle lift effect for better UX
+                boxShadow: `0 2px 8px ${getOAuthColor(provider)}20`
               },
               '&:disabled': {
                 borderColor: isProviderLoading ? getOAuthColor(provider) : undefined,
                 color: isProviderLoading ? getOAuthColor(provider) : undefined,
                 opacity: isProviderLoading ? 0.8 : 0.5
-              }
+              },
+              transition: 'all 0.2s ease-in-out' // Smooth transitions for better UX
             }}
+            aria-label={`${buttonMode === 'register' ? getAuthString('register') : getAuthString('login')} with ${provider === 'vk' ? 'VK' : provider.charAt(0).toUpperCase() + provider.slice(1)}`}
           >
             {getButtonText()}
           </Button>
@@ -387,53 +394,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       )}
 
       {/* OAuth buttons at the top */}
-      <Stack spacing={1} sx={{ mb: 3 }}>
-        {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
-          const isProviderLoading = oauthLoading === provider
-          const isAnyLoading = isLoading || oauthLoading !== null
-
-          const getButtonText = () => {
-            switch (provider) {
-              case 'google':
-                return getAuthString('loginWithGoogle')
-              case 'yandex':
-                return getAuthString('loginWithYandex')
-              case 'vk':
-                return getAuthString('loginWithVK')
-              default:
-                return ''
-            }
-          }
-
-          return (
-            <Button
-              key={provider}
-              variant="outlined"
-              startIcon={isProviderLoading ? <CircularProgress size={20} /> : getOAuthIcon(provider)}
-              onClick={() => handleOAuthLogin(provider)}
-              disabled={isAnyLoading}
-              fullWidth
-              size="large"
-              sx={{
-                borderColor: getOAuthColor(provider),
-                color: getOAuthColor(provider),
-                py: 1.5, // Increased height for better UX
-                '&:hover': {
-                  borderColor: getOAuthColor(provider),
-                  backgroundColor: `${getOAuthColor(provider)}10`
-                },
-                '&:disabled': {
-                  borderColor: isProviderLoading ? getOAuthColor(provider) : undefined,
-                  color: isProviderLoading ? getOAuthColor(provider) : undefined,
-                  opacity: isProviderLoading ? 0.8 : 0.5
-                }
-              }}
-            >
-              {getButtonText()}
-            </Button>
-          )
-        })}
-      </Stack>
+      <Box sx={{ mb: 3 }}>
+        {renderOAuthButtons('login')}
+      </Box>
 
       {/* Divider with "or use email" */}
       <Divider sx={{ my: 2 }}>
