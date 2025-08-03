@@ -23,12 +23,13 @@ import { useAuth } from './AuthContext'
 import { OAuthProvider, AuthError, ValidationErrors } from '../types'
 import { getAuthString } from '../../Localization/strings'
 
-// Modal modes
-type AuthModalMode = 'welcome' | 'login' | 'register'
+// Modal modes - supports login and register modes for streamlined UX
+type AuthModalMode = 'login' | 'register'
 
 interface AuthModalProps {
   open: boolean
   onClose: () => void
+  /** Initial mode for the auth modal. Defaults to 'login' for streamlined user experience */
   initialMode?: AuthModalMode
 }
 
@@ -77,7 +78,7 @@ const validateConfirmPassword = (password: string, confirmPassword: string): { i
 export const AuthModal: React.FC<AuthModalProps> = ({
   open,
   onClose,
-  initialMode = 'welcome'
+  initialMode = 'login'
 }) => {
   const { login, register, loginWithOAuth, isLoading } = useAuth()
   const [mode, setMode] = useState<AuthModalMode>(initialMode)
