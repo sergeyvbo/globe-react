@@ -44,11 +44,18 @@ describe('MainMenu', () => {
   describe('when user is authenticated', () => {
     beforeEach(() => {
       mockUseAuth.mockReturnValue({
-        user: { id: '1', email: 'test@example.com', avatar: null },
+        user: { 
+          id: '1', 
+          email: 'test@example.com', 
+          avatar: undefined, provider: 'email',
+          createdAt: new Date(),  },
         isAuthenticated: true,
         logout: mockLogout,
         login: vi.fn(),
         isLoading: false,
+        loginWithOAuth: vi.fn(),
+        register: vi.fn(),
+        updateProfile: vi.fn(),
       });
     });
 
