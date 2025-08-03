@@ -242,7 +242,7 @@ const MainMenu = () => {
             <AuthModal 
                 open={authModalOpen} 
                 onClose={() => setAuthModalOpen(false)} 
-                initialMode="welcome"
+
             />
         </>
     )

@@ -306,85 +306,102 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }
 
-  // Render Welcome mode
-  const renderWelcome = () => (
-    <Box sx={{ textAlign: 'center', py: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        {getAuthString('welcome')}
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        {getAuthString('welcomeMessage')}
-      </Typography>
 
-      <Stack spacing={2}>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={() => setMode('login')}
-          fullWidth
-        >
-          {getAuthString('login')}
-        </Button>
 
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={() => setMode('register')}
-          fullWidth
-        >
-          {getAuthString('register')}
-        </Button>
+  // Render OAuth buttons with mode parameter
+  const renderOAuthButtons = (buttonMode: AuthModalMode = mode) => (
+    <Stack spacing={1}>
+      {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
+        const isProviderLoading = oauthLoading === provider
+        const isAnyLoading = isLoading || oauthLoading !== null
 
-        <Button
-          variant="text"
-          size="large"
-          onClick={onClose}
-          fullWidth
-        >
-          {getAuthString('continueWithoutLogin')}
-        </Button>
-      </Stack>
-    </Box>
+        // Get the appropriate text based on mode
+        const getButtonText = () => {
+          if (buttonMode === 'register') {
+            switch (provider) {
+              case 'google':
+                return getAuthString('registerWithGoogle')
+              case 'yandex':
+                return getAuthString('registerWithYandex')
+              case 'vk':
+                return getAuthString('registerWithVK')
+              default:
+                return ''
+            }
+          } else {
+            switch (provider) {
+              case 'google':
+                return getAuthString('loginWithGoogle')
+              case 'yandex':
+                return getAuthString('loginWithYandex')
+              case 'vk':
+                return getAuthString('loginWithVK')
+              default:
+                return ''
+            }
+          }
+        }
+
+        return (
+          <Button
+            key={provider}
+            variant="outlined"
+            startIcon={isProviderLoading ? <CircularProgress size={20} /> : getOAuthIcon(provider)}
+            onClick={() => handleOAuthLogin(provider)}
+            disabled={isAnyLoading}
+            fullWidth
+            size="large"
+            sx={{
+              borderColor: getOAuthColor(provider),
+              color: getOAuthColor(provider),
+              py: 1.5, // Increased height for better UX
+              '&:hover': {
+                borderColor: getOAuthColor(provider),
+                backgroundColor: `${getOAuthColor(provider)}10`
+              },
+              '&:disabled': {
+                borderColor: isProviderLoading ? getOAuthColor(provider) : undefined,
+                color: isProviderLoading ? getOAuthColor(provider) : undefined,
+                opacity: isProviderLoading ? 0.8 : 0.5
+              }
+            }}
+          >
+            {getButtonText()}
+          </Button>
+        )
+      })}
+    </Stack>
   )
 
-  // Render OAuth buttons
-  const renderOAuthButtons = () => (
-    <Box sx={{ mt: 2 }}>
-      <Divider sx={{ my: 2 }}>
-        <Typography variant="body2" color="text.secondary">
-          {getAuthString('or')}
-        </Typography>
-      </Divider>
+  // Render Login mode
+  const renderLogin = () => (
+    <Box sx={{ py: 2 }}>
+      <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
+        {getAuthString('loginTitle')}
+      </Typography>
 
-      <Stack spacing={1}>
+      {authError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {authError}
+        </Alert>
+      )}
+
+      {/* OAuth buttons at the top */}
+      <Stack spacing={1} sx={{ mb: 3 }}>
         {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
           const isProviderLoading = oauthLoading === provider
           const isAnyLoading = isLoading || oauthLoading !== null
 
-          // Get the appropriate text based on mode
           const getButtonText = () => {
-            if (mode === 'register') {
-              switch (provider) {
-                case 'google':
-                  return getAuthString('registerWithGoogle')
-                case 'yandex':
-                  return getAuthString('registerWithYandex')
-                case 'vk':
-                  return getAuthString('registerWithVK')
-                default:
-                  return ''
-              }
-            } else {
-              switch (provider) {
-                case 'google':
-                  return getAuthString('loginWithGoogle')
-                case 'yandex':
-                  return getAuthString('loginWithYandex')
-                case 'vk':
-                  return getAuthString('loginWithVK')
-                default:
-                  return ''
-              }
+            switch (provider) {
+              case 'google':
+                return getAuthString('loginWithGoogle')
+              case 'yandex':
+                return getAuthString('loginWithYandex')
+              case 'vk':
+                return getAuthString('loginWithVK')
+              default:
+                return ''
             }
           }
 
@@ -396,9 +413,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               onClick={() => handleOAuthLogin(provider)}
               disabled={isAnyLoading}
               fullWidth
+              size="large"
               sx={{
                 borderColor: getOAuthColor(provider),
                 color: getOAuthColor(provider),
+                py: 1.5, // Increased height for better UX
                 '&:hover': {
                   borderColor: getOAuthColor(provider),
                   backgroundColor: `${getOAuthColor(provider)}10`
@@ -415,22 +434,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )
         })}
       </Stack>
-    </Box>
-  )
 
-  // Render Login mode
-  const renderLogin = () => (
-    <Box sx={{ py: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
-        {getAuthString('loginTitle')}
-      </Typography>
+      {/* Divider with "or use email" */}
+      <Divider sx={{ my: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {getAuthString('orUseEmail')}
+        </Typography>
+      </Divider>
 
-      {authError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {authError}
-        </Alert>
-      )}
-
+      {/* Email/Password form */}
       <Stack spacing={2}>
         <TextField
           label={getAuthString('email')}
@@ -475,19 +487,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             getAuthString('loginButton')
           )}
         </Button>
-
-        <Button
-          variant="text"
-          onClick={() => setMode('welcome')}
-          disabled={isLoading}
-          fullWidth
-        >
-          {getAuthString('backToWelcome')}
-        </Button>
       </Stack>
 
-      {renderOAuthButtons()}
-
+      {/* Link to register */}
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
           {getAuthString('dontHaveAccount')}{' '}
@@ -502,6 +504,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </Button>
         </Typography>
       </Box>
+
+      {/* Continue without login button at the bottom */}
+      <Button
+        variant="text"
+        onClick={onClose}
+        fullWidth
+        size="large"
+        sx={{
+          mt: 2,
+          py: 1.5, // Increased height for better visibility
+          color: 'text.secondary',
+          '&:hover': {
+            backgroundColor: 'action.hover'
+          }
+        }}
+      >
+        {getAuthString('continueWithoutLogin')}
+      </Button>
     </Box>
   )
 
@@ -518,6 +538,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </Alert>
       )}
 
+      {/* OAuth buttons at the top */}
+      <Box sx={{ mb: 3 }}>
+        {renderOAuthButtons('register')}
+      </Box>
+
+      {/* Divider with "or create account with email" */}
+      <Divider sx={{ my: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          {getAuthString('orCreateWithEmail')}
+        </Typography>
+      </Divider>
+
+      {/* Registration form */}
       <Stack spacing={2}>
         <TextField
           label={getAuthString('email')}
@@ -575,19 +608,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             getAuthString('registerButton')
           )}
         </Button>
-
-        <Button
-          variant="text"
-          onClick={() => setMode('welcome')}
-          disabled={isLoading}
-          fullWidth
-        >
-          {getAuthString('backToWelcome')}
-        </Button>
       </Stack>
 
-      {renderOAuthButtons()}
-
+      {/* Link to login */}
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Typography variant="body2" color="text.secondary">
           {getAuthString('alreadyHaveAccount')}{' '}
@@ -602,6 +625,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </Button>
         </Typography>
       </Box>
+
+      {/* Continue without login button at the bottom */}
+      <Button
+        variant="text"
+        onClick={onClose}
+        fullWidth
+        size="large"
+        sx={{
+          mt: 2,
+          py: 1.5, // Increased height for better visibility
+          color: 'text.secondary',
+          '&:hover': {
+            backgroundColor: 'action.hover'
+          }
+        }}
+      >
+        {getAuthString('continueWithoutLogin')}
+      </Button>
     </Box>
   )
 
@@ -634,7 +675,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ px: 3, pb: 3 }}>
-        {mode === 'welcome' && renderWelcome()}
         {mode === 'login' && renderLogin()}
         {mode === 'register' && renderRegister()}
       </DialogContent>

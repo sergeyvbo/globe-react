@@ -67,6 +67,8 @@ const strings = {
             alreadyHaveAccount: "Already have an account?",
             dontHaveAccount: "Don't have an account?",
             or: "or",
+            orUseEmail: "or use email",
+            orCreateWithEmail: "or create account with email",
             loginTitle: "Login to your account",
             registerTitle: "Create new account",
             // Error messages
@@ -151,6 +153,8 @@ const strings = {
             alreadyHaveAccount: "Уже есть аккаунт?",
             dontHaveAccount: "Нет аккаунта?",
             or: "или",
+            orUseEmail: "или используйте email",
+            orCreateWithEmail: "или создайте аккаунт с email",
             loginTitle: "Вход в аккаунт",
             registerTitle: "Создание аккаунта",
             // Error messages

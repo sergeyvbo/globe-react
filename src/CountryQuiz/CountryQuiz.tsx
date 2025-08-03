@@ -366,7 +366,7 @@ const CountryQuiz = () => {
                 <AuthModal
                     open={showAuthModal}
                     onClose={handleAuthModalClose}
-                    initialMode="welcome"
+
                 />
             </div>
         )
