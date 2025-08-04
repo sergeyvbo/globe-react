@@ -56,7 +56,7 @@ const validatePassword = (password: string): { isValid: boolean; message?: strin
   const hasLowercase = /[a-z]/.test(password)
   const hasUppercase = /[A-Z]/.test(password)
   const hasNumber = /\d/.test(password)
-  
+
   if (!hasLowercase || !hasUppercase || !hasNumber) {
     return { isValid: false, message: getAuthString('passwordMustContainLetterAndNumber') }
   }
@@ -195,16 +195,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     // Handle RFC 9457 validation errors
     if (error?.type === 'VALIDATION_ERROR' && error?.details?.errors) {
       const serverValidationErrors: ValidationErrors = {}
-      
+
       // Map server validation errors to form fields
       Object.entries(error.details.errors).forEach(([field, messages]) => {
         if (Array.isArray(messages) && messages.length > 0) {
           // Normalize field names to lowercase for case-insensitive matching
           const normalizedField = field.toLowerCase()
-          
+
           // Map server field names to form field names with improved mapping
           let formFieldName: string
-          
+
           if (normalizedField === 'password') {
             formFieldName = 'password'
           } else if (normalizedField === 'email') {
@@ -215,14 +215,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             // For any other field, try to match it directly or use the normalized version
             formFieldName = normalizedField
           }
-          
+
           // Use the first error message for each field
           serverValidationErrors[formFieldName] = messages[0]
         }
       })
-      
+
       setValidationErrors(serverValidationErrors)
-      
+
       // If there are validation errors, don't show a general error message
       if (Object.keys(serverValidationErrors).length > 0) {
         return
@@ -310,7 +310,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Render OAuth buttons with mode parameter for correct button text display
   const renderOAuthButtons = (buttonMode: AuthModalMode = mode) => (
-    <Stack spacing={1}>
+    <Stack spacing={1} role="group" aria-label={`${buttonMode === 'register' ? getAuthString('register') : getAuthString('login')} options`}>
       {(['google', 'yandex', 'vk'] as OAuthProvider[]).map((provider) => {
         const isProviderLoading = oauthLoading === provider
         const isAnyLoading = isLoading || oauthLoading !== null
@@ -343,6 +343,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }
         }
 
+        // Get provider display name for ARIA labels
+        const getProviderDisplayName = () => {
+          switch (provider) {
+            case 'google':
+              return 'Google'
+            case 'yandex':
+              return 'Yandex'
+            case 'vk':
+              return 'VK'
+          }
+        }
+
+        // Create comprehensive ARIA label
+        const ariaLabel = isProviderLoading
+          ? `${buttonMode === 'register' ? getAuthString('register') : getAuthString('login')} with ${getProviderDisplayName()}, ${getAuthString('loading')}`
+          : `${buttonMode === 'register' ? getAuthString('register') : getAuthString('login')} with ${getProviderDisplayName()}`
+
         return (
           <Button
             key={provider}
@@ -371,9 +388,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               },
               transition: 'all 0.2s ease-in-out' // Smooth transitions for better UX
             }}
-            aria-label={`${buttonMode === 'register' ? getAuthString('register') : getAuthString('login')} with ${provider === 'vk' ? 'VK' : provider.charAt(0).toUpperCase() + provider.slice(1)}`}
+            aria-label={ariaLabel}
+            aria-describedby={isProviderLoading ? `${provider}-loading-status` : undefined}
+            tabIndex={0}
           >
             {getButtonText()}
+            {/* Hidden status for screen readers when loading */}
+            {isProviderLoading && (
+              <span
+                id={`${provider}-loading-status`}
+                className="sr-only"
+                aria-live="polite"
+                style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+              >
+                {getAuthString('loading')}
+              </span>
+            )}
           </Button>
         )
       })}
@@ -382,78 +412,171 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Render Login mode
   const renderLogin = () => (
-    <Box sx={{ py: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
+    <Box sx={{ py: 2 }} role="main" aria-labelledby="login-title">
+      <Typography
+        id="login-title"
+        variant="h5"
+        gutterBottom
+        sx={{ textAlign: 'center' }}
+        component="h1"
+      >
         {getAuthString('loginTitle')}
       </Typography>
 
       {authError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          role="alert"
+          aria-live="polite"
+        >
           {authError}
         </Alert>
       )}
 
       {/* OAuth buttons at the top */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3 }} aria-label="Social login options">
         {renderOAuthButtons('login')}
       </Box>
 
       {/* Divider with "or use email" */}
-      <Divider sx={{ my: 2 }}>
+      <Divider sx={{ my: 2 }} role="separator" aria-label={getAuthString('orUseEmail')}>
         <Typography variant="body2" color="text.secondary">
           {getAuthString('orUseEmail')}
         </Typography>
       </Divider>
 
       {/* Email/Password form */}
-      <Stack spacing={2}>
-        <TextField
-          label={getAuthString('email')}
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          onKeyPress={handleKeyPress}
-          error={!!validationErrors.email}
-          helperText={validationErrors.email}
-          disabled={isLoading}
-          fullWidth
-          autoComplete="email"
-        />
-
-        <TextField
-          label={getAuthString('password')}
-          type="password"
-          value={formData.password}
-          onChange={handleInputChange('password')}
-          onKeyPress={handleKeyPress}
-          error={!!validationErrors.password}
-          helperText={validationErrors.password}
-          disabled={isLoading}
-          fullWidth
-          autoComplete="current-password"
-        />
-
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleLogin}
-          disabled={isLoading}
-          fullWidth
-          sx={{ mt: 2 }}
+      <Box
+        component="form"
+        role="form"
+        aria-labelledby="login-title"
+        aria-describedby="login-form-description"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleLogin()
+        }}
+      >
+        {/* Hidden description for screen readers */}
+        <div
+          id="login-form-description"
+          style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
         >
-          {isLoading ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-              {getAuthString('loginButton')}
-            </>
-          ) : (
-            getAuthString('loginButton')
+          Enter your email and password to login to your account
+        </div>
+
+        <Stack spacing={2}>
+          <TextField
+            id="login-email"
+            label={getAuthString('email')}
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange('email')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleLogin()
+              }
+            }}
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="email"
+            required
+            aria-required="true"
+            aria-invalid={!!validationErrors.email}
+            aria-describedby={validationErrors.email ? 'login-email-error' : undefined}
+            inputProps={{
+              'aria-label': `${getAuthString('email')} field, required`,
+              tabIndex: 0
+            }}
+          />
+          {validationErrors.email && (
+            <div
+              id="login-email-error"
+              role="alert"
+              aria-live="polite"
+              style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+            >
+              {validationErrors.email}
+            </div>
           )}
-        </Button>
-      </Stack>
+
+          <TextField
+            id="login-password"
+            label={getAuthString('password')}
+            type="password"
+            value={formData.password}
+            onChange={handleInputChange('password')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleLogin()
+              }
+            }}
+            error={!!validationErrors.password}
+            helperText={validationErrors.password}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="current-password"
+            required
+            aria-required="true"
+            aria-invalid={!!validationErrors.password}
+            aria-describedby={validationErrors.password ? 'login-password-error' : undefined}
+            inputProps={{
+              'aria-label': `${getAuthString('password')} field, required`,
+              tabIndex: 0
+            }}
+          />
+          {validationErrors.password && (
+            <div
+              id="login-password-error"
+              role="alert"
+              aria-live="polite"
+              style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+            >
+              {validationErrors.password}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            onClick={handleLogin}
+            disabled={isLoading}
+            fullWidth
+            sx={{ mt: 2 }}
+            aria-label={isLoading ? `${getAuthString('loginButton')}, ${getAuthString('loading')}` : getAuthString('loginButton')}
+            aria-describedby={isLoading ? 'login-loading-status' : undefined}
+            tabIndex={0}
+          >
+            {isLoading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                {getAuthString('loginButton')}
+              </>
+            ) : (
+              getAuthString('loginButton')
+            )}
+            {/* Hidden loading status for screen readers */}
+            {isLoading && (
+              <span
+                id="login-loading-status"
+                className="sr-only"
+                aria-live="polite"
+                style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+              >
+                {getAuthString('loading')}
+              </span>
+            )}
+          </Button>
+        </Stack>
+      </Box>
 
       {/* Link to register */}
-      <Box sx={{ textAlign: 'center', mt: 2 }}>
+      <Box sx={{ textAlign: 'center', mt: 2 }} role="navigation" aria-label="Switch to registration">
         <Typography variant="body2" color="text.secondary">
           {getAuthString('dontHaveAccount')}{' '}
           <Button
@@ -462,6 +585,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onClick={() => setMode('register')}
             disabled={isLoading}
             sx={{ textTransform: 'none' }}
+            aria-label={`Switch to ${getAuthString('register')} form`}
+            tabIndex={0}
           >
             {getAuthString('register')}
           </Button>
@@ -503,8 +628,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           },
           transition: 'all 0.2s ease-in-out' // Smooth transitions for all effects
         }}
-        aria-label={getAuthString('continueWithoutLogin')} // Added ARIA label for accessibility
-        tabIndex={0} // Ensure keyboard accessibility
+        aria-label={`${getAuthString('continueWithoutLogin')} - Skip authentication and start using the application`}
+        tabIndex={0}
       >
         {getAuthString('continueWithoutLogin')}
       </Button>
@@ -513,91 +638,214 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Render Register mode
   const renderRegister = () => (
-    <Box sx={{ py: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ textAlign: 'center' }}>
+    <Box sx={{ py: 2 }} role="main" aria-labelledby="register-title">
+      <Typography
+        id="register-title"
+        variant="h5"
+        gutterBottom
+        sx={{ textAlign: 'center' }}
+        component="h1"
+      >
         {getAuthString('registerTitle')}
       </Typography>
 
       {authError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          role="alert"
+          aria-live="polite"
+        >
           {authError}
         </Alert>
       )}
 
       {/* OAuth buttons at the top */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3 }} aria-label="Social registration options">
         {renderOAuthButtons('register')}
       </Box>
 
       {/* Divider with "or create account with email" */}
-      <Divider sx={{ my: 2 }}>
+      <Divider sx={{ my: 2 }} role="separator" aria-label={getAuthString('orCreateWithEmail')}>
         <Typography variant="body2" color="text.secondary">
           {getAuthString('orCreateWithEmail')}
         </Typography>
       </Divider>
 
       {/* Registration form */}
-      <Stack spacing={2}>
-        <TextField
-          label={getAuthString('email')}
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          onKeyPress={handleKeyPress}
-          error={!!validationErrors.email}
-          helperText={validationErrors.email}
-          disabled={isLoading}
-          fullWidth
-          autoComplete="email"
-        />
-
-        <TextField
-          label={getAuthString('password')}
-          type="password"
-          value={formData.password}
-          onChange={handleInputChange('password')}
-          onKeyPress={handleKeyPress}
-          error={!!validationErrors.password}
-          helperText={validationErrors.password}
-          disabled={isLoading}
-          fullWidth
-          autoComplete="new-password"
-        />
-
-        <TextField
-          label={getAuthString('confirmPasswordRegister')}
-          type="password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange('confirmPassword')}
-          onKeyPress={handleKeyPress}
-          error={!!validationErrors.confirmPassword}
-          helperText={validationErrors.confirmPassword}
-          disabled={isLoading}
-          fullWidth
-          autoComplete="new-password"
-        />
-
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleRegister}
-          disabled={isLoading}
-          fullWidth
-          sx={{ mt: 2 }}
+      <Box
+        component="form"
+        role="form"
+        aria-labelledby="register-title"
+        aria-describedby="register-form-description"
+        onSubmit={(e) => {
+          e.preventDefault()
+          handleRegister()
+        }}
+      >
+        {/* Hidden description for screen readers */}
+        <div
+          id="register-form-description"
+          style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
         >
-          {isLoading ? (
-            <>
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-              {getAuthString('registerButton')}
-            </>
-          ) : (
-            getAuthString('registerButton')
+          Create a new account by entering your email and password. Password must be at least 8 characters with letters and numbers.
+        </div>
+
+        <Stack spacing={2}>
+          <TextField
+            id="register-email"
+            label={getAuthString('email')}
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange('email')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleRegister()
+              }
+            }}
+            error={!!validationErrors.email}
+            helperText={validationErrors.email}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="email"
+            required
+            aria-required="true"
+            aria-invalid={!!validationErrors.email}
+            aria-describedby={validationErrors.email ? 'register-email-error' : undefined}
+            inputProps={{
+              'aria-label': `${getAuthString('email')} field, required`,
+              tabIndex: 0
+            }}
+          />
+          {validationErrors.email && (
+            <div
+              id="register-email-error"
+              role="alert"
+              aria-live="polite"
+              style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+            >
+              {validationErrors.email}
+            </div>
           )}
-        </Button>
-      </Stack>
+
+          <TextField
+            id="register-password"
+            label={getAuthString('password')}
+            type="password"
+            value={formData.password}
+            onChange={handleInputChange('password')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleRegister()
+              }
+            }}
+            error={!!validationErrors.password}
+            helperText={validationErrors.password || getAuthString('passwordHelperText')}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="new-password"
+            required
+            aria-required="true"
+            aria-invalid={!!validationErrors.password}
+            aria-describedby="register-password-help register-password-error"
+            inputProps={{
+              'aria-label': `${getAuthString('password')} field, required. ${getAuthString('passwordHelperText')}`,
+              tabIndex: 0
+            }}
+          />
+          <div
+            id="register-password-help"
+            style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+          >
+            {getAuthString('passwordHelperText')}
+          </div>
+          {validationErrors.password && (
+            <div
+              id="register-password-error"
+              role="alert"
+              aria-live="polite"
+              style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+            >
+              {validationErrors.password}
+            </div>
+          )}
+
+          <TextField
+            id="register-confirm-password"
+            label={getAuthString('confirmPasswordRegister')}
+            type="password"
+            value={formData.confirmPassword}
+            onChange={handleInputChange('confirmPassword')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleRegister()
+              }
+            }}
+            error={!!validationErrors.confirmPassword}
+            helperText={validationErrors.confirmPassword}
+            disabled={isLoading}
+            fullWidth
+            autoComplete="new-password"
+            required
+            aria-required="true"
+            aria-invalid={!!validationErrors.confirmPassword}
+            aria-describedby={validationErrors.confirmPassword ? 'register-confirm-password-error' : undefined}
+            inputProps={{
+              'aria-label': `${getAuthString('confirmPasswordRegister')} field, required. Must match the password above`,
+              tabIndex: 0
+            }}
+          />
+          {validationErrors.confirmPassword && (
+            <div
+              id="register-confirm-password-error"
+              role="alert"
+              aria-live="polite"
+              style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+            >
+              {validationErrors.confirmPassword}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            onClick={handleRegister}
+            disabled={isLoading}
+            fullWidth
+            sx={{ mt: 2 }}
+            aria-label={isLoading ? `${getAuthString('registerButton')}, ${getAuthString('loading')}` : getAuthString('registerButton')}
+            aria-describedby={isLoading ? 'register-loading-status' : undefined}
+            tabIndex={0}
+          >
+            {isLoading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                {getAuthString('registerButton')}
+              </>
+            ) : (
+              getAuthString('registerButton')
+            )}
+            {/* Hidden loading status for screen readers */}
+            {isLoading && (
+              <span
+                id="register-loading-status"
+                className="sr-only"
+                aria-live="polite"
+                style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
+              >
+                {getAuthString('loading')}
+              </span>
+            )}
+          </Button>
+        </Stack>
+      </Box>
 
       {/* Link to login */}
-      <Box sx={{ textAlign: 'center', mt: 2 }}>
+      <Box sx={{ textAlign: 'center', mt: 2 }} role="navigation" aria-label="Switch to login">
         <Typography variant="body2" color="text.secondary">
           {getAuthString('alreadyHaveAccount')}{' '}
           <Button
@@ -606,6 +854,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             onClick={() => setMode('login')}
             disabled={isLoading}
             sx={{ textTransform: 'none' }}
+            aria-label={`Switch to ${getAuthString('login')} form`}
+            tabIndex={0}
           >
             {getAuthString('login')}
           </Button>
@@ -647,8 +897,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           },
           transition: 'all 0.2s ease-in-out' // Smooth transitions for all effects
         }}
-        aria-label={getAuthString('continueWithoutLogin')} // Added ARIA label for accessibility
-        tabIndex={0} // Ensure keyboard accessibility
+        aria-label={`${getAuthString('continueWithoutLogin')} - Skip authentication and start using the application`}
+        tabIndex={0}
       >
         {getAuthString('continueWithoutLogin')}
       </Button>
@@ -661,16 +911,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          minHeight: '400px'
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+            minHeight: '400px'
+          }
         }
       }}
+      aria-labelledby={mode === 'login' ? 'login-title' : 'register-title'}
+      aria-describedby={mode === 'login' ? 'login-form-description' : 'register-form-description'}
+      role="dialog"
+      aria-modal="true"
     >
       <DialogTitle sx={{ m: 0, p: 2, position: 'relative' }}>
         <IconButton
-          aria-label="close"
+          aria-label={`Close ${mode === 'login' ? getAuthString('login') : getAuthString('register')} dialog`}
           onClick={onClose}
           sx={{
             position: 'absolute',
@@ -678,6 +934,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             top: 8,
             color: (theme) => theme.palette.grey[500],
           }}
+          tabIndex={0}
         >
           <CloseIcon />
         </IconButton>
