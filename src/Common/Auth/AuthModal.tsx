@@ -476,12 +476,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         size="large"
         sx={{
           mt: 2,
-          py: 1.5, // Increased height for better visibility
-          color: 'text.secondary',
+          py: 1.5, // Increased height for better visibility as per requirements
+          px: 2, // Added horizontal padding for better touch targets
+          color: 'text.primary', // Changed to primary text color for better visibility
+          fontSize: '0.95rem', // Slightly larger text for better readability
+          fontWeight: 500, // Medium weight for better visibility
+          textTransform: 'none', // Preserve natural casing for better readability
+          border: '1px solid transparent', // Invisible border for consistent sizing
+          borderRadius: 1, // Subtle border radius for modern look
           '&:hover': {
+            backgroundColor: 'action.hover',
+            borderColor: 'divider', // Subtle border on hover for better definition
+            transform: 'translateY(-1px)', // Subtle lift effect for better UX
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+            color: 'text.primary' // Ensure text remains visible on hover
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: '2px',
             backgroundColor: 'action.hover'
-          }
+          },
+          '&:active': {
+            transform: 'translateY(0)', // Reset transform on click for tactile feedback
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          },
+          transition: 'all 0.2s ease-in-out' // Smooth transitions for all effects
         }}
+        aria-label={getAuthString('continueWithoutLogin')} // Added ARIA label for accessibility
+        tabIndex={0} // Ensure keyboard accessibility
       >
         {getAuthString('continueWithoutLogin')}
       </Button>
@@ -597,12 +620,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         size="large"
         sx={{
           mt: 2,
-          py: 1.5, // Increased height for better visibility
-          color: 'text.secondary',
+          py: 1.5, // Increased height for better visibility as per requirements
+          px: 2, // Added horizontal padding for better touch targets
+          color: 'text.primary', // Changed to primary text color for better visibility
+          fontSize: '0.95rem', // Slightly larger text for better readability
+          fontWeight: 500, // Medium weight for better visibility
+          textTransform: 'none', // Preserve natural casing for better readability
+          border: '1px solid transparent', // Invisible border for consistent sizing
+          borderRadius: 1, // Subtle border radius for modern look
           '&:hover': {
+            backgroundColor: 'action.hover',
+            borderColor: 'divider', // Subtle border on hover for better definition
+            transform: 'translateY(-1px)', // Subtle lift effect for better UX
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+            color: 'text.primary' // Ensure text remains visible on hover
+          },
+          '&:focus-visible': {
+            outline: '2px solid',
+            outlineColor: 'primary.main',
+            outlineOffset: '2px',
             backgroundColor: 'action.hover'
-          }
+          },
+          '&:active': {
+            transform: 'translateY(0)', // Reset transform on click for tactile feedback
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)'
+          },
+          transition: 'all 0.2s ease-in-out' // Smooth transitions for all effects
         }}
+        aria-label={getAuthString('continueWithoutLogin')} // Added ARIA label for accessibility
+        tabIndex={0} // Ensure keyboard accessibility
       >
         {getAuthString('continueWithoutLogin')}
       </Button>
