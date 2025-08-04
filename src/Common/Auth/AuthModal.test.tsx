@@ -28,50 +28,27 @@ describe('AuthModal', () => {
     localStorage.clear()
   })
 
-  describe('Welcome Mode', () => {
-    it('renders welcome screen with three options', () => {
+  describe('Default Behavior', () => {
+    it('renders login mode by default when no initialMode is specified', () => {
       renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
+        <AuthModal open={true} onClose={mockOnClose} />
       )
 
-      expect(screen.getByText('Welcome!')).toBeInTheDocument()
-      expect(screen.getByText('Choose how you want to continue')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Continue without login' })).toBeInTheDocument()
-    })
-
-    it('switches to login mode when login button is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
-      )
-
-      await user.click(screen.getByRole('button', { name: 'Login' }))
-      
       expect(screen.getByText('Login to your account')).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(document.getElementById('login-password')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
     })
 
-    it('switches to register mode when register button is clicked', async () => {
-      const user = userEvent.setup()
+    it('renders login mode when initialMode is explicitly set to login', () => {
       renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
 
-      await user.click(screen.getByRole('button', { name: 'Register' }))
-      
-      expect(screen.getByText('Create new account')).toBeInTheDocument()
-    })
-
-    it('closes modal when continue without login is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
-      )
-
-      await user.click(screen.getByRole('button', { name: 'Continue without login' }))
-      
-      expect(mockOnClose).toHaveBeenCalled()
+      expect(screen.getByText('Login to your account')).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(document.getElementById('login-password')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
     })
   })
 
@@ -82,12 +59,12 @@ describe('AuthModal', () => {
       )
 
       expect(screen.getByText('Login to your account')).toBeInTheDocument()
-      expect(screen.getByLabelText('Email')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(document.getElementById('login-password')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument()
     })
 
-    it('shows OAuth login buttons', () => {
+    it('shows OAuth login buttons at the top', () => {
       renderWithAuth(
         <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
@@ -97,14 +74,100 @@ describe('AuthModal', () => {
       expect(screen.getByRole('button', { name: 'Login with VK' })).toBeInTheDocument()
     })
 
+    it('shows "or use email" divider between OAuth buttons and form', () => {
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+      )
+
+      expect(screen.getByText('or use email')).toBeInTheDocument()
+    })
+
+    it('shows "Continue without login" button at the bottom', () => {
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+      )
+
+      expect(screen.getByRole('button', { name: /continue without login/i })).toBeInTheDocument()
+    })
+
+    it('closes modal when "Continue without login" is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+      )
+
+      await user.click(screen.getByRole('button', { name: /continue without login/i }))
+
+      expect(mockOnClose).toHaveBeenCalled()
+    })
+
+    it('switches to register mode when register link is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+      )
+
+      await user.click(screen.getByRole('button', { name: 'Switch to Register form' }))
+
+      expect(screen.getByText('Create new account')).toBeInTheDocument()
+    })
+
+    it('preserves email when switching to register mode', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+      )
+
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      await user.type(emailInput, 'test@example.com')
+
+      await user.click(screen.getByRole('button', { name: 'Switch to Register form' }))
+
+      expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument()
+    })
+
+    it('handles OAuth login for all providers', async () => {
+      const user = userEvent.setup()
+      const mockLoginWithOAuth = vi.fn().mockResolvedValue(undefined)
+
+      const mockAuthContext = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: vi.fn(),
+        loginWithOAuth: mockLoginWithOAuth,
+        logout: vi.fn(),
+        updateProfile: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContext}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
+        </AuthContext.Provider>
+      )
+
+      // Test Google OAuth
+      await user.click(screen.getByRole('button', { name: 'Login with Google' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('google')
+
+      // Test Yandex OAuth
+      await user.click(screen.getByRole('button', { name: 'Login with Yandex' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('yandex')
+
+      // Test VK OAuth
+      await user.click(screen.getByRole('button', { name: 'Login with VK' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('vk')
+    })
+
     it('shows loading state for OAuth buttons during authentication', async () => {
       const user = userEvent.setup()
-      
+
       // Mock loginWithOAuth to simulate loading state
-      const mockLoginWithOAuth = vi.fn().mockImplementation(() => 
+      const mockLoginWithOAuth = vi.fn().mockImplementation(() =>
         new Promise(resolve => setTimeout(resolve, 100))
       )
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -123,17 +186,17 @@ describe('AuthModal', () => {
       )
 
       const googleButton = screen.getByRole('button', { name: 'Login with Google' })
-      
+
       // Click the Google OAuth button
       await user.click(googleButton)
-      
+
       // Check that loading indicator appears
       expect(screen.getByRole('progressbar')).toBeInTheDocument()
-      
+
       // Check that all OAuth buttons are disabled during loading
-      expect(screen.getByRole('button', { name: 'Login with Google' })).toBeDisabled()
-      expect(screen.getByRole('button', { name: 'Login with Yandex' })).toBeDisabled()
-      expect(screen.getByRole('button', { name: 'Login with VK' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /login with google/i })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /login with yandex/i })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /login with vk/i })).toBeDisabled()
     })
 
     it('validates email field', async () => {
@@ -145,7 +208,7 @@ describe('AuthModal', () => {
       const loginButton = screen.getByRole('button', { name: 'Login' })
       await user.click(loginButton)
 
-      expect(screen.getByText('Email is required')).toBeInTheDocument()
+      expect(screen.getAllByText('Email is required')).toHaveLength(2)
     })
 
     it('validates password field', async () => {
@@ -154,13 +217,13 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
       await user.type(emailInput, 'test@example.com')
 
       const loginButton = screen.getByRole('button', { name: 'Login' })
       await user.click(loginButton)
 
-      expect(screen.getByText('Password is required')).toBeInTheDocument()
+      expect(screen.getAllByText('Password is required')).toHaveLength(2)
     })
 
     it('validates email format', async () => {
@@ -169,19 +232,19 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
       await user.type(emailInput, 'invalid-email')
 
       const loginButton = screen.getByRole('button', { name: 'Login' })
       await user.click(loginButton)
 
-      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument()
+      expect(screen.getAllByText('Please enter a valid email address')).toHaveLength(2)
     })
 
     it('handles successful login submission', async () => {
       const user = userEvent.setup()
       const mockLogin = vi.fn().mockResolvedValue(undefined)
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -199,12 +262,12 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('login-password')
       const loginButton = screen.getByRole('button', { name: 'Login' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'Password123')
+      await user.type(passwordInput!, 'Password123')
       await user.click(loginButton)
 
       expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'Password123')
@@ -213,7 +276,7 @@ describe('AuthModal', () => {
     it('handles login error', async () => {
       const user = userEvent.setup()
       const mockLogin = vi.fn().mockRejectedValue(new Error('Invalid credentials'))
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -231,12 +294,12 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('login-password')
       const loginButton = screen.getByRole('button', { name: 'Login' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'wrongPassword123')
+      await user.type(passwordInput!, 'wrongPassword123')
       await user.click(loginButton)
 
       await waitFor(() => {
@@ -246,10 +309,10 @@ describe('AuthModal', () => {
 
     it('disables form during submission', async () => {
       const user = userEvent.setup()
-      const mockLogin = vi.fn().mockImplementation(() => 
+      const mockLogin = vi.fn().mockImplementation(() =>
         new Promise(resolve => setTimeout(resolve, 100))
       )
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -267,25 +330,16 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      const loginButton = screen.getByRole('button', { name: 'Login' })
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('login-password')
+      const loginButton = screen.getByRole('button', { name: /^login,/i })
 
       expect(emailInput).toBeDisabled()
       expect(passwordInput).toBeDisabled()
       expect(loginButton).toBeDisabled()
     })
 
-    it('goes back to welcome when back button is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
-      )
 
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-      
-      expect(screen.getByText('Welcome!')).toBeInTheDocument()
-    })
   })
 
   describe('Register Mode', () => {
@@ -295,10 +349,106 @@ describe('AuthModal', () => {
       )
 
       expect(screen.getByText('Create new account')).toBeInTheDocument()
-      expect(screen.getByLabelText('Email')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
-      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument()
+      expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument()
+      expect(document.getElementById('register-password')).toBeInTheDocument()
+      expect(document.getElementById('register-confirm-password')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Register' })).toBeInTheDocument()
+    })
+
+    it('shows OAuth registration buttons at the top', () => {
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      expect(screen.getByRole('button', { name: 'Register with Google' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Register with Yandex' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Register with VK' })).toBeInTheDocument()
+    })
+
+    it('shows "or create account with email" divider between OAuth buttons and form', () => {
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      expect(screen.getByText('or create account with email')).toBeInTheDocument()
+    })
+
+    it('shows "Continue without login" button at the bottom', () => {
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      expect(screen.getByRole('button', { name: /continue without login/i })).toBeInTheDocument()
+    })
+
+    it('closes modal when "Continue without login" is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      await user.click(screen.getByRole('button', { name: /continue without login/i }))
+
+      expect(mockOnClose).toHaveBeenCalled()
+    })
+
+    it('switches to login mode when login link is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      await user.click(screen.getByRole('button', { name: 'Switch to Login form' }))
+
+      expect(screen.getByText('Login to your account')).toBeInTheDocument()
+    })
+
+    it('preserves email when switching to login mode', async () => {
+      const user = userEvent.setup()
+      renderWithAuth(
+        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+      )
+
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      await user.type(emailInput, 'test@example.com')
+
+      await user.click(screen.getByRole('button', { name: 'Switch to Login form' }))
+
+      expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument()
+    })
+
+    it('handles OAuth registration for all providers', async () => {
+      const user = userEvent.setup()
+      const mockLoginWithOAuth = vi.fn().mockResolvedValue(undefined)
+
+      const mockAuthContext = {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        login: vi.fn(),
+        register: vi.fn(),
+        loginWithOAuth: mockLoginWithOAuth,
+        logout: vi.fn(),
+        updateProfile: vi.fn()
+      }
+
+      render(
+        <AuthContext.Provider value={mockAuthContext}>
+          <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
+        </AuthContext.Provider>
+      )
+
+      // Test Google OAuth
+      await user.click(screen.getByRole('button', { name: 'Register with Google' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('google')
+
+      // Test Yandex OAuth
+      await user.click(screen.getByRole('button', { name: 'Register with Yandex' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('yandex')
+
+      // Test VK OAuth
+      await user.click(screen.getByRole('button', { name: 'Register with VK' }))
+      expect(mockLoginWithOAuth).toHaveBeenCalledWith('vk')
     })
 
     it('validates all required fields', async () => {
@@ -310,8 +460,8 @@ describe('AuthModal', () => {
       const registerButton = screen.getByRole('button', { name: 'Register' })
       await user.click(registerButton)
 
-      expect(screen.getByText('Email is required')).toBeInTheDocument()
-      expect(screen.getByText('Password is required')).toBeInTheDocument()
+      expect(screen.getAllByText('Email is required')).toHaveLength(2)
+      expect(screen.getAllByText('Password is required')).toHaveLength(2)
     })
 
     it('validates email format', async () => {
@@ -320,13 +470,13 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
       await user.type(emailInput, 'invalid-email')
 
       const registerButton = screen.getByRole('button', { name: 'Register' })
       await user.click(registerButton)
 
-      expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument()
+      expect(screen.getAllByText('Please enter a valid email address')).toHaveLength(2)
     })
 
     it('validates password length', async () => {
@@ -335,16 +485,16 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, '123')
+      await user.type(passwordInput!, '123')
 
       const registerButton = screen.getByRole('button', { name: 'Register' })
       await user.click(registerButton)
 
-      expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument()
+      expect(screen.getAllByText('Password must be at least 8 characters long')).toHaveLength(2)
     })
 
     it('validates password complexity', async () => {
@@ -353,16 +503,16 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'onlyletters')
+      await user.type(passwordInput!, 'onlyletters')
 
       const registerButton = screen.getByRole('button', { name: 'Register' })
       await user.click(registerButton)
 
-      expect(screen.getByText('Password must contain at least one letter and one number')).toBeInTheDocument()
+      expect(screen.getAllByText('Password must contain at least one letter and one number')).toHaveLength(2)
     })
 
     it('validates password confirmation', async () => {
@@ -371,24 +521,24 @@ describe('AuthModal', () => {
         <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      const confirmPasswordInput = screen.getByLabelText('Confirm Password')
-      
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+      const confirmPasswordInput = document.getElementById('register-confirm-password')
+
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'Password123')
-      await user.type(confirmPasswordInput, 'different123')
+      await user.type(passwordInput!, 'Password123')
+      await user.type(confirmPasswordInput!, 'different123')
 
       const registerButton = screen.getByRole('button', { name: 'Register' })
       await user.click(registerButton)
 
-      expect(screen.getByText('Passwords do not match')).toBeInTheDocument()
+      expect(screen.getAllByText('Passwords do not match')).toHaveLength(2)
     })
 
     it('handles successful registration submission', async () => {
       const user = userEvent.setup()
       const mockRegister = vi.fn().mockResolvedValue(undefined)
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -406,14 +556,14 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      const confirmPasswordInput = screen.getByLabelText('Confirm Password')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+      const confirmPasswordInput = document.getElementById('register-confirm-password')
       const registerButton = screen.getByRole('button', { name: 'Register' })
 
       await user.type(emailInput, 'test@example.com')
-      await user.type(passwordInput, 'Password123')
-      await user.type(confirmPasswordInput, 'Password123')
+      await user.type(passwordInput!, 'Password123')
+      await user.type(confirmPasswordInput!, 'Password123')
       await user.click(registerButton)
 
       expect(mockRegister).toHaveBeenCalledWith('test@example.com', 'Password123', 'Password123')
@@ -422,7 +572,7 @@ describe('AuthModal', () => {
     it('handles registration error', async () => {
       const user = userEvent.setup()
       const mockRegister = vi.fn().mockRejectedValue(new Error('User already exists'))
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -440,14 +590,14 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      const confirmPasswordInput = screen.getByLabelText('Confirm Password')
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+      const confirmPasswordInput = document.getElementById('register-confirm-password')
       const registerButton = screen.getByRole('button', { name: 'Register' })
 
       await user.type(emailInput, 'existing@example.com')
-      await user.type(passwordInput, 'Password123')
-      await user.type(confirmPasswordInput, 'Password123')
+      await user.type(passwordInput!, 'Password123')
+      await user.type(confirmPasswordInput!, 'Password123')
       await user.click(registerButton)
 
       await waitFor(() => {
@@ -457,10 +607,10 @@ describe('AuthModal', () => {
 
     it('disables form during submission', async () => {
       const user = userEvent.setup()
-      const mockRegister = vi.fn().mockImplementation(() => 
+      const mockRegister = vi.fn().mockImplementation(() =>
         new Promise(resolve => setTimeout(resolve, 100))
       )
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -478,10 +628,10 @@ describe('AuthModal', () => {
         </AuthContext.Provider>
       )
 
-      const emailInput = screen.getByLabelText('Email')
-      const passwordInput = screen.getByLabelText('Password')
-      const confirmPasswordInput = screen.getByLabelText('Confirm Password')
-      const registerButton = screen.getByRole('button', { name: 'Register' })
+      const emailInput = screen.getByRole('textbox', { name: /email/i })
+      const passwordInput = document.getElementById('register-password')
+      const confirmPasswordInput = document.getElementById('register-confirm-password')
+      const registerButton = screen.getByRole('button', { name: /^register,/i })
 
       expect(emailInput).toBeDisabled()
       expect(passwordInput).toBeDisabled()
@@ -489,20 +639,12 @@ describe('AuthModal', () => {
       expect(registerButton).toBeDisabled()
     })
 
-    it('shows OAuth registration buttons', () => {
-      renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
-      )
 
-      expect(screen.getByRole('button', { name: 'Register with Google' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Register with Yandex' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Register with VK' })).toBeInTheDocument()
-    })
 
     it('handles OAuth registration', async () => {
       const user = userEvent.setup()
       const mockLoginWithOAuth = vi.fn().mockResolvedValue(undefined)
-      
+
       const mockAuthContext = {
         user: null,
         isAuthenticated: false,
@@ -526,32 +668,23 @@ describe('AuthModal', () => {
       expect(mockLoginWithOAuth).toHaveBeenCalledWith('google')
     })
 
-    it('goes back to welcome when back button is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="register" />
-      )
 
-      await user.click(screen.getByRole('button', { name: 'Back' }))
-      
-      expect(screen.getByText('Welcome!')).toBeInTheDocument()
-    })
   })
 
   describe('Localization', () => {
     it('renders in Russian when language is set to ru', () => {
       // Set Russian language in localStorage
       localStorage.setItem('settings', JSON.stringify({ language: 'ru' }))
-      
+
       renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
 
-      expect(screen.getByText('Добро пожаловать!')).toBeInTheDocument()
-      expect(screen.getByText('Выберите, как вы хотите продолжить')).toBeInTheDocument()
+      expect(screen.getByText('Вход в аккаунт')).toBeInTheDocument()
+      expect(screen.getByText('или используйте email')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Войти' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Регистрация' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Продолжить без входа' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /регистрация/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /продолжить без входа/i })).toBeInTheDocument()
     })
   })
 
@@ -559,10 +692,10 @@ describe('AuthModal', () => {
     it('closes when close button is clicked', async () => {
       const user = userEvent.setup()
       renderWithAuth(
-        <AuthModal open={true} onClose={mockOnClose} initialMode="welcome" />
+        <AuthModal open={true} onClose={mockOnClose} initialMode="login" />
       )
 
-      const closeButton = screen.getByLabelText('close')
+      const closeButton = screen.getByLabelText('Close Login dialog')
       await user.click(closeButton)
 
       expect(mockOnClose).toHaveBeenCalled()
@@ -570,17 +703,17 @@ describe('AuthModal', () => {
 
     it('does not render when open is false', () => {
       renderWithAuth(
-        <AuthModal open={false} onClose={mockOnClose} initialMode="welcome" />
+        <AuthModal open={false} onClose={mockOnClose} initialMode="login" />
       )
 
-      expect(screen.queryByText('Welcome!')).not.toBeInTheDocument()
+      expect(screen.queryByText('Login to your account')).not.toBeInTheDocument()
     })
   })
 
   describe('RFC 9457 Error Handling', () => {
     it('handles RFC 9457 validation errors in registration form', async () => {
       const user = userEvent.setup()
-      
+
       // Mock the register function to throw RFC 9457 validation error
       const mockRegister = vi.fn().mockRejectedValue({
         type: 'VALIDATION_ERROR',
@@ -602,6 +735,7 @@ describe('AuthModal', () => {
         register: mockRegister,
         loginWithOAuth: vi.fn(),
         logout: vi.fn(),
+        updateProfile: vi.fn(),
         refreshToken: vi.fn(),
         clearAuthData: vi.fn()
       }
@@ -613,9 +747,9 @@ describe('AuthModal', () => {
       )
 
       // Fill in the form with data that passes client validation but will trigger server validation errors
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+      await user.type(screen.getByRole('textbox', { name: /email/i }), 'test@example.com')
+      await user.type(document.getElementById('register-password')!, 'Password123')
+      await user.type(document.getElementById('register-confirm-password')!, 'Password123')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: 'Register' }))
@@ -627,8 +761,8 @@ describe('AuthModal', () => {
 
       // Check that field-specific validation errors are displayed
       await waitFor(() => {
-        expect(screen.getByText('Invalid email format')).toBeInTheDocument()
-        expect(screen.getByText('Password must be at least 8 characters long')).toBeInTheDocument()
+        expect(screen.getAllByText('Invalid email format')).toHaveLength(2) // One visible, one for screen reader
+        expect(screen.getAllByText('Password must be at least 8 characters long')).toHaveLength(2)
       })
 
       // Ensure no general error message is shown when validation errors are present
@@ -637,7 +771,7 @@ describe('AuthModal', () => {
 
     it('handles RFC 9457 validation errors with capitalized field names from server', async () => {
       const user = userEvent.setup()
-      
+
       // Mock the register function to throw RFC 9457 validation error with capitalized field names (like from real API)
       const mockRegister = vi.fn().mockRejectedValue({
         type: 'VALIDATION_ERROR',
@@ -666,6 +800,7 @@ describe('AuthModal', () => {
         register: mockRegister,
         loginWithOAuth: vi.fn(),
         logout: vi.fn(),
+        updateProfile: vi.fn(),
         refreshToken: vi.fn(),
         clearAuthData: vi.fn()
       }
@@ -677,9 +812,9 @@ describe('AuthModal', () => {
       )
 
       // Fill in the form with data that passes client validation but will trigger server validation errors
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+      await user.type(screen.getByRole('textbox', { name: /email/i }), 'test@example.com')
+      await user.type(document.getElementById('register-password')!, 'Password123')
+      await user.type(document.getElementById('register-confirm-password')!, 'Password123')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: 'Register' }))
@@ -691,8 +826,8 @@ describe('AuthModal', () => {
 
       // Check that field-specific validation errors are displayed (should work even with capitalized field names from server)
       await waitFor(() => {
-        expect(screen.getByText('Password must contain at least one lowercase letter, one uppercase letter, and one digit')).toBeInTheDocument()
-        expect(screen.getByText('Invalid email format')).toBeInTheDocument()
+        expect(screen.getAllByText('Password must contain at least one lowercase letter, one uppercase letter, and one digit')).toHaveLength(2)
+        expect(screen.getAllByText('Invalid email format')).toHaveLength(2)
       })
 
       // Ensure no general error message is shown when validation errors are present
@@ -701,7 +836,7 @@ describe('AuthModal', () => {
 
     it('handles RFC 9457 authentication errors', async () => {
       const user = userEvent.setup()
-      
+
       // Mock the login function to throw RFC 9457 authentication error
       const mockLogin = vi.fn().mockRejectedValue({
         type: 'INVALID_CREDENTIALS',
@@ -723,6 +858,7 @@ describe('AuthModal', () => {
         register: vi.fn(),
         loginWithOAuth: vi.fn(),
         logout: vi.fn(),
+        updateProfile: vi.fn(),
         refreshToken: vi.fn(),
         clearAuthData: vi.fn()
       }
@@ -734,8 +870,8 @@ describe('AuthModal', () => {
       )
 
       // Fill in the form
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'wrongPassword123')
+      await user.type(screen.getByRole('textbox', { name: /email/i }), 'test@example.com')
+      await user.type(document.getElementById('login-password')!, 'wrongPassword123')
 
       // Submit the form
       await user.click(screen.getByText('Login'))
@@ -753,7 +889,7 @@ describe('AuthModal', () => {
 
     it('handles RFC 9457 validation errors with mixed case and underscore field names', async () => {
       const user = userEvent.setup()
-      
+
       // Mock the register function to throw RFC 9457 validation error with various field name formats
       const mockRegister = vi.fn().mockRejectedValue({
         type: 'VALIDATION_ERROR',
@@ -776,6 +912,7 @@ describe('AuthModal', () => {
         register: mockRegister,
         loginWithOAuth: vi.fn(),
         logout: vi.fn(),
+        updateProfile: vi.fn(),
         refreshToken: vi.fn(),
         clearAuthData: vi.fn()
       }
@@ -787,9 +924,9 @@ describe('AuthModal', () => {
       )
 
       // Fill in the form with data that passes client validation
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+      await user.type(screen.getByRole('textbox', { name: /email/i }), 'test@example.com')
+      await user.type(document.getElementById('register-password')!, 'Password123')
+      await user.type(document.getElementById('register-confirm-password')!, 'Password123')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: 'Register' }))
@@ -801,9 +938,9 @@ describe('AuthModal', () => {
 
       // Check that field-specific validation errors are displayed correctly
       await waitFor(() => {
-        expect(screen.getByText('Email is already in use')).toBeInTheDocument()
-        expect(screen.getByText('Password is too weak')).toBeInTheDocument()
-        expect(screen.getByText('Passwords do not match')).toBeInTheDocument()
+        expect(screen.getAllByText('Email is already in use')).toHaveLength(2)
+        expect(screen.getAllByText('Password is too weak')).toHaveLength(2)
+        expect(screen.getAllByText('Passwords do not match')).toHaveLength(2)
       })
 
       // Ensure no general error message is shown when validation errors are present
@@ -812,7 +949,7 @@ describe('AuthModal', () => {
 
     it('handles empty validation errors gracefully', async () => {
       const user = userEvent.setup()
-      
+
       // Mock the register function to throw RFC 9457 validation error with empty errors
       const mockRegister = vi.fn().mockRejectedValue({
         type: 'VALIDATION_ERROR',
@@ -831,6 +968,7 @@ describe('AuthModal', () => {
         register: mockRegister,
         loginWithOAuth: vi.fn(),
         logout: vi.fn(),
+        updateProfile: vi.fn(),
         refreshToken: vi.fn(),
         clearAuthData: vi.fn()
       }
@@ -842,9 +980,9 @@ describe('AuthModal', () => {
       )
 
       // Fill in the form with data that passes client validation
-      await user.type(screen.getByLabelText('Email'), 'test@example.com')
-      await user.type(screen.getByLabelText('Password'), 'Password123')
-      await user.type(screen.getByLabelText('Confirm Password'), 'Password123')
+      await user.type(screen.getByRole('textbox', { name: /email/i }), 'test@example.com')
+      await user.type(document.getElementById('register-password')!, 'Password123')
+      await user.type(document.getElementById('register-confirm-password')!, 'Password123')
 
       // Submit the form
       await user.click(screen.getByRole('button', { name: 'Register' }))
