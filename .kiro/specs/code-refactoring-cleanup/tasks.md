@@ -48,7 +48,12 @@
   - Implement responsive design and accessibility features
   - _Requirements: 1.1, 1.2, 4.1, 4.2_
 
-- [ ] 5. Create base quiz state management hook
+- [x] 5. Create base quiz state management hook
+
+
+
+
+
   - Extract common quiz state logic (scores, disabled state, game session) into `useBaseQuiz` hook
   - Implement standard quiz actions (correct/wrong answer, reset, disable)
   - Add comprehensive tests for base quiz functionality
