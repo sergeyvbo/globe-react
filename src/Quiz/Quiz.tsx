@@ -88,7 +88,7 @@ const Quiz = (props: Props) => {
         <Grid2 container className="Quiz-container" spacing={1} >
             {options.map((option, index) => {
                 return (
-                    <Grid2 xs={4} key={index}>
+                    <Grid2 size={{ xs: 4 }} key={index}>
                         <Button
                             disabled={disabled && !canContinue}
                             variant="contained"

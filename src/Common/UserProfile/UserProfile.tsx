@@ -318,7 +318,7 @@ export const UserProfile: React.FC = () => {
             <Box>
               {/* Overall Statistics */}
               <Grid2 container spacing={2} sx={{ mb: 3 }}>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="primary">
                       {gameStats.totalGames}
@@ -328,7 +328,7 @@ export const UserProfile: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="success.main">
                       {Math.round(gameStats.averageAccuracy)}%
@@ -338,7 +338,7 @@ export const UserProfile: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="warning.main">
                       {gameStats.bestStreak}
@@ -348,7 +348,7 @@ export const UserProfile: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="info.main">
                       {gameStats.totalCorrectAnswers}

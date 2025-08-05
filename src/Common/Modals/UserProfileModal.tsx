@@ -315,7 +315,7 @@ const UserProfileContent: React.FC = () => {
             <Box>
               {/* Overall Statistics */}
               <Grid2 container spacing={2} sx={{ mb: 3 }}>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="primary">
                       {gameStats.totalGames}
@@ -325,7 +325,7 @@ const UserProfileContent: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="success.main">
                       {Math.round(gameStats.averageAccuracy)}%
@@ -335,7 +335,7 @@ const UserProfileContent: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="warning.main">
                       {gameStats.bestStreak}
@@ -345,7 +345,7 @@ const UserProfileContent: React.FC = () => {
                     </Typography>
                   </Box>
                 </Grid2>
-                <Grid2 xs={6} sm={3}>
+                <Grid2 size={{ xs: 6, sm: 3 }}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="info.main">
                       {gameStats.totalCorrectAnswers}
