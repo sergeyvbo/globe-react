@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { GeoPermissibleObjects } from 'd3-geo'
 import { Button, IconButton } from '@mui/material'
-import { ZoomIn, ZoomInMap, ZoomOut, ZoomOutMap } from '@mui/icons-material'
+import { ZoomIn, ZoomOut } from '@mui/icons-material'
 
 interface Props {
     geoData: GeoPermissibleObjects[],

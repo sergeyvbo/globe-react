@@ -6,7 +6,7 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Grid,
+  Grid2,
   LinearProgress,
   Divider,
   Chip,
@@ -193,8 +193,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
           </Box>
 
           {/* Overall Statistics */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={6} sm={3}>
+          <Grid2 container spacing={3} sx={{ mb: 3 }}>
+            <Grid2 xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="primary.main" sx={{ fontWeight: 'bold' }}>
                   {gameStats.totalGames}
@@ -203,8 +203,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   Total Games
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Grid2>
+            <Grid2 xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold' }}>
                   {Math.round(gameStats.averageAccuracy)}%
@@ -213,8 +213,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   Average Accuracy
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Grid2>
+            <Grid2 xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold' }}>
                   {gameStats.bestStreak}
@@ -223,8 +223,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   Best Streak
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={3}>
+            </Grid2>
+            <Grid2 xs={6} sm={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="info.main" sx={{ fontWeight: 'bold' }}>
                   {gameStats.totalCorrectAnswers}
@@ -233,12 +233,12 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   Correct Answers
                 </Typography>
               </Box>
-            </Grid>
-          </Grid>
+            </Grid2>
+          </Grid2>
 
           {/* Additional Stats Row */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={6} sm={6}>
+          <Grid2 container spacing={3} sx={{ mb: 3 }}>
+            <Grid2 xs={6} sm={6}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h5" color="error.main" sx={{ fontWeight: 'bold' }}>
                   {gameStats.totalWrongAnswers}
@@ -247,8 +247,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   Wrong Answers
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={6} sm={6}>
+            </Grid2>
+            <Grid2 xs={6} sm={6}>
               <Box sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                   <TimeIcon sx={{ mr: 1, color: 'text.secondary' }} />
@@ -263,8 +263,8 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                   }
                 </Typography>
               </Box>
-            </Grid>
-          </Grid>
+            </Grid2>
+          </Grid2>
 
           <Divider sx={{ my: 3 }} />
 
@@ -295,32 +295,32 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
                       />
                     </Box>
                     
-                    <Grid container spacing={2} sx={{ mb: 2 }}>
-                      <Grid item xs={4}>
+                    <Grid2 container spacing={2} sx={{ mb: 2 }}>
+                      <Grid2 xs={4}>
                         <Typography variant="body2" color="text.secondary">
                           Accuracy
                         </Typography>
                         <Typography variant="h6" color="success.main">
                           {Math.round(stats.accuracy)}%
                         </Typography>
-                      </Grid>
-                      <Grid item xs={4}>
+                      </Grid2>
+                      <Grid2 xs={4}>
                         <Typography variant="body2" color="text.secondary">
                           Best Streak
                         </Typography>
                         <Typography variant="h6" color="warning.main">
                           {stats.bestStreak}
                         </Typography>
-                      </Grid>
-                      <Grid item xs={4}>
+                      </Grid2>
+                      <Grid2 xs={4}>
                         <Typography variant="body2" color="text.secondary">
                           Correct/Wrong
                         </Typography>
                         <Typography variant="h6" color="info.main">
                           {stats.correctAnswers}/{stats.wrongAnswers}
                         </Typography>
-                      </Grid>
-                    </Grid>
+                      </Grid2>
+                    </Grid2>
 
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body2" sx={{ minWidth: 80 }}>

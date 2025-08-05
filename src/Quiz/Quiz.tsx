@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import './Quiz.css'
-import { Button, Grid, Typography } from "@mui/material"
+import { Button, Grid2, Typography } from "@mui/material"
 import { FlagImage } from '../Common/utils/flagUtils'
 
 
@@ -85,10 +85,10 @@ const Quiz = (props: Props) => {
     }
 
     return (
-        <Grid container className="Quiz-container" spacing={1} >
+        <Grid2 container className="Quiz-container" spacing={1} >
             {options.map((option, index) => {
                 return (
-                    <Grid item xs={4} key={index}>
+                    <Grid2 xs={4} key={index}>
                         <Button
                             disabled={disabled && !canContinue}
                             variant="contained"
@@ -108,10 +108,10 @@ const Quiz = (props: Props) => {
                                 }
                             </Typography>
                         </Button>
-                    </Grid>
+                    </Grid2>
                 )
             })}
-        </Grid>
+        </Grid2>
     )
 }
 

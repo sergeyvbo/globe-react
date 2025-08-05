@@ -11,7 +11,7 @@ import {
   Chip,
   CircularProgress,
   Stack,
-  Grid,
+  Grid2,
   LinearProgress,
   Divider
 } from '@mui/material';
@@ -314,8 +314,8 @@ const UserProfileContent: React.FC = () => {
           ) : gameStats && gameStats.totalGames > 0 ? (
             <Box>
               {/* Overall Statistics */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6} sm={3}>
+              <Grid2 container spacing={2} sx={{ mb: 3 }}>
+                <Grid2 xs={6} sm={3}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="primary">
                       {gameStats.totalGames}
@@ -324,8 +324,8 @@ const UserProfileContent: React.FC = () => {
                       Total Games
                     </Typography>
                   </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
+                </Grid2>
+                <Grid2 xs={6} sm={3}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="success.main">
                       {Math.round(gameStats.averageAccuracy)}%
@@ -334,8 +334,8 @@ const UserProfileContent: React.FC = () => {
                       Accuracy
                     </Typography>
                   </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
+                </Grid2>
+                <Grid2 xs={6} sm={3}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="warning.main">
                       {gameStats.bestStreak}
@@ -344,8 +344,8 @@ const UserProfileContent: React.FC = () => {
                       Best Streak
                     </Typography>
                   </Box>
-                </Grid>
-                <Grid item xs={6} sm={3}>
+                </Grid2>
+                <Grid2 xs={6} sm={3}>
                   <Box sx={{ textAlign: 'center' }}>
                     <Typography variant="h4" color="info.main">
                       {gameStats.totalCorrectAnswers}
@@ -354,8 +354,8 @@ const UserProfileContent: React.FC = () => {
                       Correct Answers
                     </Typography>
                   </Box>
-                </Grid>
-              </Grid>
+                </Grid2>
+              </Grid2>
 
               <Divider sx={{ my: 2 }} />
 

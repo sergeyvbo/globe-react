@@ -1,6 +1,6 @@
-import React, { useState, useEffect, Dispatch } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button, Avatar, Menu, ListItemIcon, ListItemText } from '@mui/material'
-import { Flag, Public, Settings, AccountCircle, Logout, Person, TrendingUp, EmojiEvents } from '@mui/icons-material'
+import { Flag, Settings, AccountCircle, Logout, Person, TrendingUp, EmojiEvents } from '@mui/icons-material'
 import { getString, getAuthString } from '../Localization/strings'
 import { getSettings } from '../Common/utils'
 import { CountryQuizSettings } from '../Common/types'
