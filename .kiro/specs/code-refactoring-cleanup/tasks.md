@@ -15,7 +15,12 @@
   - Create comprehensive tests for the hook covering all save scenarios
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 2. Create shared beforeunload handler hook
+- [x] 2. Create shared beforeunload handler hook
+
+
+
+
+
   - Extract duplicate beforeunload event handling logic into `useBeforeUnload` hook
   - Implement proper cleanup and session saving on page unload
   - Add tests for beforeunload behavior and cleanup
