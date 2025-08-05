@@ -25,7 +25,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "download-flags": "node scripts/download-flags.js",
+    "test-flags": "node scripts/test-flags.js",
+    "flags-info": "node scripts/flags-info.js"
   },
   "eslintConfig": {
     "extends": [

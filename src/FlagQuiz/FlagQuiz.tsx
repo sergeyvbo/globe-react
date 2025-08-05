@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Button, Grid, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
+import { FlagImage } from '../Common/utils/flagUtils';
 import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
 import { useAuth } from '../Common/Auth/AuthContext';
@@ -296,7 +297,7 @@ export const FlagQuiz = () => {
                                     className='flag-button'
                                     variant={(selectedFlag === flag || isMatch(flag)) ? 'contained' : 'outlined'}
                                     color={getFlagColor(flag)}
-                                    startIcon={<img alt={flag} src={`https://flagcdn.com/64x48/${flag}.png`} />}
+                                    startIcon={<FlagImage countryCode={flag} size="64x48" alt={flag} />}
                                     onClick={() => handleFlagClick(flag)}
                                     disableElevation={isMatch(flag)}
                                 />

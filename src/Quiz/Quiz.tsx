@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import './Quiz.css'
 import { Button, Grid, Typography } from "@mui/material"
+import { FlagImage } from '../Common/utils/flagUtils'
 
 
 interface Props {
@@ -93,7 +94,7 @@ const Quiz = (props: Props) => {
                             variant="contained"
                             className={`Quiz-button ${buttonResultClass(option.name)}`}
                             onClick={() => onBtnClick(option.name)}
-                            startIcon={showFlags ? <img alt={option.code} src={`https://flagcdn.com/20x15/${option.code}.png`} /> : null}
+                            startIcon={showFlags ? <FlagImage countryCode={option.code} size="20x15" alt={option.code} /> : null}
                             style={{
                                 opacity: (showResult && selectedOption && selectedOption !== option.name && option.name !== correctOption) ? 0.5 : 1,
                                 transform: (showResult && selectedOption === option.name && option.name === correctOption) ? 'scale(1.05)' : 'scale(1)',

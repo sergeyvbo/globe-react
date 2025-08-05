@@ -43,3 +43,6 @@ yarn-error.log*
 *.tsbuildinfo
 .env
 .env.production
+
+# Downloaded flags (run npm run download-flags to regenerate)
+/public/flags/

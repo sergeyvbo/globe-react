@@ -88,6 +88,13 @@ An interactive educational web application for learning world geography through 
 - **Security**: CORS, input validation, and secure password hashing
 - **Architecture**: Clean architecture with dependency injection
 
+### Static Assets Management
+- **Country Flags**: Local storage of 255+ country flags in multiple sizes (~521KB total)
+- **Offline Support**: All flags cached locally for better performance
+- **Automatic Download**: Simple script to fetch all flags from flagcdn.com
+- **Size Optimization**: Multiple flag sizes (20x15, 64x48) for different use cases
+- **Fallback Support**: Automatic fallback to external CDN if local flag missing
+
 ### API Integration
 - **HTTP Client**: Custom TypeScript client with automatic token management
 - **Error Handling**: Comprehensive error types and recovery strategies
@@ -131,7 +138,12 @@ An interactive educational web application for learning world geography through 
    ```
    The API will be available at `http://localhost:5000`
 
-5. **Start the frontend development server**
+5. **Download country flags** (required for flag quiz)
+   ```bash
+   npm run download-flags
+   ```
+
+6. **Start the frontend development server**
    ```bash
    npm start
    ```
@@ -249,6 +261,9 @@ dotnet test
 - `npm run preview` - Preview production build
 - `npm test` - Run test suite
 - `npm run test:run` - Run tests once
+- `npm run download-flags` - Download all country flags locally
+- `npm run test-flags` - Verify all flags are downloaded
+- `npm run flags-info` - Show flags storage information
 
 #### Backend
 - `dotnet run` - Start development server
