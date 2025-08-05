@@ -9,6 +9,7 @@ import { useAuth } from '../Common/Auth/AuthContext';
 import { gameProgressService, GameSession } from '../Common/GameProgress/GameProgressService';
 import { useOfflineDetector } from '../Common/Network/useOfflineDetector';
 import { OfflineIndicator } from '../Common/Network/OfflineIndicator';
+import { SaveStatusIndicator } from '../Common/SaveStatusIndicator';
 import flagJson from '../Common/GeoData/countryCodes2.json'
 import { CountryFlagData } from '../Common/types';
 
@@ -263,24 +264,7 @@ export const FlagQuiz = () => {
             <OfflineIndicator />
             
             {/* Save Status Indicator */}
-            {(isSaving || saveError) && (
-                <div 
-                    style={{
-                        position: 'fixed',
-                        top: '50px',
-                        right: '10px',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        zIndex: 999,
-                        backgroundColor: saveError ? '#ff9800' : '#2196f3',
-                        color: 'white',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                    }}
-                >
-                    {isSaving ? '💾 Saving...' : saveError}
-                </div>
-            )}
+            <SaveStatusIndicator isSaving={isSaving} saveError={saveError} />
             
             <Box
                 height={'90dvh'}

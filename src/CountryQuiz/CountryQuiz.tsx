@@ -11,6 +11,7 @@ import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
 import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
 import { useOfflineDetector } from "../Common/Network/useOfflineDetector"
 import { OfflineIndicator } from "../Common/Network/OfflineIndicator"
+import { SaveStatusIndicator } from "../Common/SaveStatusIndicator"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
@@ -327,24 +328,7 @@ const CountryQuiz = () => {
                 <OfflineIndicator />
                 
                 {/* Save Status Indicator */}
-                {(isSaving || saveError) && (
-                    <div 
-                        style={{
-                            position: 'fixed',
-                            top: '50px',
-                            right: '10px',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            zIndex: 999,
-                            backgroundColor: saveError ? '#ff9800' : '#2196f3',
-                            color: 'white',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}
-                    >
-                        {isSaving ? '💾 Saving...' : saveError}
-                    </div>
-                )}
+                <SaveStatusIndicator isSaving={isSaving} saveError={saveError} />
                 
                 <Globe
                     geoData={geoData.features}
