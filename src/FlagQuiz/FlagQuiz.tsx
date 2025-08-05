@@ -1,15 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Button, Grid, Box, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Button, Grid2, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
 import { FlagImage } from '../Common/utils/flagUtils';
 import { FlagMainMenu } from './FlagMainMenu';
 import { Score } from '../CountryQuiz/Score';
 import { useAuth } from '../Common/Auth/AuthContext';
-import { gameProgressService, GameSession } from '../Common/GameProgress/GameProgressService';
-import { useOfflineDetector } from '../Common/Network/useOfflineDetector';
-import { OfflineIndicator } from '../Common/Network/OfflineIndicator';
-import { SaveStatusIndicator } from '../Common/SaveStatusIndicator';
+import { useBaseQuiz } from '../Common/Hooks/useBaseQuiz';
+import { QuizLayout } from '../Common/QuizLayout';
 import flagJson from '../Common/GeoData/countryCodes2.json'
 import { CountryFlagData } from '../Common/types';
 
@@ -24,149 +22,33 @@ export const FlagQuiz = () => {
     const OPTIONS_LENGTH = 5
 
     const { user, isAuthenticated } = useAuth()
-    const { isOnline, isOffline } = useOfflineDetector()
 
-    //const [data, setData] = useState<Country[]>([])
+    // Use shared base quiz hook for common functionality
+    const {
+        correctScore,
+        wrongScore,
+        disabled,
+        gameSession,
+        actions,
+        gameProgress
+    } = useBaseQuiz({
+        gameType: 'flags',
+        isAuthenticated,
+        user
+    })
+
     const [countries, setCountries] = useState<CountryFlagData[]>([])
     const [flags, setFlags] = useState<string[]>([])
     const [selectedFlag, setSelectedFlag] = useState<string | null>(null)
     const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
     const [matches, setMatches] = useState<Match[]>([])
     const [error, setError] = useState<Match>()
-    const [correctScore, setCorrectScore] = useState(0)
-    const [wrongScore, setWrongScore] = useState(0)
-
-    // Game session state for progress tracking
-    const [gameSession, setGameSession] = useState<GameSession>({
-        gameType: 'flags',
-        correctAnswers: 0,
-        wrongAnswers: 0,
-        sessionStartTime: new Date()
-    })
-
-    // Saving state
-    const [isSaving, setIsSaving] = useState(false)
-    const [saveError, setSaveError] = useState<string | null>(null)
 
     const data = flagJson as CountryFlagData[]
 
     useEffect(() => {
         startGame(data)
-        // Initialize session start time when game begins
-        setGameSession(prev => ({
-            ...prev,
-            sessionStartTime: new Date()
-        }))
     }, [])
-
-    // Update game session when scores change
-    useEffect(() => {
-        setGameSession(prev => ({
-            ...prev,
-            correctAnswers: correctScore,
-            wrongAnswers: wrongScore
-        }))
-    }, [correctScore, wrongScore])
-
-    // Auto-save progress function
-    const autoSaveProgress = useCallback(async () => {
-        if (correctScore === 0 && wrongScore === 0) return
-
-        setIsSaving(true)
-        setSaveError(null)
-
-        try {
-            const currentSession: GameSession = {
-                ...gameSession,
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionEndTime: new Date()
-            }
-
-            if (isAuthenticated && user) {
-                // Save for authenticated users
-                await gameProgressService.saveGameProgress(user.id, 'flags', currentSession)
-                console.log('Flag quiz progress auto-saved for authenticated user')
-            } else {
-                // Save temporarily for unauthenticated users
-                gameProgressService.saveTempSession(currentSession)
-                console.log('Flag quiz progress saved temporarily for unauthenticated user')
-            }
-        } catch (error) {
-            console.error('Failed to auto-save flag quiz progress:', error)
-            setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
-        } finally {
-            setIsSaving(false)
-        }
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession, isOffline])
-
-    // Auto-save progress on score changes and round completion
-    useEffect(() => {
-        if (correctScore > 0 || wrongScore > 0) {
-            autoSaveProgress()
-        }
-    }, [correctScore, wrongScore, autoSaveProgress])
-
-    // Auto-save when round is completed
-    useEffect(() => {
-        if (OPTIONS_LENGTH === matches.length && (correctScore > 0 || wrongScore > 0)) {
-            autoSaveProgress()
-        }
-    }, [matches.length, correctScore, wrongScore, autoSaveProgress])
-
-    // Auto-save every 30 seconds during active gameplay
-    useEffect(() => {
-        if (correctScore === 0 && wrongScore === 0) return
-
-        const interval = setInterval(() => {
-            autoSaveProgress()
-        }, 30000) // 30 seconds
-
-        return () => clearInterval(interval)
-    }, [correctScore, wrongScore, autoSaveProgress])
-
-    // Handle online/offline transitions
-    useEffect(() => {
-        if (isOnline && gameProgressService.hasPendingOfflineSessions()) {
-            // Try to sync offline sessions when coming back online
-            const syncOfflineSessions = async () => {
-                try {
-                    await gameProgressService.syncOfflineSessionsManually()
-                    console.log('Offline flag quiz sessions synced successfully')
-                } catch (error) {
-                    console.error('Failed to sync offline flag quiz sessions:', error)
-                }
-            }
-            
-            syncOfflineSessions()
-        }
-    }, [isOnline])
-
-    // Save progress when user leaves
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-            if (correctScore > 0 || wrongScore > 0) {
-                // Use synchronous save for beforeunload
-                const currentSession: GameSession = {
-                    ...gameSession,
-                    correctAnswers: correctScore,
-                    wrongAnswers: wrongScore,
-                    sessionEndTime: new Date()
-                }
-
-                if (isAuthenticated && user) {
-                    // For authenticated users, try to save but don't block
-                    gameProgressService.saveGameProgress(user.id, 'flags', currentSession).catch(console.error)
-                } else {
-                    // For unauthenticated users, save to temp storage
-                    gameProgressService.saveTempSession(currentSession)
-                }
-            }
-        }
-
-        window.addEventListener('beforeunload', handleBeforeUnload)
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
 
     const startGame = (countryList: CountryFlagData[]) => {
         setMatches([])
@@ -209,22 +91,21 @@ export const FlagQuiz = () => {
     const checkMatch = async (match: Match) => {
         if (countries.find(x => x.code === match.flag && x.name === match.country)) {
             setMatches([...matches, match])
-            setCorrectScore(correctScore + 1)
+            // Manually update scores without using shared actions that disable buttons
+            actions.onCorrectAnswer()
+            // Reset disabled state immediately for FlagQuiz since it allows multiple matches
+            setTimeout(() => actions.resetGame(), 0)
         }
         else {
-            setWrongScore(wrongScore + 1)
+            // Manually update scores without using shared actions that disable buttons
+            actions.onWrongAnswer()
+            // Reset disabled state immediately for FlagQuiz since it allows multiple matches
+            setTimeout(() => actions.resetGame(), 0)
             setError(match)
             setTimeout(() => {
                 console.log('reset error')
                 setError(undefined)
             }, 1000)
-        }
-
-        // Auto-save after each match attempt
-        try {
-            await autoSaveProgress()
-        } catch (error) {
-            console.error('Failed to save progress after match:', error)
         }
     }
 
@@ -254,63 +135,84 @@ export const FlagQuiz = () => {
 
     const handleContinue = () => {
         startGame(data)
+        actions.resetGame()
     }
 
+    if (countries.length && flags.length) {
+        return (
+            <QuizLayout
+                menuComponent={<FlagMainMenu />}
+                gameAreaComponent={
+                    <Box
+                        height={'90dvh'}
+                        width={'100%'}
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                    >
+                        <Grid2 container spacing={2} >
+                            <Grid2 size={6}>
+                                <Stack className='flag-stack' spacing={2}>
+                                    {flags.map(flag => (
+                                        <Button
+                                            key={flag}
+                                            className='flag-button'
+                                            variant={(selectedFlag === flag || isMatch(flag)) ? 'contained' : 'outlined'}
+                                            color={getFlagColor(flag)}
+                                            startIcon={<FlagImage countryCode={flag} size="64x48" alt={flag} />}
+                                            onClick={() => handleFlagClick(flag)}
+                                            disableElevation={isMatch(flag)}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Grid2>
+                            <Grid2 size={6}>
+                                <Stack className='country-stack' spacing={2}>
+                                    {countries.map(country => (
+                                        <Button
+                                            key={country.name}
+                                            className='country-button'
+                                            variant={(selectedCountry === country.name || isMatch(country.code)) ? 'contained' : 'outlined'}
+                                            color={getCountryColor(country.name)}
+                                            onClick={() => handleCountryClick(country.name)}
+                                            disableElevation={isMatch(country.code)}
+                                        >
+                                            <h3>{country.name_ru}</h3>
+                                        </Button>
+                                    ))}
+                                </Stack>
+                            </Grid2>
+                        </Grid2>
+                        {OPTIONS_LENGTH === matches.length && (
+                            <Button 
+                                className='continue-button' 
+                                onClick={handleContinue} 
+                                variant="contained"
+                                style={{
+                                    marginTop: '20px'
+                                }}
+                            >
+                                Продолжить
+                            </Button>
+                        )}
+                    </Box>
+                }
+                scoreComponent={<Score correctScore={correctScore} wrongScore={wrongScore} />}
+                showOfflineIndicator={true}
+                showSaveIndicator={true}
+                isSaving={gameProgress.isSaving}
+                saveError={gameProgress.saveError}
+            />
+        )
+    }
+    
     return (
-        <>
-            <FlagMainMenu />
-            
-            {/* Offline Indicator */}
-            <OfflineIndicator />
-            
-            {/* Save Status Indicator */}
-            <SaveStatusIndicator isSaving={isSaving} saveError={saveError} />
-            
-            <Box
-                height={'90dvh'}
-                width={'100%'}
-                display="flex"
-                alignItems="center"
-            >
-                <Grid container spacing={2} >
-                    <Grid item xs={6}>
-                        <Stack className='flag-stack' spacing={2}>
-                            {flags.map(flag => (
-                                <Button
-                                    key={flag}
-                                    className='flag-button'
-                                    variant={(selectedFlag === flag || isMatch(flag)) ? 'contained' : 'outlined'}
-                                    color={getFlagColor(flag)}
-                                    startIcon={<FlagImage countryCode={flag} size="64x48" alt={flag} />}
-                                    onClick={() => handleFlagClick(flag)}
-                                    disableElevation={isMatch(flag)}
-                                />
-                            ))}
-                        </Stack>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Stack className='country-stack' spacing={2}>
-                            {countries.map(country => (
-                                <Button
-                                    key={country.name}
-                                    className='country-button'
-                                    variant={(selectedCountry === country.name || isMatch(country.code)) ? 'contained' : 'outlined'}
-                                    color={getCountryColor(country.name)}
-                                    onClick={() => handleCountryClick(country.name)}
-                                    disableElevation={isMatch(country.code)}
-                                >
-                                    <h3>{country.name_ru}</h3>
-                                </Button>
-                            ))}
-                        </Stack>
-                    </Grid>
-                </Grid>
-            </Box>
-            <Score correctScore={correctScore} wrongScore={wrongScore}></Score>
-            {OPTIONS_LENGTH === matches.length && (
-                <Button className='continue-button' onClick={handleContinue} variant="contained">
-                    Продолжить
-                </Button>
-            )}</>
+        <QuizLayout
+            menuComponent={<FlagMainMenu />}
+            gameAreaComponent={<div />}
+            isLoading={true}
+            loadingMessage="Loading flags..."
+        />
     )
 }

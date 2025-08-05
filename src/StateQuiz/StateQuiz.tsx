@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
 import { Map } from "./Map"
 import { CountryOption } from "../Common/types"
@@ -7,10 +7,8 @@ import { Quiz } from "../Quiz/Quiz"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryMainMenu } from "../CountryQuiz/CountryMainMenu"
 import { useAuth } from "../Common/Auth/AuthContext"
-import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
-import { useOfflineDetector } from "../Common/Network/useOfflineDetector"
-import { OfflineIndicator } from "../Common/Network/OfflineIndicator"
-import { SaveStatusIndicator } from "../Common/SaveStatusIndicator"
+import { QuizLayout } from "../Common/QuizLayout"
+import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
 import geoJson from '../Common/GeoData/us.json'
 
 const StateQuiz = () => {
@@ -18,139 +16,29 @@ const StateQuiz = () => {
     const OPTIONS_SIZE = 3
 
     const { user, isAuthenticated } = useAuth()
-    const { isOnline, isOffline } = useOfflineDetector()
-
-    const [disabled, setDisabled] = useState(false)
-    const [options, setOptions] = useState<CountryOption[]>([])
-    const [correctOption, setCorrectOption] = useState<CountryOption>()
-    const [correctScore, setCorrectScore] = useState(0)
-    const [wrongScore, setWrongScore] = useState(0)
-
-    // Game session state for progress tracking
-    const [gameSession, setGameSession] = useState<GameSession>({
+    
+    // Use shared base quiz hook for common quiz functionality
+    const {
+        correctScore,
+        wrongScore,
+        disabled,
+        actions,
+        gameProgress
+    } = useBaseQuiz({
         gameType: 'states',
-        correctAnswers: 0,
-        wrongAnswers: 0,
-        sessionStartTime: new Date()
+        isAuthenticated,
+        user
     })
 
-    // Saving state
-    const [isSaving, setIsSaving] = useState(false)
-    const [saveError, setSaveError] = useState<string | null>(null)
+    const [options, setOptions] = useState<CountryOption[]>([])
+    const [correctOption, setCorrectOption] = useState<CountryOption>()
 
     const geoData = geoJson as ExtendedFeatureCollection
     const settings = getSettings()
 
     useEffect(() => {
         startGame()
-        // Initialize session start time when game begins
-        setGameSession(prev => ({
-            ...prev,
-            sessionStartTime: new Date()
-        }))
     }, [])
-
-    // Update game session when scores change
-    useEffect(() => {
-        setGameSession(prev => ({
-            ...prev,
-            correctAnswers: correctScore,
-            wrongAnswers: wrongScore
-        }))
-    }, [correctScore, wrongScore])
-
-    // Auto-save progress function
-    const autoSaveProgress = useCallback(async () => {
-        if (correctScore === 0 && wrongScore === 0) return
-
-        setIsSaving(true)
-        setSaveError(null)
-
-        try {
-            const currentSession: GameSession = {
-                ...gameSession,
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionEndTime: new Date()
-            }
-
-            if (isAuthenticated && user) {
-                // Save for authenticated users
-                await gameProgressService.saveGameProgress(user.id, 'states', currentSession)
-                console.log('States quiz progress auto-saved for authenticated user')
-            } else {
-                // Save temporarily for unauthenticated users
-                gameProgressService.saveTempSession(currentSession)
-                console.log('States quiz progress saved temporarily for unauthenticated user')
-            }
-        } catch (error) {
-            console.error('Failed to auto-save states quiz progress:', error)
-            setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
-        } finally {
-            setIsSaving(false)
-        }
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession, isOffline])
-
-    // Auto-save progress on score changes
-    useEffect(() => {
-        if (correctScore > 0 || wrongScore > 0) {
-            autoSaveProgress()
-        }
-    }, [correctScore, wrongScore, autoSaveProgress])
-
-    // Auto-save every 30 seconds during active gameplay
-    useEffect(() => {
-        if (correctScore === 0 && wrongScore === 0) return
-
-        const interval = setInterval(() => {
-            autoSaveProgress()
-        }, 30000) // 30 seconds
-
-        return () => clearInterval(interval)
-    }, [correctScore, wrongScore, autoSaveProgress])
-
-    // Handle online/offline transitions
-    useEffect(() => {
-        if (isOnline && gameProgressService.hasPendingOfflineSessions()) {
-            // Try to sync offline sessions when coming back online
-            const syncOfflineSessions = async () => {
-                try {
-                    await gameProgressService.syncOfflineSessionsManually()
-                    console.log('Offline states quiz sessions synced successfully')
-                } catch (error) {
-                    console.error('Failed to sync offline states quiz sessions:', error)
-                }
-            }
-            
-            syncOfflineSessions()
-        }
-    }, [isOnline])
-
-    // Save progress when user leaves
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-            if (correctScore > 0 || wrongScore > 0) {
-                // Use synchronous save for beforeunload
-                const currentSession: GameSession = {
-                    ...gameSession,
-                    correctAnswers: correctScore,
-                    wrongAnswers: wrongScore,
-                    sessionEndTime: new Date()
-                }
-
-                if (isAuthenticated && user) {
-                    // For authenticated users, try to save but don't block
-                    gameProgressService.saveGameProgress(user.id, 'states', currentSession).catch(console.error)
-                } else {
-                    // For unauthenticated users, save to temp storage
-                    gameProgressService.saveTempSession(currentSession)
-                }
-            }
-        }
-
-        window.addEventListener('beforeunload', handleBeforeUnload)
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
 
     const getRandomOptions = (data: GeoPermissibleObjects[]) => {
         const states = data.map((state: any) => ({
@@ -169,55 +57,54 @@ const StateQuiz = () => {
 
     const onSubmit = async (isCorrect: boolean) => {
         if (isCorrect) {
-            setCorrectScore(correctScore + 1)
-        }
-        else {
-            setWrongScore(wrongScore + 1)
-        }
-        setDisabled(true)
-
-        // Auto-save after each answer
-        try {
-            await autoSaveProgress()
-        } catch (error) {
-            console.error('Failed to save progress after answer:', error)
+            await actions.onCorrectAnswer()
+        } else {
+            await actions.onWrongAnswer()
         }
     }
 
     // Function to be called when Quiz component is ready for next question
     const onQuizComplete = () => {
         startGame()
-        setDisabled(false)
+        actions.resetGame()
     }
 
-    if (geoData && options.length) {
-        return (
-            <>
-                <CountryMainMenu />
-                
-                {/* Offline Indicator */}
-                <OfflineIndicator />
-                
-                {/* Save Status Indicator */}
-                <SaveStatusIndicator isSaving={isSaving} saveError={saveError} />
-                
-                <Map
-                    geoData={geoData.features}
-                    selected={correctOption?.name ?? ''}
-                />
-                <Quiz
-                    showFlags={false}
-                    disabled={disabled}
-                    options={options.map(x => ({ code: x.code, name: x.name }))}
-                    correctOption={correctOption?.name ?? ''}
-                    onSubmit={onSubmit}
-                    onComplete={onQuizComplete} />
-                <Score correctScore={correctScore} wrongScore={wrongScore} />
-
-            </>
-        )
-    }
-    return <p>Loading...</p>
+    return (
+        <QuizLayout
+            menuComponent={<CountryMainMenu />}
+            gameAreaComponent={
+                geoData && options.length ? (
+                    <Map
+                        geoData={geoData.features}
+                        selected={correctOption?.name ?? ''}
+                    />
+                ) : null
+            }
+            quizComponent={
+                geoData && options.length ? (
+                    <Quiz
+                        showFlags={false}
+                        disabled={disabled}
+                        options={options.map(x => ({ code: x.code, name: x.name }))}
+                        correctOption={correctOption?.name ?? ''}
+                        onSubmit={onSubmit}
+                        onComplete={onQuizComplete}
+                    />
+                ) : null
+            }
+            scoreComponent={
+                geoData && options.length ? (
+                    <Score correctScore={correctScore} wrongScore={wrongScore} />
+                ) : null
+            }
+            showOfflineIndicator={true}
+            showSaveIndicator={true}
+            isSaving={gameProgress.isSaving}
+            saveError={gameProgress.saveError}
+            isLoading={!geoData || !options.length}
+            loadingMessage="Loading..."
+        />
+    )
 }
 
 export { StateQuiz }
