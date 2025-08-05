@@ -59,7 +59,12 @@
   - Add comprehensive tests for base quiz functionality
   - _Requirements: 1.1, 1.2, 2.1, 2.2_
 
-- [ ] 6. Refactor CountryQuiz component using shared hooks and components
+- [x] 6. Refactor CountryQuiz component using shared hooks and components
+
+
+
+
+
   - Replace duplicate logic with shared hooks (`useGameProgress`, `useBeforeUnload`, `useBaseQuiz`)
   - Use shared UI components (`SaveStatusIndicator`, `QuizLayout`)
   - Ensure all existing tests continue to pass

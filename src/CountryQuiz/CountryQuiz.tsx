@@ -1,5 +1,5 @@
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
@@ -8,10 +8,9 @@ import { AuthModal } from "../Common/Auth/AuthModal"
 import { useAuth } from "../Common/Auth/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
 import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
-import { gameProgressService, GameSession } from "../Common/GameProgress/GameProgressService"
-import { useOfflineDetector } from "../Common/Network/useOfflineDetector"
-import { OfflineIndicator } from "../Common/Network/OfflineIndicator"
-import { SaveStatusIndicator } from "../Common/SaveStatusIndicator"
+import { gameProgressService } from "../Common/GameProgress/GameProgressService"
+import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
+import { QuizLayout } from "../Common/QuizLayout"
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
@@ -22,43 +21,36 @@ const CountryQuiz = () => {
     const OPTIONS_SIZE = 3
 
     const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-    const { isOnline, isOffline } = useOfflineDetector()
 
     const geoData = geoJson as ExtendedFeatureCollection
     const flags = flagJson as CountryFlagData[]
 
     const settings = getSettings()
 
-    const [correctScore, setCorrectScore] = useState(0)
-    const [wrongScore, setWrongScore] = useState(0)
+    // Use shared base quiz hook for common functionality
+    const {
+        correctScore,
+        wrongScore,
+        disabled,
+        gameSession,
+        actions,
+        gameProgress
+    } = useBaseQuiz({
+        gameType: 'countries',
+        isAuthenticated,
+        user
+    })
+
     const [options, setOptions] = useState<CountryOption[]>([])
     const [correctOption, setCorrectOption] = useState<CountryOption>()
-    const [disabled, setDisabled] = useState(false)
     
     // Auth modal state
     const [showAuthModal, setShowAuthModal] = useState(false)
     const [hasDeclinedAuth, setHasDeclinedAuth] = useState(false)
-    
-    // Game session state for progress tracking
-    const [gameSession, setGameSession] = useState<GameSession>({
-        gameType: 'countries',
-        correctAnswers: 0,
-        wrongAnswers: 0,
-        sessionStartTime: new Date()
-    })
-
-    // Saving state
-    const [isSaving, setIsSaving] = useState(false)
-    const [saveError, setSaveError] = useState<string | null>(null)
 
 
     useEffect(() => {
         startGame()
-        // Initialize session start time when game begins
-        setGameSession(prev => ({
-            ...prev,
-            sessionStartTime: new Date()
-        }))
     }, [])
 
     // Show auth modal for unauthenticated users when auth loading is complete
@@ -67,15 +59,6 @@ const CountryQuiz = () => {
             setShowAuthModal(true)
         }
     }, [authLoading, isAuthenticated, hasDeclinedAuth])
-
-    // Update game session when scores change
-    useEffect(() => {
-        setGameSession(prev => ({
-            ...prev,
-            correctAnswers: correctScore,
-            wrongAnswers: wrongScore
-        }))
-    }, [correctScore, wrongScore])
 
     // Hide auth modal when user becomes authenticated and migrate progress
     useEffect(() => {
@@ -88,55 +71,7 @@ const CountryQuiz = () => {
         }
     }, [isAuthenticated, showAuthModal, user, correctScore, wrongScore])
 
-    // Auto-save progress function
-    const autoSaveProgress = useCallback(async () => {
-        if (correctScore === 0 && wrongScore === 0) return
 
-        setIsSaving(true)
-        setSaveError(null)
-
-        try {
-            const currentSession: GameSession = {
-                ...gameSession,
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionEndTime: new Date()
-            }
-
-            if (isAuthenticated && user) {
-                // Save for authenticated users
-                await gameProgressService.saveGameProgress(user.id, 'countries', currentSession)
-                console.log('Progress auto-saved for authenticated user')
-            } else {
-                // Save temporarily for unauthenticated users
-                gameProgressService.saveTempSession(currentSession)
-                console.log('Progress saved temporarily for unauthenticated user')
-            }
-        } catch (error) {
-            console.error('Failed to auto-save progress:', error)
-            setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
-        } finally {
-            setIsSaving(false)
-        }
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession, isOffline])
-
-    // Auto-save progress periodically and on score changes
-    useEffect(() => {
-        if (correctScore > 0 || wrongScore > 0) {
-            autoSaveProgress()
-        }
-    }, [correctScore, wrongScore, autoSaveProgress])
-
-    // Auto-save every 30 seconds during active gameplay
-    useEffect(() => {
-        if (correctScore === 0 && wrongScore === 0) return
-
-        const interval = setInterval(() => {
-            autoSaveProgress()
-        }, 30000) // 30 seconds
-
-        return () => clearInterval(interval)
-    }, [correctScore, wrongScore, autoSaveProgress])
 
     const startGame = () => {
 
@@ -204,25 +139,16 @@ const CountryQuiz = () => {
 
     const onSubmit = async (isCorrect: boolean) => {
         if (isCorrect) {
-            setCorrectScore(correctScore + 1)
-        }
-        else {
-            setWrongScore(wrongScore + 1)
-        }
-        setDisabled(true)
-
-        // Auto-save after each answer
-        try {
-            await autoSaveProgress()
-        } catch (error) {
-            console.error('Failed to save progress after answer:', error)
+            await actions.onCorrectAnswer()
+        } else {
+            await actions.onWrongAnswer()
         }
     }
 
     // Function to be called when Quiz component is ready for next question
     const onQuizComplete = () => {
         startGame()
-        setDisabled(false)
+        actions.resetGame()
     }
 
     // Handle auth modal close (when user clicks "Continue without login")
@@ -236,126 +162,63 @@ const CountryQuiz = () => {
         if (!user) return
         
         try {
-            // Create current session data
-            const currentSession: GameSession = {
-                gameType: 'countries',
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionStartTime: gameSession.sessionStartTime,
-                sessionEndTime: new Date()
-            }
-            
-            // Save current session progress
-            await gameProgressService.saveGameProgress(user.id, 'countries', currentSession)
+            // Save current session progress using the shared hook's method
+            await gameProgress.autoSaveProgress()
             
             // Also migrate any temporary progress that might exist
             await gameProgressService.migrateTempProgress(user)
             
-            console.log('User authenticated during game, progress saved:', currentSession)
+            console.log('User authenticated during game, progress saved')
         } catch (error) {
             console.error('Failed to save progress after authentication:', error)
         }
     }
 
-    // Save progress when game session ends (for authenticated users)
-    const saveGameSession = async () => {
-        if (!isAuthenticated || !user) return
-        
-        try {
-            const sessionToSave: GameSession = {
-                ...gameSession,
-                correctAnswers: correctScore,
-                wrongAnswers: wrongScore,
-                sessionEndTime: new Date()
-            }
-            
-            await gameProgressService.saveGameProgress(user.id, 'countries', sessionToSave)
-            console.log('Game session saved:', sessionToSave)
-        } catch (error) {
-            console.error('Failed to save game session:', error)
-        }
-    }
-
-    // Handle online/offline transitions
-    useEffect(() => {
-        if (isOnline && gameProgressService.hasPendingOfflineSessions()) {
-            // Try to sync offline sessions when coming back online
-            const syncOfflineSessions = async () => {
-                try {
-                    await gameProgressService.syncOfflineSessionsManually()
-                    console.log('Offline sessions synced successfully')
-                } catch (error) {
-                    console.error('Failed to sync offline sessions:', error)
-                }
-            }
-            
-            syncOfflineSessions()
-        }
-    }, [isOnline])
-
-    // Save progress when user leaves or session ends
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-            if (correctScore > 0 || wrongScore > 0) {
-                // Use synchronous save for beforeunload
-                const currentSession: GameSession = {
-                    ...gameSession,
-                    correctAnswers: correctScore,
-                    wrongAnswers: wrongScore,
-                    sessionEndTime: new Date()
-                }
-
-                if (isAuthenticated && user) {
-                    // For authenticated users, try to save but don't block
-                    gameProgressService.saveGameProgress(user.id, 'countries', currentSession).catch(console.error)
-                } else {
-                    // For unauthenticated users, save to temp storage
-                    gameProgressService.saveTempSession(currentSession)
-                }
-            }
-        }
-
-        window.addEventListener('beforeunload', handleBeforeUnload)
-        return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-    }, [isAuthenticated, user, correctScore, wrongScore, gameSession])
-
     if (geoData && options.length) {
         return (
-            <div >
-                <MainMenu />
-                
-                {/* Offline Indicator */}
-                <OfflineIndicator />
-                
-                {/* Save Status Indicator */}
-                <SaveStatusIndicator isSaving={isSaving} saveError={saveError} />
-                
-                <Globe
-                    geoData={geoData.features}
-                    selectedCountry={correctOption?.name ?? ''}
-                    showPin={settings.showPin}
-                    showZoomButtons={settings.showZoomButtons}
-                    showBorders={settings.showBorders}
-                />
-                <Quiz
-                    showFlags
-                    disabled={disabled}
-                    options={options.map(x => ({ code: x.code, name: x.translatedName }))}
-                    correctOption={correctOption?.translatedName ?? ''}
-                    onSubmit={onSubmit}
-                    onComplete={onQuizComplete} />
-                <Score correctScore={correctScore} wrongScore={wrongScore} />
-                
-                {/* Auth Modal for unauthenticated users */}
-                <AuthModal
-                    open={showAuthModal}
-                    onClose={handleAuthModalClose}
-
-                />
-            </div>
+            <QuizLayout
+                menuComponent={<MainMenu />}
+                gameAreaComponent={
+                    <Globe
+                        geoData={geoData.features}
+                        selectedCountry={correctOption?.name ?? ''}
+                        showPin={settings.showPin}
+                        showZoomButtons={settings.showZoomButtons}
+                        showBorders={settings.showBorders}
+                    />
+                }
+                quizComponent={
+                    <Quiz
+                        showFlags
+                        disabled={disabled}
+                        options={options.map(x => ({ code: x.code, name: x.translatedName }))}
+                        correctOption={correctOption?.translatedName ?? ''}
+                        onSubmit={onSubmit}
+                        onComplete={onQuizComplete}
+                    />
+                }
+                scoreComponent={<Score correctScore={correctScore} wrongScore={wrongScore} />}
+                showOfflineIndicator={true}
+                showSaveIndicator={true}
+                isSaving={gameProgress.isSaving}
+                saveError={gameProgress.saveError}
+                additionalContent={
+                    <AuthModal
+                        open={showAuthModal}
+                        onClose={handleAuthModalClose}
+                    />
+                }
+            />
         )
     }
-    return <p> Loading...</p>
+    return (
+        <QuizLayout
+            menuComponent={<MainMenu />}
+            gameAreaComponent={<div />}
+            isLoading={true}
+            loadingMessage="Loading..."
+        />
+    )
 }
 
 export { CountryQuiz }

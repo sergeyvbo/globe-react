@@ -77,24 +77,34 @@ vi.mock('../Globe/Globe', () => ({
 }))
 
 vi.mock('../Quiz/Quiz', () => ({
-  Quiz: ({ onSubmit, disabled, correctOption }: any) => (
-    <div data-testid="quiz">
-      <button
-        data-testid="correct-answer"
-        onClick={() => onSubmit(true)}
-        disabled={disabled}
-      >
-        {correctOption}
-      </button>
-      <button
-        data-testid="wrong-answer"
-        onClick={() => onSubmit(false)}
-        disabled={disabled}
-      >
-        Wrong Answer
-      </button>
-    </div>
-  )
+  Quiz: ({ onSubmit, onComplete, disabled, correctOption }: any) => {
+    const handleSubmit = (isCorrect: boolean) => {
+      onSubmit(isCorrect)
+      // Simulate the Quiz component's timeout behavior
+      setTimeout(() => {
+        onComplete?.()
+      }, 2000)
+    }
+
+    return (
+      <div data-testid="quiz">
+        <button
+          data-testid="correct-answer"
+          onClick={() => handleSubmit(true)}
+          disabled={disabled}
+        >
+          {correctOption}
+        </button>
+        <button
+          data-testid="wrong-answer"
+          onClick={() => handleSubmit(false)}
+          disabled={disabled}
+        >
+          Wrong Answer
+        </button>
+      </div>
+    )
+  }
 }))
 
 vi.mock('./Score', () => ({
@@ -348,9 +358,7 @@ describe('CountryQuiz', () => {
     fireEvent.click(wrongButton)
 
     await waitFor(() => {
-      expect(screen.getByText((content, element) => {
-        return element?.textContent === 'Score: 1/1'
-      })).toBeInTheDocument()
+      expect(screen.getByTestId('score')).toHaveTextContent('Score: 1/1')
     }, { timeout: 5000 })
   })
 
