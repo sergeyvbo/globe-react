@@ -18,21 +18,21 @@ const MainMenu = () => {
     const { user, isAuthenticated, logout } = useAuth()
     const { openModal } = useModal()
 
-    const handleSettingsChange = (key: string, value: string | boolean) => {
+    const handleSettingsChange = (key: string, value: string | boolean): void => {
         const newSettings = { ...settings, [key]: value }
         setSettings(newSettings)
         localStorage.setItem('countryQuizSettings', JSON.stringify(newSettings))
     }
 
-    const handleLoginClick = () => {
+    const handleLoginClick = (): void => {
         setAuthModalOpen(true)
     }
 
-    const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    const handleProfileClick = (event: React.MouseEvent<HTMLElement>): void => {
         setProfileMenuAnchor(event.currentTarget)
     }
 
-    const handleProfileMenuClose = () => {
+    const handleProfileMenuClose = (): void => {
         setProfileMenuAnchor(null)
     }
 
@@ -45,17 +45,17 @@ const MainMenu = () => {
         }
     }
 
-    const handleProfileNavigation = () => {
+    const handleProfileNavigation = (): void => {
         openModal('userProfile')
         handleProfileMenuClose()
     }
 
-    const handleStatsNavigation = () => {
+    const handleStatsNavigation = (): void => {
         openModal('statistics')
         handleProfileMenuClose()
     }
 
-    const handleLeaderboardNavigation = () => {
+    const handleLeaderboardNavigation = (): void => {
         openModal('leaderboard')
         handleProfileMenuClose()
     }

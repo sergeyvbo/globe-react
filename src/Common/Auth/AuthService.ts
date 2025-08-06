@@ -4,7 +4,8 @@ import {
   AuthErrorType,
   AuthSession,
   OAuthProvider,
-  RFC9457Error
+  RFC9457Error,
+  ApiErrorDetails
 } from '../types'
 import { oauth2Service } from './OAuth2Service'
 import { getAuthString } from '../../Localization/strings'
@@ -15,9 +16,9 @@ import { ErrorTypeMapper } from '../ErrorTypeMapper'
 // Custom AuthError class
 export class AuthServiceError extends Error {
   public type: AuthErrorType
-  public details?: any
+  public details?: ApiErrorDetails
   
-  constructor({ type, message, details }: { type: AuthErrorType; message: string; details?: any }) {
+  constructor({ type, message, details }: { type: AuthErrorType; message: string; details?: ApiErrorDetails }) {
     super(message)
     this.name = 'AuthServiceError'
     this.type = type
@@ -190,7 +191,7 @@ class HttpClient {
     })
   }
   
-  static post<T>(endpoint: string, data?: any, token?: string): Promise<T> {
+  static post<T>(endpoint: string, data?: unknown, token?: string): Promise<T> {
     const headers: Record<string, string> = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -203,7 +204,7 @@ class HttpClient {
     })
   }
   
-  static put<T>(endpoint: string, data?: any, token?: string): Promise<T> {
+  static put<T>(endpoint: string, data?: unknown, token?: string): Promise<T> {
     const headers: Record<string, string> = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -416,7 +417,7 @@ export class AuthService {
       throw new AuthServiceError({
         type: AuthErrorType.TOKEN_EXPIRED,
         message: 'Token refresh failed',
-        details: error
+        details: error as ApiErrorDetails
       })
     }
   }

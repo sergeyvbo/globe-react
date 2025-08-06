@@ -154,7 +154,7 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
     )
   }
 
-  const getGameTypeIcon = (gameType: string) => {
+  const getGameTypeIcon = (gameType: string): React.ReactElement => {
     switch (gameType) {
       case 'countries':
         return <PublicIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -167,7 +167,7 @@ export const UserStats: React.FC<UserStatsProps> = ({ className }) => {
     }
   }
 
-  const getGameTypeName = (gameType: string) => {
+  const getGameTypeName = (gameType: string): string => {
     switch (gameType) {
       case 'countries':
         return 'Countries Quiz'

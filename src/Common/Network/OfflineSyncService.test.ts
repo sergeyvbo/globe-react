@@ -74,7 +74,7 @@ describe('OfflineSyncService', () => {
       const testData = { test: 'data' }
 
       // Mock getItem to return the stored actions
-      let storedActions: any[] = []
+      let storedActions: PendingAction[] = []
       localStorageMock.getItem.mockImplementation(() => {
         return storedActions.length > 0 ? JSON.stringify(storedActions) : null
       })

@@ -6,7 +6,7 @@ import { useAuth } from '../Auth/AuthContext'
 export interface PendingAction {
   id: string
   type: 'game_session' | 'profile_update' | 'user_action'
-  data: any
+  data: Record<string, unknown>
   timestamp: string
   retryCount: number
   maxRetries: number
@@ -69,7 +69,7 @@ class OfflineSyncService {
   }
 
   // Add action to pending queue when offline
-  async addPendingAction(type: PendingAction['type'], data: any): Promise<void> {
+  async addPendingAction(type: PendingAction['type'], data: Record<string, unknown>): Promise<void> {
     const action: PendingAction = {
       id: this.generateActionId(),
       type,
@@ -198,7 +198,7 @@ class OfflineSyncService {
   }
 
   // Sync game session data
-  private async syncGameSession(data: any): Promise<void> {
+  private async syncGameSession(data: Record<string, unknown>): Promise<void> {
     if (!gameStatsApiService.isAuthenticated()) {
       throw new Error('User not authenticated for game session sync')
     }
@@ -207,14 +207,14 @@ class OfflineSyncService {
   }
 
   // Sync profile update
-  private async syncProfileUpdate(data: any): Promise<void> {
+  private async syncProfileUpdate(data: Record<string, unknown>): Promise<void> {
     // This would integrate with AuthService for profile updates
     // For now, we'll just log it as it's not implemented in the current system
     console.log('Profile update sync not implemented yet:', data)
   }
 
   // Sync generic user action
-  private async syncUserAction(data: any): Promise<void> {
+  private async syncUserAction(data: Record<string, unknown>): Promise<void> {
     // Handle other types of user actions
     console.log('User action sync:', data)
   }

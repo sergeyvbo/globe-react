@@ -199,7 +199,7 @@ export const UserProfile: React.FC = () => {
       setSuccessMessage(getAuthString('passwordChanged'))
       setIsChangingPassword(false)
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password change error:', error)
       
       if (error.type === 'INVALID_CREDENTIALS') {

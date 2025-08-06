@@ -76,7 +76,7 @@ export enum AuthErrorType {
 export interface AuthError {
     type: AuthErrorType
     message: string
-    details?: any
+    details?: ApiErrorDetails
 }
 
 export interface ValidationResult {
@@ -211,7 +211,7 @@ export interface ProblemDetails {
     status?: number
     detail?: string
     instance?: string
-    [key: string]: any // For additional fields
+    [key: string]: unknown // For additional fields
 }
 
 // Extended interface for validation errors
@@ -221,3 +221,191 @@ export interface ValidationProblemDetails extends ProblemDetails {
 
 // Union type for all possible RFC 9457 errors
 export type RFC9457Error = ProblemDetails | ValidationProblemDetails
+
+// Utility types for common patterns
+export type SelectChangeEvent = React.ChangeEvent<HTMLSelectElement>
+export type InputChangeEvent = React.ChangeEvent<HTMLInputElement>
+
+// Generic array utility types
+export type ArrayElement<T extends readonly unknown[]> = T extends readonly (infer U)[] ? U : never
+
+// D3 GeoJSON property types for better type safety
+export interface CountryProperties {
+    name: string
+    name_en?: string
+    name_ru?: string
+    iso_a2: string
+    type: string
+    continent: string
+    subregion: string
+    [key: string]: unknown
+}
+
+export interface StateProperties {
+    NAME: string
+    STATE: string
+    [key: string]: unknown
+}
+
+// Generic GeoJSON feature type
+export interface GeoFeature<T = Record<string, unknown>> {
+    properties: T
+    [key: string]: unknown
+}
+
+// Specific feature types
+export type CountryFeature = GeoFeature<CountryProperties>
+export type StateFeature = GeoFeature<StateProperties>
+
+// Error handling utility types
+export interface ApiErrorDetails {
+    code?: string
+    field?: string
+    message?: string
+    [key: string]: unknown
+}
+
+// Generic API response wrapper
+export interface ApiResponse<T> {
+    success: boolean
+    data?: T
+    error?: string
+    status?: number
+}
+
+// Event handler utility types
+export type EventHandler<T = Event> = (event: T) => void
+export type AsyncEventHandler<T = Event> = (event: T) => Promise<void>
+
+// Common function types
+export type Predicate<T> = (item: T) => boolean
+export type Mapper<T, U> = (item: T) => U
+export type Comparator<T> = (a: T, b: T) => number
+
+// Utility types for better type safety
+export type NonEmptyArray<T> = [T, ...T[]]
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>
+
+// Error handling utility types
+export interface ErrorWithType {
+    type: string
+    message: string
+    details?: ApiErrorDetails
+}
+
+export interface ServiceError extends ErrorWithType {
+    type: AuthErrorType
+}
+
+// HTTP utility types
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+export type HttpHeaders = Record<string, string>
+export type HttpRequestBody = string | globalThis.FormData | URLSearchParams | null
+
+export interface HttpRequestConfig {
+    method?: HttpMethod
+    headers?: HttpHeaders
+    body?: HttpRequestBody
+    timeout?: number
+}
+
+// Quiz-specific utility types
+export type QuizOption<T = string> = {
+    value: T
+    label: string
+    isCorrect?: boolean
+}
+
+export type QuizAnswer<T = string> = {
+    selectedOption: T
+    isCorrect: boolean
+    timestamp: Date
+}
+
+// Component prop utility types
+export type ComponentWithChildren<T = {}> = T & {
+    children: React.ReactNode
+}
+
+export type ComponentWithClassName<T = {}> = T & {
+    className?: string
+}
+
+export type ComponentWithTestId<T = {}> = T & {
+    'data-testid'?: string
+}
+
+// Form utility types
+export type FormFieldValue = string | number | boolean | Date | null | undefined
+export type FormData<T extends Record<string, FormFieldValue>> = T
+export type FormErrors<T extends Record<string, FormFieldValue>> = Partial<Record<keyof T, string>>
+
+// Async operation utility types
+export type AsyncOperationState<T = unknown, E = Error> = {
+    data: T | null
+    loading: boolean
+    error: E | null
+}
+
+export type AsyncOperation<T = unknown, E = Error> = {
+    execute: () => Promise<T>
+    reset: () => void
+} & AsyncOperationState<T, E>
+
+// Array utility types for better type safety
+export type Head<T extends readonly unknown[]> = T extends readonly [infer H, ...unknown[]] ? H : never
+export type Tail<T extends readonly unknown[]> = T extends readonly [unknown, ...infer Rest] ? Rest : []
+export type Last<T extends readonly unknown[]> = T extends readonly [...unknown[], infer L] ? L : never
+
+// Object utility types
+export type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
+}
+
+export type DeepRequired<T> = {
+    [P in keyof T]-?: T[P] extends object ? DeepRequired<T[P]> : T[P]
+}
+
+// Function utility types with better typing
+export type AsyncFunction<TArgs extends readonly unknown[] = [], TReturn = unknown> = 
+    (...args: TArgs) => Promise<TReturn>
+
+export type SyncFunction<TArgs extends readonly unknown[] = [], TReturn = unknown> = 
+    (...args: TArgs) => TReturn
+
+export type AnyFunction<TArgs extends readonly unknown[] = [], TReturn = unknown> = 
+    SyncFunction<TArgs, TReturn> | AsyncFunction<TArgs, TReturn>
+
+// Event handler types with proper typing
+export type ChangeEventHandler<T = HTMLInputElement> = (event: React.ChangeEvent<T>) => void
+export type ClickEventHandler<T = HTMLElement> = (event: React.MouseEvent<T>) => void
+export type SubmitEventHandler<T = HTMLFormElement> = (event: React.FormEvent<T>) => void
+export type KeyboardEventHandler<T = HTMLElement> = (event: React.KeyboardEvent<T>) => void
+
+// API response utility types
+export type ApiSuccessResponse<T> = {
+    success: true
+    data: T
+    error?: never
+}
+
+export type ApiErrorResponse = {
+    success: false
+    data?: never
+    error: string
+    details?: ApiErrorDetails
+}
+
+export type ApiResponseUnion<T> = ApiSuccessResponse<T> | ApiErrorResponse
+
+// Branded types for better type safety
+export type Brand<T, B> = T & { __brand: B }
+export type UserId = Brand<string, 'UserId'>
+export type SessionId = Brand<string, 'SessionId'>
+export type GameId = Brand<string, 'GameId'>
+
+// Time utility types
+export type Timestamp = Brand<number, 'Timestamp'>
+export type Duration = Brand<number, 'Duration'>
+export type ISODateString = Brand<string, 'ISODateString'>

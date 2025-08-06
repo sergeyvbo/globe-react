@@ -1,4 +1,4 @@
-import { AuthErrorType, RFC9457Error } from './types'
+import { AuthErrorType, RFC9457Error, ApiErrorDetails } from './types'
 import { RFC9457ErrorParser } from './RFC9457ErrorParser'
 
 /**
@@ -62,25 +62,25 @@ export class ErrorTypeMapper {
    * @param error - RFC 9457 error object
    * @returns Error details object with all RFC 9457 fields
    */
-  static createErrorDetails(error: RFC9457Error): any {
-    const details: any = {
-      status: error.status,
-      type: error.type,
-      title: error.title,
-      detail: error.detail,
-      instance: error.instance
+  static createErrorDetails(error: RFC9457Error): ApiErrorDetails {
+    const details: ApiErrorDetails = {
+      code: error.type,
+      message: error.detail || error.title || 'An error occurred'
     }
     
     // Add validation errors if present
     const validationErrors = RFC9457ErrorParser.getValidationErrors(error)
     if (Object.keys(validationErrors).length > 0) {
-      details.errors = validationErrors
+      details.field = Object.keys(validationErrors)[0] // First field with error
     }
     
     // Add any additional fields from the error object
     Object.keys(error).forEach(key => {
       if (!['type', 'title', 'status', 'detail', 'instance', 'errors'].includes(key)) {
-        details[key] = error[key]
+        const value = error[key]
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          details[key] = value
+        }
       }
     })
     

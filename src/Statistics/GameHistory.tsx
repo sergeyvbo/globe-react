@@ -37,7 +37,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../Common/Auth'
 import { gameStatsApiService, GameStatsApiError } from '../Common/GameProgress/GameStatsApiService'
-import { GameHistoryResponse, GameSessionDto, AuthErrorType } from '../Common/types'
+import { GameHistoryResponse, GameSessionDto, AuthErrorType, SelectChangeEvent } from '../Common/types'
 
 interface GameHistoryProps {
   className?: string
@@ -118,21 +118,21 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
     loadGameHistory(currentPage, gameTypeFilter)
   }, [loadGameHistory, currentPage, gameTypeFilter])
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
+  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number): void => {
     setCurrentPage(page)
   }
 
-  const handleGameTypeFilterChange = (event: any) => {
+  const handleGameTypeFilterChange = (event: SelectChangeEvent): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes
   }
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     loadGameHistory(currentPage, gameTypeFilter)
   }
 
-  const getGameTypeIcon = (gameType: string) => {
+  const getGameTypeIcon = (gameType: string): React.ReactElement => {
     switch (gameType.toLowerCase()) {
       case 'countries':
         return <PublicIcon sx={{ fontSize: 20, color: 'primary.main' }} />
@@ -145,7 +145,7 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
     }
   }
 
-  const getGameTypeName = (gameType: string) => {
+  const getGameTypeName = (gameType: string): string => {
     switch (gameType.toLowerCase()) {
       case 'countries':
         return 'Countries'
@@ -158,13 +158,13 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
     }
   }
 
-  const getAccuracyColor = (accuracy: number) => {
+  const getAccuracyColor = (accuracy: number): 'success' | 'warning' | 'error' => {
     if (accuracy >= 80) return 'success'
     if (accuracy >= 60) return 'warning'
     return 'error'
   }
 
-  const formatDuration = (durationMs: number) => {
+  const formatDuration = (durationMs: number): string => {
     const seconds = Math.floor(durationMs / 1000)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
@@ -175,7 +175,7 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
     return `${remainingSeconds}s`
   }
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString)
     return {
       date: date.toLocaleDateString(),

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { AuthProvider, useAuth } from './AuthContext'
 import React from 'react'
+import { ApiErrorDetails } from '../types'
 
 // Mock the AuthService
 vi.mock('./AuthService', () => ({
@@ -21,7 +22,7 @@ vi.mock('./AuthService', () => ({
     validateLoginData: vi.fn(),
   },
   AuthServiceError: class AuthServiceError extends Error {
-    constructor(public type: string, message: string, public details?: any) {
+    constructor(public type: string, message: string, public details?: ApiErrorDetails) {
       super(message)
     }
   }

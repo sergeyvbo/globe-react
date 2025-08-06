@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
+import { LeaderboardEntryDto } from '../types'
 
 // Mock the services
 vi.mock('./GameStatsApiService', () => ({
@@ -187,7 +188,7 @@ const MockLeaderboardComponent: React.FC = () => {
         </button>
       </div>
       <div data-testid="leaderboard-list">
-        {leaderboard.players?.map((player: any, index: number) => (
+        {leaderboard.players?.map((player: LeaderboardEntryDto, index: number) => (
           <div 
             key={player.userId} 
             data-testid={`player-${index}`}

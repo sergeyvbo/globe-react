@@ -17,7 +17,7 @@ vi.mock('../Common/GameProgress/GameStatsApiService', () => ({
     getUserStats: vi.fn()
   },
   GameStatsApiError: class GameStatsApiError extends Error {
-    constructor(public type: string, message: string) {
+    constructor(public type: AuthErrorType, message: string) {
       super(message)
       this.name = 'GameStatsApiError'
     }

@@ -17,8 +17,8 @@ vi.mock('../Common/utils', () => ({
     showZoomButtons: true,
     showBorders: true
   }),
-  randomElement: (arr: any[]) => arr[0],
-  shuffleArray: (arr: any[]) => arr
+  randomElement: (arr: unknown[]) => arr[0],
+  shuffleArray: (arr: unknown[]) => arr
 }))
 
 // Mock geo data
@@ -54,8 +54,15 @@ vi.mock('./Map', () => ({
   )
 }))
 
+interface MockQuizProps {
+  onSubmit: (isCorrect: boolean) => void
+  onComplete?: () => void
+  disabled: boolean
+  correctOption: { name: string; code: string; translatedName: string }
+}
+
 vi.mock('../Quiz/Quiz', () => ({
-  Quiz: ({ onSubmit, onComplete, disabled, correctOption }: any) => {
+  Quiz: ({ onSubmit, onComplete, disabled, correctOption }: MockQuizProps) => {
     const handleSubmit = (isCorrect: boolean) => {
       onSubmit(isCorrect)
       // Simulate the Quiz component's timeout behavior

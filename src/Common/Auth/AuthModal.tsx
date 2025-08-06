@@ -155,7 +155,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await login(formData.email, formData.password)
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleAuthError(error)
     }
   }
@@ -167,7 +167,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await register(formData.email, formData.password, formData.confirmPassword)
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleAuthError(error)
     }
   }
@@ -179,7 +179,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setAuthError(null)
       await loginWithOAuth(provider)
       onClose()
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleAuthError(error)
     } finally {
       setOauthLoading(null)
@@ -187,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   // Handle authentication errors including RFC 9457 validation errors
-  const handleAuthError = (error: any) => {
+  const handleAuthError = (error: unknown) => {
     // Clear previous validation errors
     setValidationErrors({})
     setAuthError(null)
@@ -234,7 +234,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   // Get error message based on error type
-  const getErrorMessage = (error: any): string => {
+  const getErrorMessage = (error: unknown): string => {
     // If error has a message property, use it directly (for simple Error objects)
     if (error?.message && typeof error.message === 'string') {
       return error.message

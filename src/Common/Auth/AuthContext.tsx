@@ -5,7 +5,8 @@ import {
   OAuthProvider, 
   AuthSession, 
   AuthError, 
-  AuthErrorType 
+  AuthErrorType,
+  ServiceError
 } from '../types'
 import { authService } from './AuthService'
 import { gameProgressService } from '../GameProgress'
@@ -195,7 +196,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   // Helper function to convert AuthResponse to AuthSession
-  const createSessionFromAuthResponse = (authResponse: any): AuthSession => {
+  const createSessionFromAuthResponse = (authResponse: AuthResponse): AuthSession => {
     // Helper function to safely convert to Date object
     const toDate = (date: Date | string | undefined): Date | undefined => {
       if (!date) return undefined
@@ -274,7 +275,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       console.log('Token refresh successful')
       return true
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.warn('Automatic token refresh failed:', error)
       
       // If refresh fails, logout the user
@@ -385,14 +386,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setupSessionManagement(session)
       
       // Auto-sync game progress after successful login
-      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: any) => {
+      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: unknown) => {
         console.warn('Failed to auto-sync progress after login:', error)
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError: AuthError = {
-        type: error.type || AuthErrorType.INVALID_CREDENTIALS,
-        message: error.message || 'Login failed',
-        details: error.details
+        type: (error as ServiceError)?.type || AuthErrorType.INVALID_CREDENTIALS,
+        message: (error as ServiceError)?.message || 'Login failed',
+        details: (error as ServiceError)?.details
       }
       dispatch({ type: 'AUTH_ERROR', payload: authError })
       throw authError
@@ -413,14 +414,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setupSessionManagement(session)
       
       // Auto-sync game progress after successful registration
-      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: any) => {
+      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: unknown) => {
         console.warn('Failed to auto-sync progress after registration:', error)
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError: AuthError = {
-        type: error.type || AuthErrorType.VALIDATION_ERROR,
-        message: error.message || 'Registration failed',
-        details: error.details
+        type: (error as ServiceError)?.type || AuthErrorType.VALIDATION_ERROR,
+        message: (error as ServiceError)?.message || 'Registration failed',
+        details: (error as ServiceError)?.details
       }
       dispatch({ type: 'AUTH_ERROR', payload: authError })
       throw authError
@@ -441,14 +442,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setupSessionManagement(session)
       
       // Auto-sync game progress after successful OAuth login
-      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: any) => {
+      gameProgressService.autoSyncOnAuth(session.user.id).catch((error: unknown) => {
         console.warn('Failed to auto-sync progress after OAuth login:', error)
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError: AuthError = {
-        type: error.type || AuthErrorType.OAUTH_ERROR,
-        message: error.message || `OAuth login with ${provider} failed`,
-        details: error.details
+        type: (error as ServiceError)?.type || AuthErrorType.OAUTH_ERROR,
+        message: (error as ServiceError)?.message || `OAuth login with ${provider} failed`,
+        details: (error as ServiceError)?.details
       }
       dispatch({ type: 'AUTH_ERROR', payload: authError })
       throw authError
@@ -477,11 +478,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       dispatch({ type: 'UPDATE_USER', payload: data })
-    } catch (error: any) {
+    } catch (error: unknown) {
       const authError: AuthError = {
-        type: error.type || AuthErrorType.NETWORK_ERROR,
-        message: error.message || 'Failed to update profile',
-        details: error.details
+        type: (error as ServiceError)?.type || AuthErrorType.NETWORK_ERROR,
+        message: (error as ServiceError)?.message || 'Failed to update profile',
+        details: (error as ServiceError)?.details
       }
       dispatch({ type: 'AUTH_ERROR', payload: authError })
       throw authError

@@ -1,9 +1,11 @@
 import {
   LeaderboardResponse,
+  LeaderboardEntryDto,
   LeaderboardFilter,
   LeaderboardPeriod,
   AuthErrorType,
-  RFC9457Error
+  RFC9457Error,
+  ApiErrorDetails
 } from '../types'
 import { API_CONFIG } from '../config/api'
 import { RFC9457ErrorParser } from '../RFC9457ErrorParser'
@@ -12,9 +14,9 @@ import { ErrorTypeMapper } from '../ErrorTypeMapper'
 // Custom error class for Leaderboard API
 export class LeaderboardApiError extends Error {
   public type: AuthErrorType
-  public details?: any
+  public details?: ApiErrorDetails
   
-  constructor({ type, message, details }: { type: AuthErrorType; message: string; details?: any }) {
+  constructor({ type, message, details }: { type: AuthErrorType; message: string; details?: ApiErrorDetails }) {
     super(message)
     this.name = 'LeaderboardApiError'
     this.type = type
@@ -355,13 +357,13 @@ export class LeaderboardService {
   }
   
   // Transform backend response to frontend format
-  private transformLeaderboardResponse(backendResponse: any): LeaderboardResponse {
+  private transformLeaderboardResponse(backendResponse: LeaderboardResponse): LeaderboardResponse {
     const currentUserId = TokenManager.getAccessToken() ? this.getCurrentUserId() : null
     
     // Handle both old test format (players) and new backend format (entries)
     const entries = backendResponse.entries || backendResponse.players || []
     
-    const transformedEntries = entries.map((entry: any) => ({
+    const transformedEntries = entries.map((entry: LeaderboardEntryDto) => ({
       ...entry,
       // Add compatibility properties
       userName: entry.userName || entry.displayName,

@@ -10,7 +10,7 @@ vi.mock('../Common/Auth/AuthContext')
 vi.mock('../Common/Network/useOfflineDetector')
 vi.mock('../Common/GameProgress/GameProgressService')
 vi.mock('../Common/utils', () => ({
-  shuffleArray: (arr: any[]) => arr
+  shuffleArray: (arr: unknown[]) => arr
 }))
 
 // Mock flag data

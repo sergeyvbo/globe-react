@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 import { Leaderboard } from './Leaderboard'
 import { useAuth } from '../Common/Auth'
 import { leaderboardService } from '../Common/GameProgress/LeaderboardService'
-import { LeaderboardResponse } from '../Common/types'
+import { LeaderboardResponse, ApiErrorDetails } from '../Common/types'
 
 // Mock the auth hook
 vi.mock('../Common/Auth', () => ({
@@ -22,9 +22,9 @@ vi.mock('../Common/GameProgress/LeaderboardService', () => ({
   },
   LeaderboardApiError: class LeaderboardApiError extends Error {
     public type: string
-    public details?: any
+    public details?: ApiErrorDetails
 
-    constructor({ type, message, details }: { type: string; message: string; details?: any }) {
+    constructor({ type, message, details }: { type: string; message: string; details?: ApiErrorDetails }) {
       super(message)
       this.name = 'LeaderboardApiError'
       this.type = type

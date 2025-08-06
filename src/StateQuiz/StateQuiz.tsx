@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
 import { Map } from "./Map"
-import { CountryOption } from "../Common/types"
+import { CountryOption, StateFeature } from "../Common/types"
 import { Score } from "../CountryQuiz/Score"
 import { Quiz } from "../Quiz/Quiz"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
@@ -40,8 +40,8 @@ const StateQuiz = () => {
         startGame()
     }, [])
 
-    const getRandomOptions = (data: GeoPermissibleObjects[]) => {
-        const states = data.map((state: any) => ({
+    const getRandomOptions = (data: StateFeature[]): Array<{code: string, name: string}> => {
+        const states = data.map((state: StateFeature) => ({
             code: state.properties.STATE,
             name: state.properties.NAME,
         }))
@@ -49,7 +49,7 @@ const StateQuiz = () => {
         return shuffleArray(states).slice(0, OPTIONS_SIZE)
     }
 
-    const startGame = () => {
+    const startGame = (): void => {
         const randomOptions = getRandomOptions(geoData.features!)
         setOptions(randomOptions)
         setCorrectOption(randomElement(randomOptions))
@@ -64,7 +64,7 @@ const StateQuiz = () => {
     }
 
     // Function to be called when Quiz component is ready for next question
-    const onQuizComplete = () => {
+    const onQuizComplete = (): void => {
         startGame()
         actions.resetGame()
     }

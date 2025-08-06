@@ -3,9 +3,10 @@ import { Button } from "@mui/material"
 import * as d3 from 'd3'
 import { GeoPermissibleObjects } from 'd3-geo'
 import { useEffect, useRef } from "react"
+import { StateFeature } from '../Common/types'
 
 interface Props {
-    geoData: GeoPermissibleObjects[],
+    geoData: StateFeature[],
     selected: string,
 }
 
@@ -45,7 +46,7 @@ const Map = (props: Props) => {
             .data(geoData)
             .enter().append('path')
             .attr('d', path)
-            .attr('fill', (d: any) => d.properties.NAME === selected ? SELECTED_STATE_FILL : GROUND_FILL)
+            .attr('fill', (d: StateFeature) => d.properties.NAME === selected ? SELECTED_STATE_FILL : GROUND_FILL)
             .attr('stroke', 'black')
             .attr('stroke-width', 0.5);
 
@@ -59,7 +60,7 @@ const Map = (props: Props) => {
         zoomRef.current = zoom
 
         if (selected) {
-            const selectedState = geoData.find((d: any) => d.properties.NAME === selected);
+            const selectedState = geoData.find((d: StateFeature) => d.properties.NAME === selected);
             if (selectedState) {
                 const bounds = path.bounds(selectedState);
                 const dx = bounds[1][0] - bounds[0][0];
@@ -81,13 +82,13 @@ const Map = (props: Props) => {
         };
     }, [selected]);
 
-    const zoomIn = () => {
+    const zoomIn = (): void => {
         if (svgRef.current && zoomRef.current) {
             svgRef.current.transition().call(zoomRef.current.scaleBy, 2);
         }
     };
 
-    const zoomOut = () => {
+    const zoomOut = (): void => {
         if (svgRef.current && zoomRef.current) {
             svgRef.current.transition().call(zoomRef.current.scaleBy, 0.5);
         }

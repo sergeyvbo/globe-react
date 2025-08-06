@@ -50,7 +50,7 @@ function a11yProps(index: number) {
 export const StatsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0)
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number): void => {
     setTabValue(newValue)
   }
 

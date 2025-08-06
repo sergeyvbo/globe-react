@@ -6,7 +6,7 @@ import { API_CONFIG } from '../config/api'
 export interface ApiTestResult {
   success: boolean
   status?: number
-  data?: any
+  data?: unknown
   error?: string
   responseText?: string
 }

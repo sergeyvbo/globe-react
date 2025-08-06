@@ -1,10 +1,10 @@
 import { defaultSettings } from "./defaults";
 import { CountryQuizSettings } from "./types";
 
-const randomElement = (arr: any[]) => arr[random(arr.length)]
-const random = (max: number) => Math.floor(Math.random() * max)
+const randomElement = <T>(arr: T[]): T => arr[random(arr.length)]
+const random = (max: number): number => Math.floor(Math.random() * max)
 
-const shuffleArray = (array: any[]) => {
+const shuffleArray = <T>(array: T[]): T[] => {
     return array.sort(() => Math.random() - 0.5);
 };
 

@@ -46,7 +46,7 @@ const Quiz = (props: Props) => {
         }
     }, [showResult])
 
-    const proceedToNext = () => {
+    const proceedToNext = (): void => {
         setShowResult(false)
         setSelectedOption(null)
         setIsAnswerSubmitted(false)
@@ -54,7 +54,7 @@ const Quiz = (props: Props) => {
         onComplete?.()
     }
 
-    const onBtnClick = (option: string) => {
+    const onBtnClick = (option: string): void => {
         // If showing results and user clicks, proceed to next question
         if (showResult && canContinue) {
             proceedToNext()
@@ -77,7 +77,7 @@ const Quiz = (props: Props) => {
         }, 300) // Минимальная задержка для визуализации
     }
 
-    const buttonResultClass = (option: string) => {
+    const buttonResultClass = (option: string): string => {
         if (!showResult || !selectedOption) {
             return ''
         }

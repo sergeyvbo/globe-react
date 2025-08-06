@@ -7,7 +7,7 @@ import { MainMenu } from "../MainMenu/MainMenu"
 import { AuthModal } from "../Common/Auth/AuthModal"
 import { useAuth } from "../Common/Auth/AuthContext"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
-import { CountryFlagData, CountryOption, Difficulty } from "../Common/types"
+import { CountryFlagData, CountryOption, Difficulty, CountryFeature } from "../Common/types"
 import { gameProgressService } from "../Common/GameProgress/GameProgressService"
 import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
 import { QuizLayout } from "../Common/QuizLayout"
@@ -76,7 +76,7 @@ const CountryQuiz = () => {
     const startGame = () => {
 
         let countryData = geoData.features
-            .filter((obj: any) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties['type']))
+            .filter((obj: CountryFeature) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties.type))
 
         const randomOptions = getRandomOptions(countryData, settings.difficulty)
 
@@ -84,7 +84,7 @@ const CountryQuiz = () => {
         setCorrectOption(randomElement(randomOptions))
     }
 
-    const getFlag = (country: any): string => {
+    const getFlag = (country: CountryFeature): string => {
         return flags.find(x => x.name === country.properties.name
             || x.name === country.properties.name_en
             || x.name_ru === country.properties.name_ru
@@ -92,7 +92,7 @@ const CountryQuiz = () => {
         )?.code ?? ''
     }
 
-    const getRandomOptions = (countryData: GeoPermissibleObjects[], difficulty: Difficulty): CountryOption[] => {
+    const getRandomOptions = (countryData: CountryFeature[], difficulty: Difficulty): CountryOption[] => {
 
         let regionType: RegionType
         switch (difficulty) {
@@ -114,23 +114,23 @@ const CountryQuiz = () => {
         // select random region and find 3 random countries of that region
         // if there are less than 3 countries in this region, widen the region type
         if (regionType != 'world') {
-            let regions = Array.from(new Set(countryData.map((obj: any) => obj.properties[regionType] as string)))
+            let regions = Array.from(new Set(countryData.map((obj: CountryFeature) => obj.properties[regionType] as string)))
             regions = regions.filter(x => x != 'Seven seas (open ocean)')
             const randomRegion = randomElement(regions)
 
-            const regionCountries = filteredCountries.filter((x: any) => x.properties[regionType] === randomRegion)
+            const regionCountries = filteredCountries.filter((x: CountryFeature) => x.properties[regionType] === randomRegion)
             if (regionCountries.length >= OPTIONS_SIZE) {
                 filteredCountries = regionCountries
             }
             else {
-                filteredCountries = filteredCountries.filter((x: any) => x.properties.continent === (regionCountries[0] as any).continent)
+                filteredCountries = filteredCountries.filter((x: CountryFeature) => x.properties.continent === regionCountries[0].properties.continent)
             }
         }
 
         const language = settings && settings.language
         const countryNameField = language ? 'name_' + language : 'name'
         const countries = filteredCountries
-            .map((country: any) => ({ code: getFlag(country), name: country.properties.name, translatedName: country.properties[countryNameField] }))
+            .map((country: CountryFeature) => ({ code: getFlag(country), name: country.properties.name, translatedName: country.properties[countryNameField] as string }))
 
         const optionsArray = shuffleArray(countries).slice(0, OPTIONS_SIZE)
 

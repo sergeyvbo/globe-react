@@ -39,7 +39,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../Common/Auth'
 import { leaderboardService, LeaderboardApiError } from '../Common/GameProgress/LeaderboardService'
-import { LeaderboardResponse, LeaderboardEntryDto, LeaderboardPeriod, AuthErrorType } from '../Common/types'
+import { LeaderboardResponse, LeaderboardEntryDto, LeaderboardPeriod, AuthErrorType, SelectChangeEvent } from '../Common/types'
 
 interface LeaderboardProps {
   className?: string
@@ -124,27 +124,27 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     loadLeaderboard(currentPage, gameTypeFilter, periodFilter)
   }, [loadLeaderboard, currentPage, gameTypeFilter, periodFilter])
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number) => {
+  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number): void => {
     setCurrentPage(page)
   }
 
-  const handleGameTypeFilterChange = (event: any) => {
+  const handleGameTypeFilterChange = (event: SelectChangeEvent): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes
   }
 
-  const handlePeriodFilterChange = (event: any) => {
+  const handlePeriodFilterChange = (event: SelectChangeEvent): void => {
     const newPeriod = event.target.value as LeaderboardPeriod
     setPeriodFilter(newPeriod)
     setCurrentPage(1) // Reset to first page when filter changes
   }
 
-  const handleRefresh = () => {
+  const handleRefresh = (): void => {
     loadLeaderboard(currentPage, gameTypeFilter, periodFilter)
   }
 
-  const getGameTypeIcon = (gameType: string) => {
+  const getGameTypeIcon = (gameType: string): React.ReactElement => {
     switch (gameType?.toLowerCase()) {
       case 'countries':
         return <PublicIcon sx={{ fontSize: 20, color: 'primary.main' }} />
@@ -157,7 +157,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   }
 
-  const getGameTypeName = (gameType: string) => {
+  const getGameTypeName = (gameType: string): string => {
     switch (gameType?.toLowerCase()) {
       case 'countries':
         return 'Countries'
@@ -170,7 +170,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   }
 
-  const getPeriodName = (period: LeaderboardPeriod) => {
+  const getPeriodName = (period: LeaderboardPeriod): string => {
     switch (period) {
       case 'week':
         return 'This Week'
@@ -184,7 +184,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   }
 
-  const getRankIcon = (rank: number) => {
+  const getRankIcon = (rank: number): React.ReactElement | null => {
     switch (rank) {
       case 1:
         return <TrophyIcon sx={{ color: '#FFD700', fontSize: 24 }} /> // Gold
@@ -214,7 +214,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     }
   }
 
-  const getAccuracyColor = (accuracy: number) => {
+  const getAccuracyColor = (accuracy: number): 'success' | 'warning' | 'error' => {
     if (accuracy >= 80) return 'success'
     if (accuracy >= 60) return 'warning'
     return 'error'

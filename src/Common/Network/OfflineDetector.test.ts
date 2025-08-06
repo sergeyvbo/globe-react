@@ -23,7 +23,7 @@ global.fetch = vi.fn()
 import { offlineDetector, NetworkStatus } from './OfflineDetector'
 
 describe('OfflineDetector', () => {
-  let mockFetch: any
+  let mockFetch: vi.MockedFunction<typeof fetch>
 
   beforeEach(() => {
     vi.clearAllMocks()

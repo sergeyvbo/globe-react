@@ -5,13 +5,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CountryQuiz } from './CountryQuiz'
 import { AuthProvider } from '../Common/Auth/AuthContext'
 import AuthContext from '../Common/Auth/AuthContext'
+import { AuthContextType } from '../Common/types'
 
 // Mock the auth context for E2E scenarios
 const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <AuthProvider>{children}</AuthProvider>
 }
 
-const renderWithAuth = (component: React.ReactElement, authContext?: any) => {
+const renderWithAuth = (component: React.ReactElement, authContext?: Partial<AuthContextType>) => {
   const defaultAuthContext = {
     user: null,
     isAuthenticated: false,
