@@ -31,6 +31,8 @@
     "flags-info": "node scripts/flags-info.js",
     "sonar:start": "docker-compose up -d sonarqube sonarqube-db",
     "sonar:stop": "docker-compose down sonarqube sonarqube-db",
+    "sonar:setup-profile": "node scripts/setup-sonar-quality-profile.js",
+    "sonar:verify-rules": "node scripts/verify-sonar-rules.js",
     "analyze-frontend": "docker run --rm -v .:/usr/src -w /usr/src --network geoquiz-network -e SONAR_TOKEN sonarsource/sonar-scanner-cli -Dproject.settings=sonar-project-frontend.properties -Dsonar.host.url=http://sonarqube:9000",
     "analyze-backend": "docker run --rm -v .:/usr/src -w /usr/src/backend/GeoQuizApi --network geoquiz-network -e SONAR_TOKEN -e SONAR_HOST_URL=http://sonarqube:9000 mcr.microsoft.com/dotnet/sdk:10.0-preview sh -c \"dotnet tool install --global dotnet-sonarscanner && export PATH=\\\"$PATH:/root/.dotnet/tools\\\" && dotnet sonarscanner begin /k:geoquiz-backend /n:'GeoQuiz Backend' /v:1.0.0 /d:sonar.host.url=http://sonarqube:9000 /d:sonar.token=$SONAR_TOKEN && dotnet build && dotnet sonarscanner end /d:sonar.token=$SONAR_TOKEN\"",
     "analyze-all": "npm run analyze-frontend && npm run analyze-backend"

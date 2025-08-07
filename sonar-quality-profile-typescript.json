@@ -1,0 +1,179 @@
+{
+  "name": "GeoQuiz TypeScript/React Quality Profile",
+  "language": "ts",
+  "isDefault": true,
+  "rules": [
+    {
+      "key": "typescript:S1481",
+      "severity": "MAJOR",
+      "name": "Unused local variables should be removed",
+      "description": "Detects unused local variables and parameters"
+    },
+    {
+      "key": "typescript:S1128",
+      "severity": "MAJOR", 
+      "name": "Unused imports should be removed",
+      "description": "Detects unused import statements"
+    },
+    {
+      "key": "typescript:S3776",
+      "severity": "CRITICAL",
+      "name": "Cognitive Complexity of functions should not be too high",
+      "description": "Functions should not be too complex",
+      "params": {
+        "threshold": "15"
+      }
+    },
+    {
+      "key": "typescript:S1541",
+      "severity": "MAJOR",
+      "name": "Functions should not be too complex",
+      "description": "Cyclomatic complexity should not exceed threshold",
+      "params": {
+        "threshold": "10"
+      }
+    },
+    {
+      "key": "typescript:S138",
+      "severity": "MAJOR",
+      "name": "Functions should not have too many lines",
+      "description": "Functions should not exceed maximum lines",
+      "params": {
+        "max": "100"
+      }
+    },
+    {
+      "key": "typescript:S104",
+      "severity": "MAJOR",
+      "name": "Files should not have too many lines",
+      "description": "Files should not exceed maximum lines",
+      "params": {
+        "max": "500"
+      }
+    },
+    {
+      "key": "typescript:S107",
+      "severity": "MAJOR",
+      "name": "Functions should not have too many parameters",
+      "description": "Functions should not have too many parameters",
+      "params": {
+        "max": "7"
+      }
+    },
+    {
+      "key": "typescript:S1186",
+      "severity": "CRITICAL",
+      "name": "Methods should not be empty",
+      "description": "Empty methods should be avoided"
+    },
+    {
+      "key": "typescript:S125",
+      "severity": "MAJOR",
+      "name": "Sections of code should not be commented out",
+      "description": "Commented out code should be removed"
+    },
+    {
+      "key": "typescript:S1134",
+      "severity": "MAJOR",
+      "name": "Track uses of \"FIXME\" tags",
+      "description": "FIXME tags should be handled"
+    },
+    {
+      "key": "typescript:S1135",
+      "severity": "INFO",
+      "name": "Track uses of \"TODO\" tags", 
+      "description": "TODO tags should be tracked"
+    },
+    {
+      "key": "typescript:S2068",
+      "severity": "BLOCKER",
+      "name": "Credentials should not be hard-coded",
+      "description": "Hard-coded credentials are security risks"
+    },
+    {
+      "key": "typescript:S4502",
+      "severity": "CRITICAL",
+      "name": "Cross-document messaging domains should be validated",
+      "description": "postMessage domains should be validated"
+    },
+    {
+      "key": "typescript:S5122",
+      "severity": "CRITICAL",
+      "name": "Having a permissive Cross-Origin Resource Sharing policy is security-sensitive",
+      "description": "CORS policies should be restrictive"
+    }
+  ],
+  "reactRules": [
+    {
+      "key": "typescript:S6478",
+      "severity": "MAJOR",
+      "name": "React components should use TypeScript",
+      "description": "React components should be properly typed"
+    },
+    {
+      "key": "typescript:S6479",
+      "severity": "MAJOR", 
+      "name": "React hooks should follow the rules of hooks",
+      "description": "React hooks should be used correctly"
+    },
+    {
+      "key": "typescript:S6481",
+      "severity": "MAJOR",
+      "name": "React components should not use array index as key",
+      "description": "Array indices should not be used as React keys"
+    },
+    {
+      "key": "typescript:S6486",
+      "severity": "MAJOR",
+      "name": "React state should be immutable",
+      "description": "React state should not be mutated directly"
+    },
+    {
+      "key": "typescript:S6477",
+      "severity": "MINOR",
+      "name": "React components should be properly named",
+      "description": "React components should follow naming conventions"
+    },
+    {
+      "key": "typescript:S6480",
+      "severity": "MAJOR",
+      "name": "React useEffect should have dependency array",
+      "description": "useEffect hooks should specify dependencies"
+    }
+  ],
+  "codeSmellRules": [
+    {
+      "key": "typescript:S1172",
+      "severity": "MAJOR",
+      "name": "Unused function parameters should be removed",
+      "description": "Unused parameters should be removed or prefixed with underscore"
+    },
+    {
+      "key": "typescript:S1854",
+      "severity": "MAJOR",
+      "name": "Unused assignments should be removed",
+      "description": "Dead stores should be removed"
+    },
+    {
+      "key": "typescript:S3358",
+      "severity": "MAJOR",
+      "name": "Ternary operators should not be nested",
+      "description": "Nested ternary operators reduce readability"
+    },
+    {
+      "key": "typescript:S1067",
+      "severity": "CRITICAL",
+      "name": "Expressions should not be too complex",
+      "description": "Boolean expressions should not be too complex",
+      "params": {
+        "max": "3"
+      }
+    },
+    {
+      "key": "typescript:S3923",
+      "severity": "CRITICAL",
+      "name": "All branches in a conditional structure should not have the same implementation",
+      "description": "Conditional branches should not be identical"
+    }
+  ]
+}
