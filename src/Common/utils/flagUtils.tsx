@@ -34,22 +34,24 @@ interface FlagImageProps {
   style?: React.CSSProperties;
 }
 
-export function FlagImage({ countryCode, size, alt, className, style }: FlagImageProps) {
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+export const FlagImage = React.memo(({ countryCode, size, alt, className, style }: FlagImageProps) => {
+  const handleError = React.useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     // Если локальный флаг не загрузился, пробуем внешний CDN
     const img = e.currentTarget;
     if (img.src.includes('/flags/')) {
       img.src = `https://flagcdn.com/${size}/${countryCode}.png`;
     }
-  };
+  }, [size, countryCode]);
+
+  const flagUrl = React.useMemo(() => getFlagUrl(countryCode, size), [countryCode, size]);
 
   return (
     <img
-      src={getFlagUrl(countryCode, size)}
+      src={flagUrl}
       alt={alt}
       className={className}
       style={style}
       onError={handleError}
     />
   );
-}
+})

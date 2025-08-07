@@ -14,7 +14,7 @@ interface SaveStatusIndicatorProps {
   className?: string
 }
 
-export const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({ 
+export const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = React.memo(({ 
   isSaving, 
   saveError, 
   className = '' 
@@ -44,6 +44,6 @@ export const SaveStatusIndicator: React.FC<SaveStatusIndicatorProps> = ({
       {isSaving ? '💾 Saving...' : saveError}
     </div>
   )
-}
+})
 
 export default SaveStatusIndicator

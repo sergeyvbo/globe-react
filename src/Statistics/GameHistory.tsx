@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -46,7 +46,7 @@ interface GameHistoryProps {
 
 type GameTypeFilter = 'all' | 'countries' | 'flags' | 'states'
 
-export const GameHistory: React.FC<GameHistoryProps> = ({ 
+export const GameHistory: React.FC<GameHistoryProps> = React.memo(({ 
   className, 
   pageSize = 10 
 }) => {
@@ -118,21 +118,21 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
     loadGameHistory(currentPage, gameTypeFilter)
   }, [loadGameHistory, currentPage, gameTypeFilter])
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number): void => {
+  const handlePageChange = useCallback((_: React.ChangeEvent<unknown>, page: number): void => {
     setCurrentPage(page)
-  }
+  }, [])
 
-  const handleGameTypeFilterChange = (event: SelectChangeEvent): void => {
+  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes
-  }
+  }, [])
 
-  const handleRefresh = (): void => {
+  const handleRefresh = useCallback((): void => {
     loadGameHistory(currentPage, gameTypeFilter)
-  }
+  }, [loadGameHistory, currentPage, gameTypeFilter])
 
-  const getGameTypeIcon = (gameType: string): React.ReactElement => {
+  const getGameTypeIcon = useCallback((gameType: string): React.ReactElement => {
     switch (gameType.toLowerCase()) {
       case 'countries':
         return <PublicIcon sx={{ fontSize: 20, color: 'primary.main' }} />
@@ -143,9 +143,9 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
       default:
         return <QuizIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
     }
-  }
+  }, [])
 
-  const getGameTypeName = (gameType: string): string => {
+  const getGameTypeName = useCallback((gameType: string): string => {
     switch (gameType.toLowerCase()) {
       case 'countries':
         return 'Countries'
@@ -156,15 +156,15 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
       default:
         return gameType.charAt(0).toUpperCase() + gameType.slice(1)
     }
-  }
+  }, [])
 
-  const getAccuracyColor = (accuracy: number): 'success' | 'warning' | 'error' => {
+  const getAccuracyColor = useCallback((accuracy: number): 'success' | 'warning' | 'error' => {
     if (accuracy >= 80) return 'success'
     if (accuracy >= 60) return 'warning'
     return 'error'
-  }
+  }, [])
 
-  const formatDuration = (durationMs: number): string => {
+  const formatDuration = useCallback((durationMs: number): string => {
     const seconds = Math.floor(durationMs / 1000)
     const minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
@@ -173,15 +173,15 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
       return `${minutes}m ${remainingSeconds}s`
     }
     return `${remainingSeconds}s`
-  }
+  }, [])
 
-  const formatDateTime = (dateString: string): { date: string; time: string } => {
+  const formatDateTime = useCallback((dateString: string): { date: string; time: string } => {
     const date = new Date(dateString)
     return {
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
-  }
+  }, [])
 
   // Show authentication required message
   if (!isAuthenticated) {
@@ -293,64 +293,17 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
                       const totalQuestions = session.correctAnswers + session.wrongAnswers
                       
                       return (
-                        <TableRow key={session.id} hover>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              {getGameTypeIcon(session.gameType)}
-                              <Typography variant="body2" sx={{ ml: 1 }}>
-                                {getGameTypeName(session.gameType)}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <CheckIcon sx={{ fontSize: 16, color: 'success.main', mr: 0.5 }} />
-                                <Typography variant="body2" color="success.main">
-                                  {session.correctAnswers}
-                                </Typography>
-                              </Box>
-                              <Typography variant="body2" color="text.secondary">/</Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <CancelIcon sx={{ fontSize: 16, color: 'error.main', mr: 0.5 }} />
-                                <Typography variant="body2" color="error.main">
-                                  {session.wrongAnswers}
-                                </Typography>
-                              </Box>
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {session.correctAnswers}/{totalQuestions}
-                            </Typography>
-                          </TableCell>
-                          
-                          <TableCell align="center">
-                            <Chip
-                              label={`${Math.round(session.accuracy)}%`}
-                              color={getAccuracyColor(session.accuracy)}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <TimeIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
-                              <Typography variant="body2">
-                                {formatDuration(session.sessionDurationMs)}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          
-                          <TableCell align="center">
-                            <Typography variant="body2">
-                              {date}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {time}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
+                        <GameHistoryRow
+                          key={session.id}
+                          session={session}
+                          date={date}
+                          time={time}
+                          totalQuestions={totalQuestions}
+                          getGameTypeIcon={getGameTypeIcon}
+                          getGameTypeName={getGameTypeName}
+                          getAccuracyColor={getAccuracyColor}
+                          formatDuration={formatDuration}
+                        />
                       )
                     })}
                   </TableBody>
@@ -382,6 +335,90 @@ export const GameHistory: React.FC<GameHistoryProps> = ({
       </Card>
     </Box>
   )
+})
+
+// Memoized row component to prevent unnecessary re-renders
+interface GameHistoryRowProps {
+  session: GameSessionDto
+  date: string
+  time: string
+  totalQuestions: number
+  getGameTypeIcon: (gameType: string) => React.ReactElement
+  getGameTypeName: (gameType: string) => string
+  getAccuracyColor: (accuracy: number) => 'success' | 'warning' | 'error'
+  formatDuration: (durationMs: number) => string
 }
+
+const GameHistoryRow: React.FC<GameHistoryRowProps> = React.memo(({
+  session,
+  date,
+  time,
+  totalQuestions,
+  getGameTypeIcon,
+  getGameTypeName,
+  getAccuracyColor,
+  formatDuration
+}) => {
+  return (
+    <TableRow hover>
+      <TableCell>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {getGameTypeIcon(session.gameType)}
+          <Typography variant="body2" sx={{ ml: 1 }}>
+            {getGameTypeName(session.gameType)}
+          </Typography>
+        </Box>
+      </TableCell>
+      
+      <TableCell align="center">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CheckIcon sx={{ fontSize: 16, color: 'success.main', mr: 0.5 }} />
+            <Typography variant="body2" color="success.main">
+              {session.correctAnswers}
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary">/</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CancelIcon sx={{ fontSize: 16, color: 'error.main', mr: 0.5 }} />
+            <Typography variant="body2" color="error.main">
+              {session.wrongAnswers}
+            </Typography>
+          </Box>
+        </Box>
+        <Typography variant="caption" color="text.secondary">
+          {session.correctAnswers}/{totalQuestions}
+        </Typography>
+      </TableCell>
+      
+      <TableCell align="center">
+        <Chip
+          label={`${Math.round(session.accuracy)}%`}
+          color={getAccuracyColor(session.accuracy)}
+          size="small"
+          variant="outlined"
+        />
+      </TableCell>
+      
+      <TableCell align="center">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <TimeIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+          <Typography variant="body2">
+            {formatDuration(session.sessionDurationMs)}
+          </Typography>
+        </Box>
+      </TableCell>
+      
+      <TableCell align="center">
+        <Typography variant="body2">
+          {date}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {time}
+        </Typography>
+      </TableCell>
+    </TableRow>
+  )
+})
 
 export default GameHistory

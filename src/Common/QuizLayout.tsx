@@ -9,7 +9,7 @@ import { QuizLayoutProps } from './QuizLayout.types'
  * and responsive design. Includes slots for menu, game area, quiz, score, and status indicators.
  */
 
-export const QuizLayout: React.FC<QuizLayoutProps> = ({
+export const QuizLayout: React.FC<QuizLayoutProps> = React.memo(({
   menuComponent,
   gameAreaComponent,
   quizComponent,
@@ -161,6 +161,6 @@ export const QuizLayout: React.FC<QuizLayoutProps> = ({
       )}
     </Box>
   )
-}
+})
 
 export default QuizLayout

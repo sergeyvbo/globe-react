@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -48,7 +48,7 @@ interface LeaderboardProps {
 
 type GameTypeFilter = 'all' | 'countries' | 'flags' | 'states'
 
-export const Leaderboard: React.FC<LeaderboardProps> = ({ 
+export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({ 
   className, 
   pageSize = 20 
 }) => {
@@ -124,27 +124,27 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     loadLeaderboard(currentPage, gameTypeFilter, periodFilter)
   }, [loadLeaderboard, currentPage, gameTypeFilter, periodFilter])
 
-  const handlePageChange = (_: React.ChangeEvent<unknown>, page: number): void => {
+  const handlePageChange = useCallback((_: React.ChangeEvent<unknown>, page: number): void => {
     setCurrentPage(page)
-  }
+  }, [])
 
-  const handleGameTypeFilterChange = (event: SelectChangeEvent): void => {
+  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes
-  }
+  }, [])
 
-  const handlePeriodFilterChange = (event: SelectChangeEvent): void => {
+  const handlePeriodFilterChange = useCallback((event: SelectChangeEvent): void => {
     const newPeriod = event.target.value as LeaderboardPeriod
     setPeriodFilter(newPeriod)
     setCurrentPage(1) // Reset to first page when filter changes
-  }
+  }, [])
 
-  const handleRefresh = (): void => {
+  const handleRefresh = useCallback((): void => {
     loadLeaderboard(currentPage, gameTypeFilter, periodFilter)
-  }
+  }, [loadLeaderboard, currentPage, gameTypeFilter, periodFilter])
 
-  const getGameTypeIcon = (gameType: string): React.ReactElement => {
+  const getGameTypeIcon = useCallback((gameType: string): React.ReactElement => {
     switch (gameType?.toLowerCase()) {
       case 'countries':
         return <PublicIcon sx={{ fontSize: 20, color: 'primary.main' }} />
@@ -155,9 +155,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       default:
         return <QuizIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
     }
-  }
+  }, [])
 
-  const getGameTypeName = (gameType: string): string => {
+  const getGameTypeName = useCallback((gameType: string): string => {
     switch (gameType?.toLowerCase()) {
       case 'countries':
         return 'Countries'
@@ -168,9 +168,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       default:
         return 'All Games'
     }
-  }
+  }, [])
 
-  const getPeriodName = (period: LeaderboardPeriod): string => {
+  const getPeriodName = useCallback((period: LeaderboardPeriod): string => {
     switch (period) {
       case 'week':
         return 'This Week'
@@ -182,9 +182,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       default:
         return 'All Time'
     }
-  }
+  }, [])
 
-  const getRankIcon = (rank: number): React.ReactElement | null => {
+  const getRankIcon = useCallback((rank: number): React.ReactElement | null => {
     switch (rank) {
       case 1:
         return <TrophyIcon sx={{ color: '#FFD700', fontSize: 24 }} /> // Gold
@@ -212,13 +212,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           </Box>
         )
     }
-  }
+  }, [])
 
-  const getAccuracyColor = (accuracy: number): 'success' | 'warning' | 'error' => {
+  const getAccuracyColor = useCallback((accuracy: number): 'success' | 'warning' | 'error' => {
     if (accuracy >= 80) return 'success'
     if (accuracy >= 60) return 'warning'
     return 'error'
-  }
+  }, [])
 
   return (
     <Box className={className} sx={{ p: 3 }}>
@@ -345,89 +345,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   </TableHead>
                   <TableBody>
                     {(leaderboardData.players || leaderboardData.entries || []).map((player: LeaderboardEntryDto) => (
-                      <TableRow 
-                        key={player.userId} 
-                        hover
-                        sx={{
-                          backgroundColor: player.isCurrentUser ? 'action.selected' : 'inherit',
-                          '&:hover': {
-                            backgroundColor: player.isCurrentUser 
-                              ? 'action.selected' 
-                              : 'action.hover'
-                          }
-                        }}
-                      >
-                        <TableCell align="center">
-                          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            {getRankIcon(player.rank)}
-                          </Box>
-                        </TableCell>
-                        
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Avatar 
-                              src={player.userAvatar} 
-                              sx={{ 
-                                width: 32, 
-                                height: 32, 
-                                mr: 2,
-                                bgcolor: player.isCurrentUser ? 'primary.main' : 'grey.400'
-                              }}
-                            >
-                              {player.userAvatar ? null : <PersonIcon />}
-                            </Avatar>
-                            <Box>
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  fontWeight: player.isCurrentUser ? 'bold' : 'normal',
-                                  color: player.isCurrentUser ? 'primary.main' : 'inherit'
-                                }}
-                              >
-                                {player.userName || player.displayName || 'Anonymous Player'}
-                                {player.isCurrentUser && (
-                                  <Chip 
-                                    label="You" 
-                                    size="small" 
-                                    color="primary" 
-                                    sx={{ ml: 1, height: 20 }}
-                                  />
-                                )}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </TableCell>
-                        
-                        <TableCell align="center">
-                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <TrendingUpIcon sx={{ fontSize: 16, color: 'primary.main', mr: 0.5 }} />
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                fontWeight: player.rank <= 3 ? 'bold' : 'normal',
-                                color: player.rank <= 3 ? 'primary.main' : 'inherit'
-                              }}
-                            >
-                              {player.totalScore.toLocaleString()}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        
-                        <TableCell align="center">
-                          <Chip
-                            label={`${Math.round(player.accuracy)}%`}
-                            color={getAccuracyColor(player.accuracy)}
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        
-                        <TableCell align="center">
-                          <Typography variant="body2">
-                            {player.gamesPlayed || player.totalGames}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
+                      <LeaderboardRow
+                        key={player.userId}
+                        player={player}
+                        getRankIcon={getRankIcon}
+                        getAccuracyColor={getAccuracyColor}
+                      />
                     ))}
                   </TableBody>
                 </Table>
@@ -458,6 +381,104 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       </Card>
     </Box>
   )
+})
+
+// Memoized row component to prevent unnecessary re-renders
+interface LeaderboardRowProps {
+  player: LeaderboardEntryDto
+  getRankIcon: (rank: number) => React.ReactElement | null
+  getAccuracyColor: (accuracy: number) => 'success' | 'warning' | 'error'
 }
+
+const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
+  player,
+  getRankIcon,
+  getAccuracyColor
+}) => {
+  return (
+    <TableRow 
+      hover
+      sx={{
+        backgroundColor: player.isCurrentUser ? 'action.selected' : 'inherit',
+        '&:hover': {
+          backgroundColor: player.isCurrentUser 
+            ? 'action.selected' 
+            : 'action.hover'
+        }
+      }}
+    >
+      <TableCell align="center">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {getRankIcon(player.rank)}
+        </Box>
+      </TableCell>
+      
+      <TableCell>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Avatar 
+            src={player.userAvatar} 
+            sx={{ 
+              width: 32, 
+              height: 32, 
+              mr: 2,
+              bgcolor: player.isCurrentUser ? 'primary.main' : 'grey.400'
+            }}
+          >
+            {player.userAvatar ? null : <PersonIcon />}
+          </Avatar>
+          <Box>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: player.isCurrentUser ? 'bold' : 'normal',
+                color: player.isCurrentUser ? 'primary.main' : 'inherit'
+              }}
+            >
+              {player.userName || player.displayName || 'Anonymous Player'}
+              {player.isCurrentUser && (
+                <Chip 
+                  label="You" 
+                  size="small" 
+                  color="primary" 
+                  sx={{ ml: 1, height: 20 }}
+                />
+              )}
+            </Typography>
+          </Box>
+        </Box>
+      </TableCell>
+      
+      <TableCell align="center">
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <TrendingUpIcon sx={{ fontSize: 16, color: 'primary.main', mr: 0.5 }} />
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontWeight: player.rank <= 3 ? 'bold' : 'normal',
+              color: player.rank <= 3 ? 'primary.main' : 'inherit'
+            }}
+          >
+            {player.totalScore.toLocaleString()}
+          </Typography>
+        </Box>
+      </TableCell>
+      
+      <TableCell align="center">
+        <Chip
+          label={`${Math.round(player.accuracy)}%`}
+          color={getAccuracyColor(player.accuracy)}
+          size="small"
+          variant="outlined"
+        />
+      </TableCell>
+      
+      <TableCell align="center">
+        <Typography variant="body2">
+          {player.gamesPlayed || player.totalGames}
+        </Typography>
+      </TableCell>
+    </TableRow>
+  )
+})
 
 export default Leaderboard

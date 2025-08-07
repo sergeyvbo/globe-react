@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Button, Grid2, Box, Stack } from '@mui/material';
 import './FlagQuiz.css'
 import { shuffleArray } from '../Common/utils';
@@ -18,7 +18,7 @@ type Match = {
 
 type ButtonColor = "inherit" | "success" | "primary" | "secondary" | "error" | "info" | "warning" | undefined
 
-export const FlagQuiz = () => {
+export const FlagQuiz = React.memo(() => {
     const OPTIONS_LENGTH = 5
 
     const { user, isAuthenticated } = useAuth()
@@ -50,45 +50,19 @@ export const FlagQuiz = () => {
         startGame(data)
     }, [])
 
-    const startGame = (countryList: CountryFlagData[]) => {
+    const startGame = useCallback((countryList: CountryFlagData[]) => {
         setMatches([])
         setError(undefined)
         const randomCountries = shuffleArray(countryList).slice(0, OPTIONS_LENGTH)
         setCountries(randomCountries)
         setFlags(shuffleArray(randomCountries.map(x => x.code)))
-    }
+    }, [])
 
-    const handleFlagClick = (code: string) => {
-        if (isMatch(code)) return
-        if (selectedFlag === code) {
-            setSelectedFlag(null)
-            return
-        }
-        if (selectedCountry) {
-            checkMatch({ flag: code, country: selectedCountry })
-            setSelectedCountry(null);
-            setSelectedFlag(null);
-            return
-        }
-        setSelectedFlag(code);
-    };
+    const isMatch = useCallback((code: string): boolean => {
+        return matches.some(x => (x.flag === code || x.country === code))
+    }, [matches])
 
-    const handleCountryClick = (name: string) => {
-        if (isMatch(name)) return
-        if (selectedCountry === name) {
-            setSelectedCountry(null)
-            return
-        }
-        if (selectedFlag) {
-            checkMatch({ flag: selectedFlag, country: name })
-            setSelectedCountry(null);
-            setSelectedFlag(null);
-            return
-        }
-        setSelectedCountry(name)
-    };
-
-    const checkMatch = async (match: Match) => {
+    const checkMatch = useCallback(async (match: Match) => {
         if (countries.find(x => x.code === match.flag && x.name === match.country)) {
             setMatches([...matches, match])
             // Manually update scores without using shared actions that disable buttons
@@ -107,13 +81,39 @@ export const FlagQuiz = () => {
                 setError(undefined)
             }, 1000)
         }
-    }
+    }, [countries, matches, actions])
 
-    const isMatch = (code: string): boolean => {
-        return matches.some(x => (x.flag === code || x.country === code))
-    }
+    const handleFlagClick = useCallback((code: string) => {
+        if (isMatch(code)) return
+        if (selectedFlag === code) {
+            setSelectedFlag(null)
+            return
+        }
+        if (selectedCountry) {
+            checkMatch({ flag: code, country: selectedCountry })
+            setSelectedCountry(null);
+            setSelectedFlag(null);
+            return
+        }
+        setSelectedFlag(code);
+    }, [isMatch, selectedFlag, selectedCountry, checkMatch]);
 
-    const getFlagColor = (code: string): ButtonColor => {
+    const handleCountryClick = useCallback((name: string) => {
+        if (isMatch(name)) return
+        if (selectedCountry === name) {
+            setSelectedCountry(null)
+            return
+        }
+        if (selectedFlag) {
+            checkMatch({ flag: selectedFlag, country: name })
+            setSelectedCountry(null);
+            setSelectedFlag(null);
+            return
+        }
+        setSelectedCountry(name)
+    }, [isMatch, selectedCountry, selectedFlag, checkMatch]);
+
+    const getFlagColor = useCallback((code: string): ButtonColor => {
         if (isMatch(code)) {
             return 'success'
         }
@@ -121,9 +121,9 @@ export const FlagQuiz = () => {
             return 'error'
         }
         return 'primary'
-    }
+    }, [isMatch, error])
 
-    const getCountryColor = (country: string): ButtonColor => {
+    const getCountryColor = useCallback((country: string): ButtonColor => {
         if (isMatch(country)) {
             return 'success'
         }
@@ -131,12 +131,12 @@ export const FlagQuiz = () => {
             return 'error'
         }
         return 'primary'
-    }
+    }, [isMatch, error])
 
-    const handleContinue = () => {
+    const handleContinue = useCallback(() => {
         startGame(data)
         actions.resetGame()
-    }
+    }, [startGame, data, actions])
 
     if (countries.length && flags.length) {
         return (
@@ -215,4 +215,4 @@ export const FlagQuiz = () => {
             loadingMessage="Loading flags..."
         />
     )
-}
+})

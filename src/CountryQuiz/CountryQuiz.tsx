@@ -1,5 +1,5 @@
 import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
@@ -16,7 +16,7 @@ import flagJson from '../Common/GeoData/countryCodes2.json'
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb' | 'world'
 
-const CountryQuiz = () => {
+const CountryQuiz = React.memo(() => {
 
     const OPTIONS_SIZE = 3
 
@@ -73,26 +73,7 @@ const CountryQuiz = () => {
 
 
 
-    const startGame = () => {
-
-        let countryData = geoData.features
-            .filter((obj: CountryFeature) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties.type))
-
-        const randomOptions = getRandomOptions(countryData, settings.difficulty)
-
-        setOptions(randomOptions)
-        setCorrectOption(randomElement(randomOptions))
-    }
-
-    const getFlag = (country: CountryFeature): string => {
-        return flags.find(x => x.name === country.properties.name
-            || x.name === country.properties.name_en
-            || x.name_ru === country.properties.name_ru
-            || x.code === country.properties.iso_a2.toLowerCase()
-        )?.code ?? ''
-    }
-
-    const getRandomOptions = (countryData: CountryFeature[], difficulty: Difficulty): CountryOption[] => {
+    const getRandomOptions = useCallback((countryData: CountryFeature[], difficulty: Difficulty): CountryOption[] => {
 
         let regionType: RegionType
         switch (difficulty) {
@@ -135,30 +116,51 @@ const CountryQuiz = () => {
         const optionsArray = shuffleArray(countries).slice(0, OPTIONS_SIZE)
 
         return optionsArray
-    }
+    }, [settings, getFlag])
 
-    const onSubmit = async (isCorrect: boolean) => {
+    const startGame = useCallback(() => {
+
+        let countryData = geoData.features
+            .filter((obj: CountryFeature) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties.type))
+
+        const randomOptions = getRandomOptions(countryData, settings.difficulty)
+
+        setOptions(randomOptions)
+        setCorrectOption(randomElement(randomOptions))
+    }, [geoData.features, settings.difficulty, getRandomOptions])
+
+    const getFlag = useCallback((country: CountryFeature): string => {
+        return flags.find(x => x.name === country.properties.name
+            || x.name === country.properties.name_en
+            || x.name_ru === country.properties.name_ru
+            || x.code === country.properties.iso_a2.toLowerCase()
+        )?.code ?? ''
+    }, [flags])
+
+
+
+    const onSubmit = useCallback(async (isCorrect: boolean) => {
         if (isCorrect) {
             await actions.onCorrectAnswer()
         } else {
             await actions.onWrongAnswer()
         }
-    }
+    }, [actions])
 
     // Function to be called when Quiz component is ready for next question
-    const onQuizComplete = () => {
+    const onQuizComplete = useCallback(() => {
         startGame()
         actions.resetGame()
-    }
+    }, [startGame, actions])
 
     // Handle auth modal close (when user clicks "Continue without login")
-    const handleAuthModalClose = () => {
+    const handleAuthModalClose = useCallback(() => {
         setShowAuthModal(false)
         setHasDeclinedAuth(true)
-    }
+    }, [])
 
     // Handle when user authenticates during game - migrate current progress
-    const handleAuthSuccess = async () => {
+    const handleAuthSuccess = useCallback(async () => {
         if (!user) return
         
         try {
@@ -172,7 +174,7 @@ const CountryQuiz = () => {
         } catch (error) {
             console.error('Failed to save progress after authentication:', error)
         }
-    }
+    }, [user, gameProgress])
 
     if (geoData && options.length) {
         return (
@@ -219,6 +221,6 @@ const CountryQuiz = () => {
             loadingMessage="Loading..."
         />
     )
-}
+})
 
 export { CountryQuiz }

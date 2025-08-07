@@ -6,7 +6,7 @@ interface OfflineIndicatorProps {
   showWhenOnline?: boolean
 }
 
-export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ 
+export const OfflineIndicator: React.FC<OfflineIndicatorProps> = React.memo(({ 
   className = '', 
   showWhenOnline = false 
 }) => {
@@ -37,6 +37,6 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
       {isOffline ? '🔴 Offline Mode' : '🟢 Online'}
     </div>
   )
-}
+})
 
 export default OfflineIndicator

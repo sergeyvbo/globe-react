@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { AppBar, Toolbar, IconButton, Dialog, DialogTitle, DialogContent, FormControl, FormControlLabel, FormGroup, Switch, Select, MenuItem, Box, Button, Avatar, Menu, ListItemIcon, ListItemText } from '@mui/material'
 import { Flag, Settings, AccountCircle, Logout, Person, TrendingUp, EmojiEvents } from '@mui/icons-material'
 import { getString, getAuthString } from '../Localization/strings'
@@ -9,7 +9,7 @@ import { AuthModal } from '../Common/Auth/AuthModal'
 import { useModal } from '../Common/Modals'
 
 
-const MainMenu = () => {
+const MainMenu = React.memo(() => {
     const [settings, setSettings] = useState<CountryQuizSettings>(getSettings())
     const [open, setOpen] = useState(false)
     const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -18,47 +18,59 @@ const MainMenu = () => {
     const { user, isAuthenticated, logout } = useAuth()
     const { openModal } = useModal()
 
-    const handleSettingsChange = (key: string, value: string | boolean): void => {
+    const handleSettingsChange = useCallback((key: string, value: string | boolean): void => {
         const newSettings = { ...settings, [key]: value }
         setSettings(newSettings)
         localStorage.setItem('countryQuizSettings', JSON.stringify(newSettings))
-    }
+    }, [settings])
 
-    const handleLoginClick = (): void => {
+    const handleLoginClick = useCallback((): void => {
         setAuthModalOpen(true)
-    }
+    }, [])
 
-    const handleProfileClick = (event: React.MouseEvent<HTMLElement>): void => {
+    const handleProfileClick = useCallback((event: React.MouseEvent<HTMLElement>): void => {
         setProfileMenuAnchor(event.currentTarget)
-    }
+    }, [])
 
-    const handleProfileMenuClose = (): void => {
+    const handleProfileMenuClose = useCallback((): void => {
         setProfileMenuAnchor(null)
-    }
+    }, [])
 
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         try {
             await logout()
             handleProfileMenuClose()
         } catch (error) {
             console.error('Logout failed:', error)
         }
-    }
+    }, [logout, handleProfileMenuClose])
 
-    const handleProfileNavigation = (): void => {
+    const handleProfileNavigation = useCallback((): void => {
         openModal('userProfile')
         handleProfileMenuClose()
-    }
+    }, [openModal, handleProfileMenuClose])
 
-    const handleStatsNavigation = (): void => {
+    const handleStatsNavigation = useCallback((): void => {
         openModal('statistics')
         handleProfileMenuClose()
-    }
+    }, [openModal, handleProfileMenuClose])
 
-    const handleLeaderboardNavigation = (): void => {
+    const handleLeaderboardNavigation = useCallback((): void => {
         openModal('leaderboard')
         handleProfileMenuClose()
-    }
+    }, [openModal, handleProfileMenuClose])
+
+    const toggleSettings = useCallback(() => {
+        setOpen(!open)
+    }, [open])
+
+    const closeAuthModal = useCallback(() => {
+        setAuthModalOpen(false)
+    }, [])
+
+    const closeSettings = useCallback(() => {
+        setOpen(false)
+    }, [])
 
     return (
         <>
@@ -69,7 +81,7 @@ const MainMenu = () => {
                         edge='start'
                         color='primary'
                         aria-label='menu'
-                        onClick={() => setOpen(!open)}
+                        onClick={toggleSettings}
                     >
                         <Settings />
                     </IconButton>
@@ -163,7 +175,7 @@ const MainMenu = () => {
             <Dialog
                 className='MainMenu-Dialog'
                 open={open}
-                onClose={() => setOpen(false)}>
+                onClose={closeSettings}>
                 <DialogTitle>{getString('settings')}</DialogTitle>
                 <DialogContent sx={{ margin: '5px' }}>
                     <FormControl component='fieldset'>
@@ -241,11 +253,11 @@ const MainMenu = () => {
             {/* Authentication Modal */}
             <AuthModal 
                 open={authModalOpen} 
-                onClose={() => setAuthModalOpen(false)} 
+                onClose={closeAuthModal} 
 
             />
         </>
     )
-}
+})
 
 export { MainMenu }

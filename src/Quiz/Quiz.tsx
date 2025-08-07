@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import './Quiz.css'
 import { Button, Grid2, Typography } from "@mui/material"
 import { FlagImage } from '../Common/utils/flagUtils'
@@ -13,7 +13,7 @@ interface Props {
     onComplete?: () => void
 }
 
-const Quiz = (props: Props) => {
+const Quiz = React.memo((props: Props) => {
     const {
         showFlags,
         disabled,
@@ -46,15 +46,15 @@ const Quiz = (props: Props) => {
         }
     }, [showResult])
 
-    const proceedToNext = (): void => {
+    const proceedToNext = useCallback((): void => {
         setShowResult(false)
         setSelectedOption(null)
         setIsAnswerSubmitted(false)
         setCanContinue(false)
         onComplete?.()
-    }
+    }, [onComplete])
 
-    const onBtnClick = (option: string): void => {
+    const onBtnClick = useCallback((option: string): void => {
         // If showing results and user clicks, proceed to next question
         if (showResult && canContinue) {
             proceedToNext()
@@ -75,46 +75,85 @@ const Quiz = (props: Props) => {
             setCanContinue(true)
             onSubmit(option === correctOption)
         }, 300) // Минимальная задержка для визуализации
-    }
+    }, [showResult, canContinue, disabled, isAnswerSubmitted, correctOption, onSubmit, proceedToNext])
 
-    const buttonResultClass = (option: string): string => {
+    const buttonResultClass = useCallback((option: string): string => {
         if (!showResult || !selectedOption) {
             return ''
         }
         return option === correctOption ? "Quiz-button-success" : "Quiz-button-failure"
-    }
+    }, [showResult, selectedOption, correctOption])
+
+    // Memoize button styles to prevent recalculation on every render
+    const getButtonStyle = useCallback((option: string) => ({
+        opacity: (showResult && selectedOption && selectedOption !== option && option !== correctOption) ? 0.5 : 1,
+        transform: (showResult && selectedOption === option && option === correctOption) ? 'scale(1.05)' : 'scale(1)',
+        transition: 'all 0.3s ease-in-out',
+        cursor: (showResult && canContinue) ? 'pointer' : 'default'
+    }), [showResult, selectedOption, correctOption, canContinue])
 
     return (
         <Grid2 container className="Quiz-container" spacing={1} >
             {options.map((option, index) => {
                 return (
                     <Grid2 size={{ xs: 4 }} key={index}>
-                        <Button
+                        <QuizButton
+                            key={option.name}
+                            option={option}
                             disabled={disabled && !canContinue}
-                            variant="contained"
-                            className={`Quiz-button ${buttonResultClass(option.name)}`}
-                            onClick={() => onBtnClick(option.name)}
-                            startIcon={showFlags ? <FlagImage countryCode={option.code} size="20x15" alt={option.code} /> : null}
-                            style={{
-                                opacity: (showResult && selectedOption && selectedOption !== option.name && option.name !== correctOption) ? 0.5 : 1,
-                                transform: (showResult && selectedOption === option.name && option.name === correctOption) ? 'scale(1.05)' : 'scale(1)',
-                                transition: 'all 0.3s ease-in-out',
-                                cursor: (showResult && canContinue) ? 'pointer' : 'default'
-                            }}
-                        >
-                            <Typography>
-                                {
-                                    option.name
-                                }
-                            </Typography>
-                        </Button>
+                            showFlags={showFlags}
+                            buttonResultClass={buttonResultClass(option.name)}
+                            onBtnClick={onBtnClick}
+                            buttonStyle={getButtonStyle(option.name)}
+                        />
                     </Grid2>
                 )
             })}
         </Grid2>
     )
+})
+
+// Memoized button component to prevent unnecessary re-renders
+interface QuizButtonProps {
+    option: { code: string, name: string }
+    disabled: boolean
+    showFlags?: boolean
+    buttonResultClass: string
+    onBtnClick: (option: string) => void
+    buttonStyle: React.CSSProperties
 }
 
+const QuizButton: React.FC<QuizButtonProps> = React.memo(({
+    option,
+    disabled,
+    showFlags,
+    buttonResultClass,
+    onBtnClick,
+    buttonStyle
+}) => {
+    const handleClick = useCallback(() => {
+        onBtnClick(option.name)
+    }, [onBtnClick, option.name])
 
+    const flagIcon = useMemo(() => 
+        showFlags ? <FlagImage countryCode={option.code} size="20x15" alt={option.code} /> : null,
+        [showFlags, option.code]
+    )
+
+    return (
+        <Button
+            disabled={disabled}
+            variant="contained"
+            className={`Quiz-button ${buttonResultClass}`}
+            onClick={handleClick}
+            startIcon={flagIcon}
+            style={buttonStyle}
+        >
+            <Typography>
+                {option.name}
+            </Typography>
+        </Button>
+    )
+})
 
 export { Quiz }
