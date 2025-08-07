@@ -89,7 +89,7 @@ const Globe = (props: Props) => {
                         rotate[1] - event.dy * k
                     ])
                     path = d3.geoPath().projection(projection)
-                    svg.selectAll('path').attr('d', (d: CountryFeature) => path(d as GeoPermissibleObjects) as string)
+                    svg.selectAll<SVGPathElement, CountryFeature>('path').attr('d', (d: CountryFeature) => path(d as unknown as GeoPermissibleObjects) as string)
                     updatePin(geoData.find((d: CountryFeature) => d.properties.name === selectedCountry))
                 })
         )
@@ -100,7 +100,7 @@ const Globe = (props: Props) => {
             .on('zoom', (event) => {
                 projection.scale(initialScale * event.transform.k)
                 path = d3.geoPath().projection(projection)
-                svg.selectAll('path').attr('d', (d: CountryFeature) => path(d as GeoPermissibleObjects) as string)
+                svg.selectAll<SVGPathElement, CountryFeature>('path').attr('d', (d: CountryFeature) => path(d as unknown as GeoPermissibleObjects) as string)
                 globe.attr('r', projection.scale())
                 updatePin(geoData.find((d: CountryFeature) => d.properties.name === selectedCountry))
             })
@@ -116,7 +116,7 @@ const Globe = (props: Props) => {
             .data(geoData)
             .enter().append('path')
             .attr('class', (d: CountryFeature) => 'country_' + d.properties.name.replace(' ', '_'))
-            .attr('d', d => path(d as GeoPermissibleObjects) as string)
+            .attr('d', d => path(d as unknown as GeoPermissibleObjects) as string)
             .attr('fill', (d: CountryFeature) => d.properties.name === selectedCountry ? SELECTED_COUNTRY_FILL : GROUND_FILL)
             .style('stroke', showBorders ? 'black' : 'transparent')
             .style('stroke-width', 0.3)
@@ -133,14 +133,15 @@ const Globe = (props: Props) => {
         const pin = svg.select('.map-pin')
 
         const updatePin = (country: CountryFeature | undefined): void => {
-            const area = d3.geoArea(country)
-            if (country && area < .00025) {
+            if (!country) return
+            const area = d3.geoArea(country as unknown as GeoPermissibleObjects)
+            if (area < .00025) {
                 // add pin for small countries at country label coordinates
                 const { label_x, label_y } = country.properties
                 if (!label_x || !label_y) {
                     return
                 }
-                const projectedLabel = projection([label_x, label_y])
+                const projectedLabel = projection([label_x as number, label_y as number])
                 if (projectedLabel) {
                     d3.select('.map-pin')
                         .attr('transform', `translate(${projectedLabel[0] + PIN_OFFSET_X},${projectedLabel[1] + PIN_OFFSET_Y})`)
@@ -161,7 +162,7 @@ const Globe = (props: Props) => {
                     rotate[1]
                 ])
                 path = d3.geoPath().projection(projection)
-                svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string)
+                svg.selectAll<SVGPathElement, CountryFeature>('path').attr('d', d => path(d as unknown as GeoPermissibleObjects) as string)
                 if (showPin) updatePin(geoData.find((d: CountryFeature) => d.properties.name === selectedCountry))
             }, rotationSpeed)
         }
@@ -170,10 +171,10 @@ const Globe = (props: Props) => {
         if (selectedCountry) {
             const selected = geoData.find((d: CountryFeature) => d.properties.name === selectedCountry)
             if (selected) {
-                const centroid = d3.geoCentroid(selected)
+                const centroid = d3.geoCentroid(selected as unknown as GeoPermissibleObjects)
                 projection.rotate([-centroid[0], -centroid[1]])
                 path = d3.geoPath().projection(projection)
-                svg.selectAll('path').attr('d', d => path(d as GeoPermissibleObjects) as string)
+                svg.selectAll<SVGPathElement, CountryFeature>('path').attr('d', d => path(d as unknown as GeoPermissibleObjects) as string)
                 updatePin(selected)
             }
         }

@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react"
-import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
-import { Map } from "./Map"
+import React, { useCallback, useEffect, useState } from "react"
+import { ExtendedFeatureCollection } from "d3"
+
 import { CountryOption, StateFeature } from "../Common/types"
-import { Score } from "../CountryQuiz/Score"
-import { Quiz } from "../Quiz/Quiz"
 import { getSettings, randomElement, shuffleArray } from "../Common/utils"
-import { CountryMainMenu } from "../CountryQuiz/CountryMainMenu"
 import { useAuth } from "../Common/Auth/AuthContext"
-import { QuizLayout } from "../Common/QuizLayout"
 import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
+import { Map } from "./Map"
+import { Quiz } from "../Quiz/Quiz"
+import { Score } from "../CountryQuiz/Score"
+import { CountryMainMenu } from "../CountryQuiz/CountryMainMenu"
+import { QuizLayout } from "../Common/QuizLayout"
+
 import geoJson from '../Common/GeoData/us.json'
 
-const StateQuiz = () => {
+export const StateQuiz: React.FC = React.memo(() => {
 
     const OPTIONS_SIZE = 3
 
     const { user, isAuthenticated } = useAuth()
-    
+
     // Use shared base quiz hook for common quiz functionality
     const {
         correctScore,
@@ -40,34 +42,35 @@ const StateQuiz = () => {
         startGame()
     }, [])
 
-    const getRandomOptions = (data: StateFeature[]): Array<{code: string, name: string}> => {
+    const getRandomOptions = useCallback((data: StateFeature[]): CountryOption[] => {
         const states = data.map((state: StateFeature) => ({
             code: state.properties.STATE,
             name: state.properties.NAME,
+            translatedName: state.properties.NAME, // For states, use the same name as translated name
         }))
 
         return shuffleArray(states).slice(0, OPTIONS_SIZE)
-    }
+    }, [])
 
-    const startGame = (): void => {
-        const randomOptions = getRandomOptions(geoData.features!)
+    const startGame = useCallback((): void => {
+        const randomOptions = getRandomOptions(geoData.features! as unknown as StateFeature[])
         setOptions(randomOptions)
         setCorrectOption(randomElement(randomOptions))
-    }
+    }, [geoData.features, getRandomOptions])
 
-    const onSubmit = async (isCorrect: boolean) => {
+    const onSubmit = useCallback(async (isCorrect: boolean) => {
         if (isCorrect) {
             await actions.onCorrectAnswer()
         } else {
             await actions.onWrongAnswer()
         }
-    }
+    }, [actions])
 
     // Function to be called when Quiz component is ready for next question
-    const onQuizComplete = (): void => {
+    const onQuizComplete = useCallback((): void => {
         startGame()
         actions.resetGame()
-    }
+    }, [startGame, actions])
 
     return (
         <QuizLayout
@@ -75,7 +78,7 @@ const StateQuiz = () => {
             gameAreaComponent={
                 geoData && options.length ? (
                     <Map
-                        geoData={geoData.features}
+                        geoData={geoData.features as unknown as StateFeature[]}
                         selected={correctOption?.name ?? ''}
                     />
                 ) : null
@@ -105,6 +108,4 @@ const StateQuiz = () => {
             loadingMessage="Loading..."
         />
     )
-}
-
-export { StateQuiz }
+})

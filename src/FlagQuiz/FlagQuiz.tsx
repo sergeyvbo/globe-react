@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Button, Grid2, Box, Stack } from '@mui/material';
-import './FlagQuiz.css'
-import { shuffleArray } from '../Common/utils';
-import { FlagImage } from '../Common/utils/flagUtils';
-import { FlagMainMenu } from './FlagMainMenu';
-import { Score } from '../CountryQuiz/Score';
-import { useAuth } from '../Common/Auth/AuthContext';
-import { useBaseQuiz } from '../Common/Hooks/useBaseQuiz';
-import { QuizLayout } from '../Common/QuizLayout';
+import React, { useEffect, useState, useCallback } from 'react'
+import { Button, Grid2, Box, Stack } from '@mui/material'
+
+import { CountryFlagData } from '../Common/types'
+import { shuffleArray } from '../Common/utils'
+import { useAuth } from '../Common/Auth/AuthContext'
+import { useBaseQuiz } from '../Common/Hooks/useBaseQuiz'
+import { FlagImage } from '../Common/utils/flagUtils'
+import { FlagMainMenu } from './FlagMainMenu'
+import { Score } from '../CountryQuiz/Score'
+import { QuizLayout } from '../Common/QuizLayout'
+
 import flagJson from '../Common/GeoData/countryCodes2.json'
-import { CountryFlagData } from '../Common/types';
+import './FlagQuiz.css'
 
 type Match = {
     flag: string;
@@ -27,8 +29,6 @@ export const FlagQuiz = React.memo(() => {
     const {
         correctScore,
         wrongScore,
-        disabled,
-        gameSession,
         actions,
         gameProgress
     } = useBaseQuiz({

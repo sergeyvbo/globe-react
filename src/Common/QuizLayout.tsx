@@ -1,8 +1,9 @@
 import React from 'react'
 import { Box, useTheme, useMediaQuery } from '@mui/material'
+
+import { QuizLayoutProps } from './QuizLayout.types'
 import { OfflineIndicator } from './Network/OfflineIndicator'
 import { SaveStatusIndicator } from './SaveStatusIndicator'
-import { QuizLayoutProps } from './QuizLayout.types'
 
 /**
  * A shared layout component for all quiz types that provides consistent structure

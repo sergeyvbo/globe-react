@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+
 import { GameSession, gameProgressService } from '../GameProgress/GameProgressService'
 import { GameType, User } from '../types'
 

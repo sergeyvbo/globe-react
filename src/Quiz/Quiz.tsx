@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import './Quiz.css'
 import { Button, Grid2, Typography } from "@mui/material"
+
 import { FlagImage } from '../Common/utils/flagUtils'
 
+import './Quiz.css'
 
-interface Props {
+
+interface QuizProps {
     showFlags?: boolean
     disabled: boolean
     options: { code: string, name: string }[]
@@ -13,7 +15,7 @@ interface Props {
     onComplete?: () => void
 }
 
-const Quiz = React.memo((props: Props) => {
+export const Quiz: React.FC<QuizProps> = React.memo((props) => {
     const {
         showFlags,
         disabled,
@@ -154,4 +156,4 @@ const QuizButton: React.FC<QuizButtonProps> = React.memo(({
     )
 })
 
-export { Quiz }
+})

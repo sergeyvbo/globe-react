@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+
 import { GameSession, gameProgressService } from '../GameProgress/GameProgressService'
 import { GameType, User } from '../types'
 import { useOfflineDetector } from '../Network/useOfflineDetector'
@@ -29,7 +30,7 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
     gameSession
   } = options
 
-  const { isOnline, isOffline } = useOfflineDetector()
+  const { isOnline } = useOfflineDetector()
   
   const [isSaving, setIsSaving] = useState(false)
   

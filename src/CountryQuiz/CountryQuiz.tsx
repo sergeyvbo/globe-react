@@ -1,22 +1,24 @@
-import { ExtendedFeatureCollection, GeoPermissibleObjects } from "d3"
-import React, { useState, useEffect, useCallback, useMemo } from "react"
+import React, { useState, useEffect, useCallback } from "react"
+import { ExtendedFeatureCollection } from "d3"
+
+import { CountryFlagData, CountryOption, Difficulty, CountryFeature } from "../Common/types"
+import { getSettings, randomElement, shuffleArray } from "../Common/utils"
+import { useAuth } from "../Common/Auth/AuthContext"
+import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
+import { gameProgressService } from "../Common/GameProgress/GameProgressService"
 import { Globe } from "../Globe/Globe"
 import { Quiz } from "../Quiz/Quiz"
 import { Score } from "./Score"
 import { MainMenu } from "../MainMenu/MainMenu"
 import { AuthModal } from "../Common/Auth/AuthModal"
-import { useAuth } from "../Common/Auth/AuthContext"
-import { getSettings, randomElement, shuffleArray } from "../Common/utils"
-import { CountryFlagData, CountryOption, Difficulty, CountryFeature } from "../Common/types"
-import { gameProgressService } from "../Common/GameProgress/GameProgressService"
-import { useBaseQuiz } from "../Common/Hooks/useBaseQuiz"
 import { QuizLayout } from "../Common/QuizLayout"
+
 import geoJson from '../Common/GeoData/geo.json'
 import flagJson from '../Common/GeoData/countryCodes2.json'
 
 type RegionType = 'continent' | 'region_un' | 'subregion' | 'region_wb' | 'world'
 
-const CountryQuiz = React.memo(() => {
+export const CountryQuiz: React.FC = React.memo(() => {
 
     const OPTIONS_SIZE = 3
 
@@ -32,7 +34,6 @@ const CountryQuiz = React.memo(() => {
         correctScore,
         wrongScore,
         disabled,
-        gameSession,
         actions,
         gameProgress
     } = useBaseQuiz({
@@ -43,7 +44,7 @@ const CountryQuiz = React.memo(() => {
 
     const [options, setOptions] = useState<CountryOption[]>([])
     const [correctOption, setCorrectOption] = useState<CountryOption>()
-    
+
     // Auth modal state
     const [showAuthModal, setShowAuthModal] = useState(false)
     const [hasDeclinedAuth, setHasDeclinedAuth] = useState(false)
@@ -72,6 +73,14 @@ const CountryQuiz = React.memo(() => {
     }, [isAuthenticated, showAuthModal, user, correctScore, wrongScore])
 
 
+
+    const getFlag = useCallback((country: CountryFeature): string => {
+        return flags.find(x => x.name === country.properties.name
+            || x.name === country.properties.name_en
+            || x.name_ru === country.properties.name_ru
+            || x.code === country.properties.iso_a2.toLowerCase()
+        )?.code ?? ''
+    }, [flags])
 
     const getRandomOptions = useCallback((countryData: CountryFeature[], difficulty: Difficulty): CountryOption[] => {
 
@@ -120,7 +129,7 @@ const CountryQuiz = React.memo(() => {
 
     const startGame = useCallback(() => {
 
-        let countryData = geoData.features
+        let countryData = (geoData.features as unknown as CountryFeature[])
             .filter((obj: CountryFeature) => ['Country', 'Sovereign country', 'Disputed', 'Indeterminate'].includes(obj.properties.type))
 
         const randomOptions = getRandomOptions(countryData, settings.difficulty)
@@ -128,14 +137,6 @@ const CountryQuiz = React.memo(() => {
         setOptions(randomOptions)
         setCorrectOption(randomElement(randomOptions))
     }, [geoData.features, settings.difficulty, getRandomOptions])
-
-    const getFlag = useCallback((country: CountryFeature): string => {
-        return flags.find(x => x.name === country.properties.name
-            || x.name === country.properties.name_en
-            || x.name_ru === country.properties.name_ru
-            || x.code === country.properties.iso_a2.toLowerCase()
-        )?.code ?? ''
-    }, [flags])
 
 
 
@@ -162,11 +163,11 @@ const CountryQuiz = React.memo(() => {
     // Handle when user authenticates during game - migrate current progress
     const handleAuthSuccess = useCallback(async () => {
         if (!user) return
-        
+
         try {
             // Save current session progress using the shared hook's method
             await gameProgress.autoSaveProgress()
-            
+
             // Also migrate any temporary progress that might exist
             await gameProgressService.migrateTempProgress(user)
         } catch (error) {
@@ -180,7 +181,7 @@ const CountryQuiz = React.memo(() => {
                 menuComponent={<MainMenu />}
                 gameAreaComponent={
                     <Globe
-                        geoData={geoData.features}
+                        geoData={geoData.features as unknown as CountryFeature[]}
                         selectedCountry={correctOption?.name ?? ''}
                         showPin={settings.showPin}
                         showZoomButtons={settings.showZoomButtons}
@@ -220,5 +221,3 @@ const CountryQuiz = React.memo(() => {
         />
     )
 })
-
-export { CountryQuiz }
