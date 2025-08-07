@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { GameSession, gameProgressService } from '../GameProgress/GameProgressService'
 import { GameType, User } from '../types'
 import { useOfflineDetector } from '../Network/useOfflineDetector'
+import { useSaveErrorHandler } from '../ErrorHandling/useSaveErrorHandler'
 
 export interface UseGameProgressOptions {
   gameType: GameType
@@ -31,7 +32,15 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
   const { isOnline, isOffline } = useOfflineDetector()
   
   const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  
+  // Use centralized error handling
+  const errorHandler = useSaveErrorHandler({
+    context: {
+      component: 'useGameProgress',
+      gameType,
+      userId: user?.id
+    }
+  })
   
   // Use ref to track the latest values to avoid stale closures
   const optionsRef = useRef(options)
@@ -44,9 +53,9 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
     if (currentOptions.correctScore === 0 && currentOptions.wrongScore === 0) return
 
     setIsSaving(true)
-    setSaveError(null)
+    errorHandler.clearError()
 
-    try {
+    const saveOperation = async () => {
       const currentSession: GameSession = {
         ...currentOptions.gameSession,
         correctAnswers: currentOptions.correctScore,
@@ -67,13 +76,24 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
         gameProgressService.saveTempSession(currentSession)
         console.log(`${currentOptions.gameType} quiz progress saved temporarily for unauthenticated user`)
       }
+    }
+
+    try {
+      await saveOperation()
     } catch (error) {
-      console.error(`Failed to auto-save ${currentOptions.gameType} quiz progress:`, error)
-      setSaveError(isOffline ? 'Saved offline - will sync when online' : 'Failed to save progress')
+      // Use centralized error handling
+      errorHandler.handleError(error, {
+        action: 'save',
+        gameType: currentOptions.gameType,
+        userId: currentOptions.user?.id
+      })
+      
+      // Set retry operation for potential retry
+      errorHandler.setRetryOperation(saveOperation)
     } finally {
       setIsSaving(false)
     }
-  }, [isOffline])
+  }, [errorHandler])
 
   // Auto-save progress on score changes
   useEffect(() => {
@@ -112,7 +132,7 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
 
   return {
     isSaving,
-    saveError,
+    saveError: errorHandler.getUserMessage,
     autoSaveProgress
   }
 }
