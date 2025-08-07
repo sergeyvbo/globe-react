@@ -39,7 +39,8 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../Common/Auth'
 import { leaderboardService, LeaderboardApiError } from '../Common/GameProgress/LeaderboardService'
-import { LeaderboardResponse, LeaderboardEntryDto, LeaderboardPeriod, AuthErrorType, SelectChangeEvent } from '../Common/types'
+import { LeaderboardResponse, LeaderboardEntryDto, LeaderboardPeriod, AuthErrorType } from '../Common/types'
+import { SelectChangeEvent } from '@mui/material/Select'
 
 interface LeaderboardProps {
   className?: string
@@ -48,9 +49,9 @@ interface LeaderboardProps {
 
 type GameTypeFilter = 'all' | 'countries' | 'flags' | 'states'
 
-export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({ 
-  className, 
-  pageSize = 20 
+export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
+  className,
+  pageSize = 20
 }) => {
   const { user, isAuthenticated } = useAuth()
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse | null>(null)
@@ -61,16 +62,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
   const [periodFilter, setPeriodFilter] = useState<LeaderboardPeriod>('all')
 
   const loadLeaderboard = useCallback(async (
-    page: number = 1, 
+    page: number = 1,
     gameType: GameTypeFilter = 'all',
     period: LeaderboardPeriod = 'all'
   ) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       let response: LeaderboardResponse
-      
+
       if (gameType !== 'all' && period !== 'all') {
         // Use filtered leaderboard for multiple filters
         response = await leaderboardService.getFilteredLeaderboard({
@@ -89,15 +90,15 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
         // Global leaderboard
         response = await leaderboardService.getGlobalLeaderboard(page, pageSize)
       }
-      
+
       setLeaderboardData(response)
     } catch (err) {
       console.error('Failed to load leaderboard:', err)
-      
+
       if (err instanceof LeaderboardApiError) {
         // Use the message from RFC 9457 error parsing for better user experience
         const errorMessage = err.message || 'Failed to load leaderboard. Please try again later.'
-        
+
         switch (err.type) {
           case AuthErrorType.TOKEN_EXPIRED:
             setError('Your session has expired. Please log in again to view personalized leaderboard data.')
@@ -128,13 +129,13 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
     setCurrentPage(page)
   }, [])
 
-  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent): void => {
+  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent<GameTypeFilter>): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes
   }, [])
 
-  const handlePeriodFilterChange = useCallback((event: SelectChangeEvent): void => {
+  const handlePeriodFilterChange = useCallback((event: SelectChangeEvent<LeaderboardPeriod>): void => {
     const newPeriod = event.target.value as LeaderboardPeriod
     setPeriodFilter(newPeriod)
     setCurrentPage(1) // Reset to first page when filter changes
@@ -194,11 +195,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
         return <TrophyIcon sx={{ color: '#CD7F32', fontSize: 20 }} /> // Bronze
       default:
         return (
-          <Box 
-            sx={{ 
-              width: 24, 
-              height: 24, 
-              borderRadius: '50%', 
+          <Box
+            sx={{
+              width: 24,
+              height: 24,
+              borderRadius: '50%',
               backgroundColor: 'primary.main',
               color: 'white',
               display: 'flex',
@@ -297,23 +298,23 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
           )}
 
           {/* No Data State */}
-          {!isLoading && !error && (!leaderboardData || 
-            (!leaderboardData.players && !leaderboardData.entries) || 
+          {!isLoading && !error && (!leaderboardData ||
+            (!leaderboardData.players && !leaderboardData.entries) ||
             (leaderboardData.players && leaderboardData.players.length === 0) ||
             (leaderboardData.entries && leaderboardData.entries.length === 0)) && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <TrophyIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                No Players Found
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {gameTypeFilter === 'all' && periodFilter === 'all'
-                  ? 'No players have completed any games yet.'
-                  : `No players found for ${getGameTypeName(gameTypeFilter)} in ${getPeriodName(periodFilter).toLowerCase()}.`
-                }
-              </Typography>
-            </Box>
-          )}
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <TrophyIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No Players Found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {gameTypeFilter === 'all' && periodFilter === 'all'
+                    ? 'No players have completed any games yet.'
+                    : `No players found for ${getGameTypeName(gameTypeFilter)} in ${getPeriodName(periodFilter).toLowerCase()}.`
+                  }
+                </Typography>
+              </Box>
+            )}
 
           {/* Current User Rank Display */}
           {!isLoading && !error && leaderboardData && isAuthenticated && leaderboardData.currentUserRank && (
@@ -328,55 +329,55 @@ export const Leaderboard: React.FC<LeaderboardProps> = React.memo(({
           )}
 
           {/* Leaderboard Table */}
-          {!isLoading && !error && leaderboardData && 
+          {!isLoading && !error && leaderboardData &&
             ((leaderboardData.players && leaderboardData.players.length > 0) ||
-             (leaderboardData.entries && leaderboardData.entries.length > 0)) && (
-            <>
-              <TableContainer component={Paper} variant="outlined">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center" sx={{ width: 80 }}>Rank</TableCell>
-                      <TableCell>Player</TableCell>
-                      <TableCell align="center">Total Score</TableCell>
-                      <TableCell align="center">Accuracy</TableCell>
-                      <TableCell align="center">Games Played</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(leaderboardData.players || leaderboardData.entries || []).map((player: LeaderboardEntryDto) => (
-                      <LeaderboardRow
-                        key={player.userId}
-                        player={player}
-                        getRankIcon={getRankIcon}
-                        getAccuracyColor={getAccuracyColor}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              (leaderboardData.entries && leaderboardData.entries.length > 0)) && (
+              <>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell align="center" sx={{ width: 80 }}>Rank</TableCell>
+                        <TableCell>Player</TableCell>
+                        <TableCell align="center">Total Score</TableCell>
+                        <TableCell align="center">Accuracy</TableCell>
+                        <TableCell align="center">Games Played</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(leaderboardData.players || leaderboardData.entries || []).map((player: LeaderboardEntryDto) => (
+                        <LeaderboardRow
+                          key={player.userId}
+                          player={player}
+                          getRankIcon={getRankIcon}
+                          getAccuracyColor={getAccuracyColor}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
 
-              {/* Pagination */}
-              {leaderboardData.totalPlayers > pageSize && (
-                <Stack spacing={2} sx={{ mt: 3, alignItems: 'center' }}>
-                  <Pagination
-                    count={Math.ceil(leaderboardData.totalPlayers / pageSize)}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    color="primary"
-                    showFirstButton
-                    showLastButton
-                    disabled={isLoading}
-                  />
-                  <Typography variant="body2" color="text.secondary">
-                    Showing {((currentPage - 1) * pageSize) + 1} to{' '}
-                    {Math.min(currentPage * pageSize, leaderboardData.totalPlayers)} of{' '}
-                    {leaderboardData.totalPlayers} players
-                  </Typography>
-                </Stack>
-              )}
-            </>
-          )}
+                {/* Pagination */}
+                {leaderboardData.totalPlayers > pageSize && (
+                  <Stack spacing={2} sx={{ mt: 3, alignItems: 'center' }}>
+                    <Pagination
+                      count={Math.ceil(leaderboardData.totalPlayers / pageSize)}
+                      page={currentPage}
+                      onChange={handlePageChange}
+                      color="primary"
+                      showFirstButton
+                      showLastButton
+                      disabled={isLoading}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Showing {((currentPage - 1) * pageSize) + 1} to{' '}
+                      {Math.min(currentPage * pageSize, leaderboardData.totalPlayers)} of{' '}
+                      {leaderboardData.totalPlayers} players
+                    </Typography>
+                  </Stack>
+                )}
+              </>
+            )}
         </CardContent>
       </Card>
     </Box>
@@ -396,13 +397,13 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
   getAccuracyColor
 }) => {
   return (
-    <TableRow 
+    <TableRow
       hover
       sx={{
         backgroundColor: player.isCurrentUser ? 'action.selected' : 'inherit',
         '&:hover': {
-          backgroundColor: player.isCurrentUser 
-            ? 'action.selected' 
+          backgroundColor: player.isCurrentUser
+            ? 'action.selected'
             : 'action.hover'
         }
       }}
@@ -412,14 +413,14 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
           {getRankIcon(player.rank)}
         </Box>
       </TableCell>
-      
+
       <TableCell>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
-            src={player.userAvatar} 
-            sx={{ 
-              width: 32, 
-              height: 32, 
+          <Avatar
+            src={player.userAvatar}
+            sx={{
+              width: 32,
+              height: 32,
               mr: 2,
               bgcolor: player.isCurrentUser ? 'primary.main' : 'grey.400'
             }}
@@ -427,19 +428,19 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
             {player.userAvatar ? null : <PersonIcon />}
           </Avatar>
           <Box>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 fontWeight: player.isCurrentUser ? 'bold' : 'normal',
                 color: player.isCurrentUser ? 'primary.main' : 'inherit'
               }}
             >
               {player.userName || player.displayName || 'Anonymous Player'}
               {player.isCurrentUser && (
-                <Chip 
-                  label="You" 
-                  size="small" 
-                  color="primary" 
+                <Chip
+                  label="You"
+                  size="small"
+                  color="primary"
                   sx={{ ml: 1, height: 20 }}
                 />
               )}
@@ -447,13 +448,13 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
           </Box>
         </Box>
       </TableCell>
-      
+
       <TableCell align="center">
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <TrendingUpIcon sx={{ fontSize: 16, color: 'primary.main', mr: 0.5 }} />
-          <Typography 
-            variant="body2" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            sx={{
               fontWeight: player.rank <= 3 ? 'bold' : 'normal',
               color: player.rank <= 3 ? 'primary.main' : 'inherit'
             }}
@@ -462,7 +463,7 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
           </Typography>
         </Box>
       </TableCell>
-      
+
       <TableCell align="center">
         <Chip
           label={`${Math.round(player.accuracy)}%`}
@@ -471,7 +472,7 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = React.memo(({
           variant="outlined"
         />
       </TableCell>
-      
+
       <TableCell align="center">
         <Typography variant="body2">
           {player.gamesPlayed || player.totalGames}

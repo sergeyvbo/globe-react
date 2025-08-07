@@ -37,7 +37,8 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../Common/Auth'
 import { gameStatsApiService, GameStatsApiError } from '../Common/GameProgress/GameStatsApiService'
-import { GameHistoryResponse, GameSessionDto, AuthErrorType, SelectChangeEvent } from '../Common/types'
+import { GameHistoryResponse, GameSessionDto, AuthErrorType } from '../Common/types'
+import { SelectChangeEvent } from '@mui/material/Select'
 
 interface GameHistoryProps {
   className?: string
@@ -122,7 +123,7 @@ export const GameHistory: React.FC<GameHistoryProps> = React.memo(({
     setCurrentPage(page)
   }, [])
 
-  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent): void => {
+  const handleGameTypeFilterChange = useCallback((event: SelectChangeEvent<GameTypeFilter>): void => {
     const newFilter = event.target.value as GameTypeFilter
     setGameTypeFilter(newFilter)
     setCurrentPage(1) // Reset to first page when filter changes

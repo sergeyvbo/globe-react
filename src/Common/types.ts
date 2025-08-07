@@ -223,7 +223,6 @@ export interface ValidationProblemDetails extends ProblemDetails {
 export type RFC9457Error = ProblemDetails | ValidationProblemDetails
 
 // Utility types for common patterns
-export type SelectChangeEvent = React.ChangeEvent<HTMLSelectElement>
 export type InputChangeEvent = React.ChangeEvent<HTMLInputElement>
 
 // Generic array utility types
