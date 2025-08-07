@@ -1,0 +1,277 @@
+{
+  "name": "GeoQuiz C# Quality Profile",
+  "language": "cs",
+  "rules": [
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S101",
+      "severity": "MAJOR",
+      "parameters": {
+        "format": "^[A-Z][a-zA-Z0-9]*$"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S100",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1118",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1144",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1481",
+      "severity": "MINOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1854",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2068",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2070",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2245",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2612",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S4426",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S5042",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S5659",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1066",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1067",
+      "severity": "MAJOR",
+      "parameters": {
+        "max": "3"
+      }
+    },
+
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S138",
+      "severity": "MAJOR",
+      "parameters": {
+        "max": "60"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1541",
+      "severity": "MAJOR",
+      "parameters": {
+        "threshold": "10"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1479",
+      "severity": "MAJOR",
+      "parameters": {
+        "maximum": "30"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S104",
+      "severity": "MAJOR",
+      "parameters": {
+        "maximumFileLocThreshold": "1000"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1200",
+      "severity": "MAJOR",
+      "parameters": {
+        "max": "200"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1151",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1186",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1172",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1168",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1135",
+      "severity": "INFO"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S125",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1134",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1116",
+      "severity": "MINOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1128",
+      "severity": "MINOR"
+    },
+
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1075",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1104",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2933",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2292",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2259",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2583",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1862",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1871",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1940",
+      "severity": "MINOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S3925",
+      "severity": "MAJOR"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S3776",
+      "severity": "CRITICAL",
+      "parameters": {
+        "threshold": "15"
+      }
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S1313",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2077",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2053",
+      "severity": "BLOCKER"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S2092",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S4507",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S4784",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S5766",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S6781",
+      "severity": "CRITICAL"
+    },
+    {
+      "repositoryKey": "csharpsquid",
+      "key": "S6967",
+      "severity": "MAJOR"
+    }
+  ]
+}
