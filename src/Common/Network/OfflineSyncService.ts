@@ -84,8 +84,6 @@ class OfflineSyncService {
     
     this.savePendingActions(pendingActions)
     this.notifyStatusChange()
-    
-    console.log('Action added to offline queue:', { type, actionId: action.id })
   }
 
   // Get all pending actions
@@ -121,11 +119,8 @@ class OfflineSyncService {
       const pendingActions = this.getPendingActions()
       
       if (pendingActions.length === 0) {
-        console.log('No pending actions to sync')
         return
       }
-
-      console.log(`Starting sync of ${pendingActions.length} pending actions`)
 
       const failedActions: PendingAction[] = []
       let syncedCount = 0
@@ -134,7 +129,6 @@ class OfflineSyncService {
         try {
           await this.syncSingleAction(action)
           syncedCount++
-          console.log(`Action synced successfully: ${action.type} (${action.id})`)
         } catch (error) {
           console.warn(`Failed to sync action: ${action.type} (${action.id})`, error)
           
@@ -159,7 +153,7 @@ class OfflineSyncService {
         lastSyncError: failedActions.length > 0 ? `${failedActions.length} actions failed to sync` : undefined
       })
 
-      console.log(`Sync completed: ${syncedCount} synced, ${failedActions.length} failed`)
+
 
       // If there are still failed actions, schedule a retry
       if (failedActions.length > 0) {
@@ -210,13 +204,11 @@ class OfflineSyncService {
   private async syncProfileUpdate(data: Record<string, unknown>): Promise<void> {
     // This would integrate with AuthService for profile updates
     // For now, we'll just log it as it's not implemented in the current system
-    console.log('Profile update sync not implemented yet:', data)
   }
 
   // Sync generic user action
   private async syncUserAction(data: Record<string, unknown>): Promise<void> {
     // Handle other types of user actions
-    console.log('User action sync:', data)
   }
 
   // Get current sync status
@@ -298,7 +290,6 @@ class OfflineSyncService {
   clearPendingActions(): void {
     localStorage.removeItem(this.PENDING_ACTIONS_KEY)
     this.notifyStatusChange()
-    console.log('All pending actions cleared')
   }
 
   // Check if there are pending actions

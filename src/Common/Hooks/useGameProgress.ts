@@ -70,11 +70,10 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
           currentOptions.gameType, 
           currentSession
         )
-        console.log(`${currentOptions.gameType} quiz progress auto-saved for authenticated user`)
+
       } else {
         // Save temporarily for unauthenticated users
         gameProgressService.saveTempSession(currentSession)
-        console.log(`${currentOptions.gameType} quiz progress saved temporarily for unauthenticated user`)
       }
     }
 
@@ -120,7 +119,6 @@ export const useGameProgress = (options: UseGameProgressOptions): UseGameProgres
       const syncOfflineSessions = async () => {
         try {
           await gameProgressService.syncOfflineSessionsManually()
-          console.log(`Offline ${gameType} quiz sessions synced successfully`)
         } catch (error) {
           console.error(`Failed to sync offline ${gameType} quiz sessions:`, error)
         }

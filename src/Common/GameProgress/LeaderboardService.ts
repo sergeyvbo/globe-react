@@ -156,7 +156,6 @@ export class LeaderboardService {
     const cacheKey = `global_${page}_${pageSize}`
     const cached = this.getCachedData(cacheKey)
     if (cached) {
-      console.log('Returning cached global leaderboard')
       return cached
     }
     
@@ -171,7 +170,6 @@ export class LeaderboardService {
       const transformedResponse = this.transformLeaderboardResponse(response)
       
       this.setCachedData(cacheKey, transformedResponse)
-      console.log('Global leaderboard retrieved successfully:', transformedResponse)
       return transformedResponse
     } catch (error) {
       console.error('Failed to fetch global leaderboard:', error)
@@ -196,7 +194,6 @@ export class LeaderboardService {
     const cacheKey = `gameType_${gameType}_${page}_${pageSize}`
     const cached = this.getCachedData(cacheKey)
     if (cached) {
-      console.log('Returning cached game type leaderboard')
       return cached
     }
     
@@ -211,7 +208,6 @@ export class LeaderboardService {
       const transformedResponse = this.transformLeaderboardResponse(response)
       
       this.setCachedData(cacheKey, transformedResponse)
-      console.log('Game type leaderboard retrieved successfully:', transformedResponse)
       return transformedResponse
     } catch (error) {
       console.error('Failed to fetch game type leaderboard:', error)
@@ -236,7 +232,6 @@ export class LeaderboardService {
     const cacheKey = `period_${period}_${page}_${pageSize}`
     const cached = this.getCachedData(cacheKey)
     if (cached) {
-      console.log('Returning cached period leaderboard')
       return cached
     }
     
@@ -254,7 +249,6 @@ export class LeaderboardService {
       const transformedResponse = this.transformLeaderboardResponse(response)
       
       this.setCachedData(cacheKey, transformedResponse)
-      console.log('Period leaderboard retrieved successfully:', transformedResponse)
       return transformedResponse
     } catch (error) {
       console.error('Failed to fetch period leaderboard:', error)
@@ -278,7 +272,6 @@ export class LeaderboardService {
     const cacheKey = `filtered_${gameType || 'all'}_${period || 'all'}_${page}_${pageSize}`
     const cached = this.getCachedData(cacheKey)
     if (cached) {
-      console.log('Returning cached filtered leaderboard')
       return cached
     }
     
@@ -306,7 +299,6 @@ export class LeaderboardService {
       const transformedResponse = this.transformLeaderboardResponse(response)
       
       this.setCachedData(cacheKey, transformedResponse)
-      console.log('Filtered leaderboard retrieved successfully:', transformedResponse)
       return transformedResponse
     } catch (error) {
       console.error('Failed to fetch filtered leaderboard:', error)
@@ -325,13 +317,11 @@ export class LeaderboardService {
   // Clear cache (useful for forcing refresh)
   clearCache(): void {
     this.cache.clear()
-    console.log('Leaderboard cache cleared')
   }
   
   // Clear specific cache entry
   clearCacheEntry(key: string): void {
     this.cache.delete(key)
-    console.log('Cache entry cleared:', key)
   }
   
   // Get cached data if still valid

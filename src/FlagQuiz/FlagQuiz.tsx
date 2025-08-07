@@ -77,7 +77,6 @@ export const FlagQuiz = React.memo(() => {
             setTimeout(() => actions.resetGame(), 0)
             setError(match)
             setTimeout(() => {
-                console.log('reset error')
                 setError(undefined)
             }, 1000)
         }

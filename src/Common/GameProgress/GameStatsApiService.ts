@@ -165,7 +165,6 @@ export class GameStatsApiService {
     
     try {
       const response = await HttpClient.post<GameSessionDto>('/game-stats', session, accessToken)
-      console.log('Game session saved successfully:', response)
       return response
     } catch (error) {
       console.error('Failed to save game session:', error)
@@ -187,7 +186,6 @@ export class GameStatsApiService {
     
     try {
       const response = await HttpClient.get<GameStatsResponse>('/game-stats/me', accessToken)
-      console.log('User stats retrieved successfully:', response)
       return response
     } catch (error) {
       console.error('Failed to get user stats:', error)
@@ -212,7 +210,6 @@ export class GameStatsApiService {
         `/game-stats/me/history?page=${page}&pageSize=${pageSize}`, 
         accessToken
       )
-      console.log('User game history retrieved successfully:', response)
       return response
     } catch (error) {
       console.error('Failed to get user game history:', error)
@@ -233,7 +230,6 @@ export class GameStatsApiService {
     const accessToken = await this.getValidAccessToken()
     
     if (!sessions || sessions.length === 0) {
-      console.log('No anonymous sessions to migrate')
       return
     }
     
@@ -241,7 +237,6 @@ export class GameStatsApiService {
     
     try {
       await HttpClient.post<void>('/game-stats/migrate', request, accessToken)
-      console.log('Anonymous progress migrated successfully:', sessions.length, 'sessions')
     } catch (error) {
       console.error('Failed to migrate anonymous progress:', error)
       if (error instanceof GameStatsApiError) {

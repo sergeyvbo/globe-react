@@ -64,8 +64,6 @@ const Quiz = React.memo((props: Props) => {
         // If already answered or disabled, ignore
         if (disabled || isAnswerSubmitted) return
 
-        console.log('Answer selected:', option, 'Correct:', correctOption, 'Is correct:', option === correctOption)
-
         setSelectedOption(option)
         setShowResult(true)
         setIsAnswerSubmitted(true)

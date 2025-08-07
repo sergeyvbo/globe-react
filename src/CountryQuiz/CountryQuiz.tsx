@@ -169,8 +169,6 @@ const CountryQuiz = React.memo(() => {
             
             // Also migrate any temporary progress that might exist
             await gameProgressService.migrateTempProgress(user)
-            
-            console.log('User authenticated during game, progress saved')
         } catch (error) {
             console.error('Failed to save progress after authentication:', error)
         }

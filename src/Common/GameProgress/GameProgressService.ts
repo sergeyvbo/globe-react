@@ -56,7 +56,6 @@ class GameProgressService {
       if (gameStatsApiService.isAuthenticated() && offlineDetector.isOnline()) {
         try {
           await gameStatsApiService.saveGameSession(sessionRequest)
-          console.log('Game session saved to server successfully', { userId, gameType, session })
           
           // Also update local storage for offline access
           await this.saveGameProgressLocally(userId, gameType, session)
@@ -70,7 +69,6 @@ class GameProgressService {
         }
       } else if (gameStatsApiService.isAuthenticated() && !offlineDetector.isOnline()) {
         // User is authenticated but offline - add to sync queue
-        console.log('User authenticated but offline, adding to sync queue')
         await offlineSyncService.addPendingAction('game_session', sessionRequest)
       }
       
@@ -124,8 +122,6 @@ class GameProgressService {
 
     // Also save to a backup location for sync purposes
     await this.saveToBackup(userId, progress)
-
-    console.log('Game progress saved locally', { userId, gameType, session })
   }
 
   // Get game progress for a user
@@ -323,7 +319,6 @@ class GameProgressService {
       const anonymousSessions = this.getAnonymousSessions()
       
       if (!tempSession && anonymousSessions.length === 0) {
-        console.log('No temporary progress to migrate')
         return
       }
 
@@ -334,11 +329,6 @@ class GameProgressService {
           
           // Clear anonymous sessions after successful migration
           localStorage.removeItem(this.ANONYMOUS_SESSIONS_KEY)
-          
-          console.log('Anonymous progress migrated via API successfully', { 
-            userId: user.id, 
-            sessionsCount: anonymousSessions.length 
-          })
         } catch (error) {
           console.warn('Failed to migrate via API, falling back to local migration:', error)
         }
@@ -347,7 +337,6 @@ class GameProgressService {
       // Migrate temporary session locally
       if (tempSession) {
         await this.saveGameProgress(user.id, tempSession.gameType, tempSession)
-        console.log('Temporary session migrated successfully', { userId: user.id, session: tempSession })
       }
       
       // Migrate anonymous sessions locally if API migration failed
@@ -366,11 +355,6 @@ class GameProgressService {
         
         // Clear anonymous sessions after local migration
         localStorage.removeItem(this.ANONYMOUS_SESSIONS_KEY)
-        
-        console.log('Anonymous sessions migrated locally', { 
-          userId: user.id, 
-          sessionsCount: anonymousSessions.length 
-        })
       }
       
     } catch (error) {
@@ -381,7 +365,6 @@ class GameProgressService {
   // Sync progress between devices and with server
   async syncProgress(userId: string): Promise<void> {
     try {
-      console.log('Progress sync initiated for user:', userId)
       
       // First, sync offline queue if user is authenticated
       if (gameStatsApiService.isAuthenticated()) {
@@ -407,7 +390,7 @@ class GameProgressService {
             lastPlayedAt: p.lastPlayedAt.toISOString()
           }))))
           
-          console.log('Progress synced with server successfully')
+
         } catch (error) {
           console.warn('Failed to sync with server, using local progress:', error)
         }

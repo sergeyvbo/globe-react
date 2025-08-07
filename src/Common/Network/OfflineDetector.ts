@@ -33,12 +33,10 @@ class OfflineDetectorService {
   }
 
   private handleOnline(): void {
-    console.log('Network connection restored')
     this.updateStatus(true)
   }
 
   private handleOffline(): void {
-    console.log('Network connection lost')
     this.updateStatus(false)
   }
 
