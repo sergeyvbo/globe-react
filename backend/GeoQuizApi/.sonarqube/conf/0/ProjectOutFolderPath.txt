@@ -1,0 +1,1 @@
+/usr/src/backend/GeoQuizApi/.sonarqube/out/0

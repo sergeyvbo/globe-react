@@ -1,0 +1,1 @@
+DR-/usr/src/backend/GeoQuizApi/GeoQuizApi.csproj¢net10.0òCSharp13
