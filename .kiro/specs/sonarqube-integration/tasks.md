@@ -1,6 +1,11 @@
 # Implementation Plan
 
-- [ ] 1. Настройка SonarQube сервера через Docker
+- [x] 1. Настройка SonarQube сервера через Docker
+
+
+
+
+
   - Создать docker-compose конфигурацию для SonarQube и PostgreSQL
   - Настроить volumes для персистентного хранения данных
   - Настроить Docker сеть для изоляции SonarQube компонентов
