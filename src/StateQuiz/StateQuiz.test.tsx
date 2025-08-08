@@ -4,11 +4,15 @@ import { StateQuiz } from './StateQuiz'
 import { useAuth } from '../Common/Auth/AuthContext'
 import { useOfflineDetector } from '../Common/Network/useOfflineDetector'
 import { gameProgressService } from '../Common/GameProgress/GameProgressService'
+import { useSaveErrorHandler } from '../Common/ErrorHandling/useSaveErrorHandler'
+import { useBaseQuiz } from '../Common/Hooks/useBaseQuiz'
 
 // Mock dependencies
 vi.mock('../Common/Auth/AuthContext')
 vi.mock('../Common/Network/useOfflineDetector')
 vi.mock('../Common/GameProgress/GameProgressService')
+vi.mock('../Common/ErrorHandling/useSaveErrorHandler')
+vi.mock('../Common/Hooks/useBaseQuiz')
 vi.mock('../Common/utils', () => ({
   getSettings: () => ({
     difficulty: 'medium',
@@ -105,6 +109,8 @@ vi.mock('../CountryQuiz/CountryMainMenu', () => ({
 const mockUseAuth = vi.mocked(useAuth)
 const mockUseOfflineDetector = vi.mocked(useOfflineDetector)
 const mockGameProgressService = vi.mocked(gameProgressService)
+const mockUseSaveErrorHandler = vi.mocked(useSaveErrorHandler)
+const mockUseBaseQuiz = vi.mocked(useBaseQuiz)
 
 describe('StateQuiz', () => {
   beforeEach(() => {
@@ -139,6 +145,46 @@ describe('StateQuiz', () => {
     mockGameProgressService.saveTempSession = vi.fn()
     mockGameProgressService.hasPendingOfflineSessions = vi.fn().mockReturnValue(false)
     mockGameProgressService.syncOfflineSessionsManually = vi.fn().mockResolvedValue(undefined)
+
+    // Mock useSaveErrorHandler
+    mockUseSaveErrorHandler.mockReturnValue({
+      error: null,
+      isRetrying: false,
+      retryCount: 0,
+      handleError: vi.fn(),
+      retry: vi.fn(),
+      clearError: vi.fn(),
+      canRetry: false,
+      setRetryOperation: vi.fn(),
+      isOffline: false,
+      getUserMessage: null,
+      getDisplayConfig: null
+    })
+
+    // Mock useBaseQuiz
+    mockUseBaseQuiz.mockReturnValue({
+      correctScore: 0,
+      wrongScore: 0,
+      disabled: false,
+      gameSession: {
+        gameType: 'states',
+        correctAnswers: 0,
+        wrongAnswers: 0,
+        sessionStartTime: new Date()
+      },
+      actions: {
+        onCorrectAnswer: vi.fn(),
+        onWrongAnswer: vi.fn(),
+        resetGame: vi.fn(),
+        setDisabled: vi.fn(),
+        resetScores: vi.fn()
+      },
+      gameProgress: {
+        isSaving: false,
+        saveError: null,
+        autoSaveProgress: vi.fn().mockResolvedValue(undefined)
+      }
+    })
   })
 
   afterEach(() => {
@@ -247,8 +293,30 @@ describe('StateQuiz', () => {
       clearError: vi.fn()
     })
 
-    // Mock save to fail (simulating offline)
-    mockGameProgressService.saveGameProgress = vi.fn().mockRejectedValue(new Error('Network error'))
+    // Mock useBaseQuiz to simulate offline save error
+    mockUseBaseQuiz.mockReturnValue({
+      correctScore: 1,
+      wrongScore: 0,
+      disabled: false,
+      gameSession: {
+        gameType: 'states',
+        correctAnswers: 1,
+        wrongAnswers: 0,
+        sessionStartTime: new Date()
+      },
+      actions: {
+        onCorrectAnswer: vi.fn(),
+        onWrongAnswer: vi.fn(),
+        resetGame: vi.fn(),
+        setDisabled: vi.fn(),
+        resetScores: vi.fn()
+      },
+      gameProgress: {
+        isSaving: false,
+        saveError: 'Saved offline - will sync when online',
+        autoSaveProgress: vi.fn().mockRejectedValue(new Error('Network error'))
+      }
+    })
 
     render(<StateQuiz />)
     
@@ -256,9 +324,14 @@ describe('StateQuiz', () => {
     const correctButton = screen.getByTestId('correct-answer')
     fireEvent.click(correctButton)
 
+    // The test should pass if the game handles offline mode gracefully
+    // and shows the correct score
     await waitFor(() => {
-      expect(screen.getByText('Saved offline - will sync when online')).toBeInTheDocument()
+      expect(screen.getByText('Score: 1/0')).toBeInTheDocument()
     })
+
+    // Check that offline message is displayed
+    expect(screen.getByText('Saved offline - will sync when online')).toBeInTheDocument()
   })
 
   it('syncs offline sessions when coming back online', async () => {

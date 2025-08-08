@@ -2,15 +2,18 @@ import { renderHook } from '@testing-library/react'
 import { useGameProgress, UseGameProgressOptions } from '../useGameProgress'
 import { gameProgressService } from '../../GameProgress/GameProgressService'
 import { useOfflineDetector } from '../../Network/useOfflineDetector'
+import { useSaveErrorHandler } from '../../ErrorHandling/useSaveErrorHandler'
 import { GameType, User } from '../../types'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // Mock dependencies
 vi.mock('../../GameProgress/GameProgressService')
 vi.mock('../../Network/useOfflineDetector')
+vi.mock('../../ErrorHandling/useSaveErrorHandler')
 
 const mockGameProgressService = gameProgressService as any
 const mockUseOfflineDetector = useOfflineDetector as any
+const mockUseSaveErrorHandler = useSaveErrorHandler as any
 
 describe('useGameProgress - Simple Tests', () => {
   const mockUser: User = {
@@ -50,6 +53,21 @@ describe('useGameProgress - Simple Tests', () => {
     mockGameProgressService.saveTempSession = vi.fn().mockImplementation(() => {})
     mockGameProgressService.hasPendingOfflineSessions = vi.fn().mockReturnValue(false)
     mockGameProgressService.syncOfflineSessionsManually = vi.fn().mockResolvedValue(undefined)
+
+    // Mock useSaveErrorHandler
+    mockUseSaveErrorHandler.mockReturnValue({
+      error: null,
+      isRetrying: false,
+      retryCount: 0,
+      handleError: vi.fn(),
+      retry: vi.fn(),
+      clearError: vi.fn(),
+      canRetry: false,
+      setRetryOperation: vi.fn(),
+      isOffline: false,
+      getUserMessage: null,
+      getDisplayConfig: null
+    })
   })
 
   it('should initialize with correct default values', () => {

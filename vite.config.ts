@@ -24,5 +24,24 @@ export default defineConfig({
       VITE_YANDEX_CLIENT_ID: 'test-yandex-client-id',
       VITE_VK_CLIENT_ID: 'test-vk-client-id',
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: [
+        'node_modules/**',
+        'src/setupTests.ts',
+        'src/vite-env.d.ts',
+        'src/react-app-env.d.ts',
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.e2e.test.{ts,tsx}',
+        'src/TestCodeQuality.tsx',
+        'src/Common/Standards/**',
+        'build/**',
+        'coverage/**',
+        'public/**'
+      ]
+    }
   },
 })
