@@ -372,3 +372,5 @@ FodyWeavers.xsd
 .env.local
 .env.production
 .env.staging
+
+.sonarqube/out/*

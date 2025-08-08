@@ -6,16 +6,13 @@ namespace GeoQuizApi.Middleware;
 public class SecurityHeadersMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly SecuritySettings _securitySettings;
     private readonly ILogger<SecurityHeadersMiddleware> _logger;
 
     public SecurityHeadersMiddleware(
         RequestDelegate next,
-        IOptions<SecuritySettings> securitySettings,
         ILogger<SecurityHeadersMiddleware> logger)
     {
         _next = next;
-        _securitySettings = securitySettings.Value;
         _logger = logger;
     }
 

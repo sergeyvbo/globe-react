@@ -12,12 +12,10 @@ namespace GeoQuizApi.Controllers;
 public class HealthController : ControllerBase
 {
     private readonly GeoQuizDbContext _context;
-    private readonly ILogger<HealthController> _logger;
 
-    public HealthController(GeoQuizDbContext context, ILogger<HealthController> logger)
+    public HealthController(GeoQuizDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     /// <summary>

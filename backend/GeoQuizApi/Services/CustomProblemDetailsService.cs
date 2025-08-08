@@ -11,18 +11,11 @@ namespace GeoQuizApi.Services;
 /// </summary>
 public class CustomProblemDetailsService : ICustomProblemDetailsService
 {
-    private readonly IProblemDetailsService _problemDetailsService;
     private readonly IWebHostEnvironment _environment;
-    private readonly ILogger<CustomProblemDetailsService> _logger;
 
-    public CustomProblemDetailsService(
-        IProblemDetailsService problemDetailsService,
-        IWebHostEnvironment environment,
-        ILogger<CustomProblemDetailsService> logger)
+    public CustomProblemDetailsService(IWebHostEnvironment environment)
     {
-        _problemDetailsService = problemDetailsService;
         _environment = environment;
-        _logger = logger;
     }
 
     /// <summary>

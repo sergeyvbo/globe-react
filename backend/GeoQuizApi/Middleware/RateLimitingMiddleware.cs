@@ -9,19 +9,16 @@ public class RateLimitingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly SecuritySettings _securitySettings;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<RateLimitingMiddleware> _logger;
     private static readonly ConcurrentDictionary<string, ClientRequestInfo> _clients = new();
 
     public RateLimitingMiddleware(
         RequestDelegate next,
         IOptions<SecuritySettings> securitySettings,
-        IConfiguration configuration,
         ILogger<RateLimitingMiddleware> logger)
     {
         _next = next;
         _securitySettings = securitySettings.Value;
-        _configuration = configuration;
         _logger = logger;
     }
 
@@ -92,7 +89,8 @@ public class RateLimitingMiddleware
     // Clean up old entries periodically (this is a simple implementation)
     static RateLimitingMiddleware()
     {
-        var timer = new Timer(CleanupOldEntries, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        // Timer must be kept alive to prevent garbage collection
+        _ = new Timer(CleanupOldEntries, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
     }
 
     private static void CleanupOldEntries(object? state)

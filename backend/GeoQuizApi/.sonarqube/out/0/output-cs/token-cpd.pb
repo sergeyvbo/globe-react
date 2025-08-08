@@ -3216,7 +3216,7 @@ bestStreak
 ··) *
 }
 ‚‚ 
-}„„ áM
+}„„ ﬂL
 2/usr/src/backend/GeoQuizApi/Services/JwtService.cs
 	namespace
 
@@ -3743,11 +3743,10 @@ LogWarningXX 
 Zeromm% )
 }nn 
 ,nn 
-outnn 
-SecurityTokennn  
-validatedTokennn! /
-)nn/ 0
-;nn0 1
+outnn 
+_nn 
+)nn 
+;nn 
 returnpp 
 truepp 
 ;pp 
@@ -7605,7 +7604,7 @@ bestStreak
 
 }
 ÙÙ 
-}ıı …N
+}ıı ÛH
 C/usr/src/backend/GeoQuizApi/Services/CustomProblemDetailsService.cs
 	namespace 	
 
@@ -7621,555 +7620,505 @@ GeoQuizApi
 ICustomProblemDetailsService+ G
 { 
 private 
-readonly "
-IProblemDetailsService +"
-_problemDetailsService, B
-;B C
-private 
-readonly 
-IWebHostEnvironment (
-_environment) 5
-;5 6
-private 
-readonly 
-ILogger 
-< '
-CustomProblemDetailsService 8
->8 9
-_logger: A
-;A B
-public 
+readonly 
+IWebHostEnvironment (
+_environment) 5
+;5 6
+public 
 '
-CustomProblemDetailsService &
-(& '"
-IProblemDetailsService !
-problemDetailsService 4
-,4 5
-IWebHostEnvironment 
-environment '
-,' (
-ILogger 
-< '
-CustomProblemDetailsService +
->+ ,
-logger- 3
-)3 4
-{ "
-_problemDetailsService 
-=  !
-problemDetailsService! 6
-;6 7
-_environment 
-= 
-environment "
-;" #
-_logger 
-= 
-logger 
-; 
-} 
-public"" 
+CustomProblemDetailsService &
+(& '
+IWebHostEnvironment' :
+environment; F
+)F G
+{ 
+_environment 
+= 
+environment "
+;" #
+} 
+public 
 
-ProblemDetails""  
-CreateProblemDetails"" .
-("". /
-	Exception""/ 8
-	exception""9 B
-,""B C
-HttpContext""D O
-context""P W
-)""W X
-{## 
-var$$ 
-($$ 
+ProblemDetails  
+CreateProblemDetails .
+(. /
+	Exception/ 8
+	exception9 B
+,B C
+HttpContextD O
+contextP W
+)W X
+{ 
+var 
+( 
 
-statusCode$$ 
-,$$ 
-problemType$$ $
-)$$$ %
-=$$& ''
-GetStatusCodeAndProblemType$$( C
-($$C D
-	exception$$D M
-)$$M N
-;$$N O
-var%% 
-title%% 
-=%% 
-ProblemTypes%%  
-.%%  !
-GetTitle%%! )
-(%%) *
-problemType%%* 5
-)%%5 6
-;%%6 7
-var'' 
-problemDetails'' 
-='' 
-new''  
-ProblemDetails''! /
-{(( 	
-Type)) 
-=)) 
-problemType)) 
-,)) 
-Title** 
-=** 
-title** 
-,** 
-Status++ 
-=++ 
+statusCode 
+, 
+problemType $
+)$ %
+=& ''
+GetStatusCodeAndProblemType( C
+(C D
+	exceptionD M
+)M N
+;N O
+var 
+title 
+= 
+ProblemTypes  
+.  !
+GetTitle! )
+() *
+problemType* 5
+)5 6
+;6 7
+var   
+problemDetails   
+=   
+new    
+ProblemDetails  ! /
+{!! 	
+Type"" 
+="" 
+problemType"" 
+,"" 
+Title## 
+=## 
+title## 
+,## 
+Status$$ 
+=$$ 
 
-statusCode++ 
-,++  
-Detail,, 
-=,, 
-GetDetailMessage,, %
-(,,% &
-	exception,,& /
-,,,/ 0
+statusCode$$ 
+,$$  
+Detail%% 
+=%% 
+GetDetailMessage%% %
+(%%% &
+	exception%%& /
+,%%/ 0
 
-statusCode,,1 ;
-),,; <
-,,,< =
-Instance-- 
-=-- 
-context-- 
-.-- 
-Request-- &
-.--& '
-Path--' +
-}.. 	
-;..	 
+statusCode%%1 ;
+)%%; <
+,%%< =
+Instance&& 
+=&& 
+context&& 
+.&& 
+Request&& &
+.&&& '
+Path&&' +
+}'' 	
+;''	 
 
-problemDetails11 
-.11 
+problemDetails** 
+.** 
 
-Extensions11 !
-[11! "
-$str11" -
-]11- .
-=11/ 0
-DateTime111 9
-.119 :
-UtcNow11: @
-;11@ A
-problemDetails22 
-.22 
+Extensions** !
+[**! "
+$str**" -
+]**- .
+=**/ 0
+DateTime**1 9
+.**9 :
+UtcNow**: @
+;**@ A
+problemDetails++ 
+.++ 
 
-Extensions22 !
-[22! "
-$str22" +
-]22+ ,
-=22- .
-context22/ 6
-.226 7
-TraceIdentifier227 F
-;22F G
-if55 
+Extensions++ !
+[++! "
+$str++" +
+]+++ ,
+=++- .
+context++/ 6
+.++6 7
+TraceIdentifier++7 F
+;++F G
+if.. 
 
-(55 
-_environment55 
-.55 
-IsDevelopment55 &
-(55& '
-)55' (
-&&55) +
+(.. 
+_environment.. 
+... 
+IsDevelopment.. &
+(..& '
+)..' (
+&&..) +
 
-statusCode55, 6
-==557 9
-(55: ;
-int55; >
-)55> ?
-HttpStatusCode55? M
-.55M N
-InternalServerError55N a
-)55a b
-{66 	
-problemDetails77 
-.77 
+statusCode.., 6
+==..7 9
+(..: ;
+int..; >
+)..> ?
+HttpStatusCode..? M
+...M N
+InternalServerError..N a
+)..a b
+{// 	
+problemDetails00 
+.00 
 
-Extensions77 %
-[77% &
-$str77& 2
-]772 3
-=774 5
-	exception776 ?
-.77? @
+Extensions00 %
+[00% &
+$str00& 2
+]002 3
+=004 5
+	exception006 ?
+.00? @
 
-StackTrace77@ J
-??77K M
-string77N T
-.77T U
-Empty77U Z
-;77Z [
-if88 
-(88 
-	exception88 
-.88 
-InnerException88 (
-!=88) +
-null88, 0
-)880 1
-{99 
-problemDetails:: 
-.:: 
+StackTrace00@ J
+??00K M
+string00N T
+.00T U
+Empty00U Z
+;00Z [
+if11 
+(11 
+	exception11 
+.11 
+InnerException11 (
+!=11) +
+null11, 0
+)110 1
+{22 
+problemDetails33 
+.33 
 
-Extensions:: )
-[::) *
-$str::* :
-]::: ;
-=::< =
-	exception::> G
-.::G H
-InnerException::H V
-.::V W
-Message::W ^
-;::^ _
-};; 
-}<< 	
-return>> 
-problemDetails>> 
-;>> 
-}?? 
-publicGG 
+Extensions33 )
+[33) *
+$str33* :
+]33: ;
+=33< =
+	exception33> G
+.33G H
+InnerException33H V
+.33V W
+Message33W ^
+;33^ _
+}44 
+}55 	
+return77 
+problemDetails77 
+;77 
+}88 
+public@@ 
 $
-ValidationProblemDetailsGG #*
-CreateValidationProblemDetailsGG$ B
-(GGB C
-ValidationExceptionGGC V
-	exceptionGGW `
-,GG` a
-HttpContextGGb m
-contextGGn u
-)GGu v
-{HH 
-varII $
-validationProblemDetailsII $
-=II% &
-newII' *$
-ValidationProblemDetailsII+ C
-{JJ 	
-TypeKK 
-=KK 
-ProblemTypesKK 
-.KK  
-ValidationErrorKK  /
-,KK/ 0
-TitleLL 
-=LL 
-ProblemTypesLL  
-.LL  !
-GetTitleLL! )
-(LL) *
-ProblemTypesLL* 6
-.LL6 7
-ValidationErrorLL7 F
-)LLF G
-,LLG H
-StatusMM 
-=MM 
-(MM 
-intMM 
-)MM 
-HttpStatusCodeMM (
-.MM( )
-UnprocessableEntityMM) <
-,MM< =
-DetailNN 
-=NN 
-$strNN 8
-,NN8 9
-InstanceOO 
-=OO 
-contextOO 
-.OO 
-RequestOO &
-.OO& '
-PathOO' +
-}PP 	
-;PP	 
+ValidationProblemDetails@@ #*
+CreateValidationProblemDetails@@$ B
+(@@B C
+ValidationException@@C V
+	exception@@W `
+,@@` a
+HttpContext@@b m
+context@@n u
+)@@u v
+{AA 
+varBB $
+validationProblemDetailsBB $
+=BB% &
+newBB' *$
+ValidationProblemDetailsBB+ C
+{CC 	
+TypeDD 
+=DD 
+ProblemTypesDD 
+.DD  
+ValidationErrorDD  /
+,DD/ 0
+TitleEE 
+=EE 
+ProblemTypesEE  
+.EE  !
+GetTitleEE! )
+(EE) *
+ProblemTypesEE* 6
+.EE6 7
+ValidationErrorEE7 F
+)EEF G
+,EEG H
+StatusFF 
+=FF 
+(FF 
+intFF 
+)FF 
+HttpStatusCodeFF (
+.FF( )
+UnprocessableEntityFF) <
+,FF< =
+DetailGG 
+=GG 
+$strGG 8
+,GG8 9
+InstanceHH 
+=HH 
+contextHH 
+.HH 
+RequestHH &
+.HH& '
+PathHH' +
+}II 	
+;II	 
 
-foreachSS 
-(SS 
-varSS 
-errorSS 
-inSS 
-	exceptionSS '
-.SS' (
-ErrorsSS( .
-)SS. /
-{TT 	$
-validationProblemDetailsUU $
-.UU$ %
-ErrorsUU% +
-[UU+ ,
-errorUU, 1
-.UU1 2
-KeyUU2 5
-]UU5 6
-=UU7 8
-errorUU9 >
-.UU> ?
-ValueUU? D
-;UUD E
-}VV 	$
-validationProblemDetailsYY  
-.YY  !
+foreachLL 
+(LL 
+varLL 
+errorLL 
+inLL 
+	exceptionLL '
+.LL' (
+ErrorsLL( .
+)LL. /
+{MM 	$
+validationProblemDetailsNN $
+.NN$ %
+ErrorsNN% +
+[NN+ ,
+errorNN, 1
+.NN1 2
+KeyNN2 5
+]NN5 6
+=NN7 8
+errorNN9 >
+.NN> ?
+ValueNN? D
+;NND E
+}OO 	$
+validationProblemDetailsRR  
+.RR  !
 
-ExtensionsYY! +
-[YY+ ,
-$strYY, 7
-]YY7 8
-=YY9 :
-DateTimeYY; C
-.YYC D
-UtcNowYYD J
-;YYJ K$
-validationProblemDetailsZZ  
-.ZZ  !
+ExtensionsRR! +
+[RR+ ,
+$strRR, 7
+]RR7 8
+=RR9 :
+DateTimeRR; C
+.RRC D
+UtcNowRRD J
+;RRJ K$
+validationProblemDetailsSS  
+.SS  !
 
-ExtensionsZZ! +
-[ZZ+ ,
-$strZZ, 5
-]ZZ5 6
-=ZZ7 8
-contextZZ9 @
-.ZZ@ A
-TraceIdentifierZZA P
-;ZZP Q
-return\\ $
-validationProblemDetails\\ '
-;\\' (
-}]] 
-privatedd 
-staticdd 
-(dd 
-intdd 
+ExtensionsSS! +
+[SS+ ,
+$strSS, 5
+]SS5 6
+=SS7 8
+contextSS9 @
+.SS@ A
+TraceIdentifierSSA P
+;SSP Q
+returnUU $
+validationProblemDetailsUU '
+;UU' (
+}VV 
+private]] 
+static]] 
+(]] 
+int]] 
 
-statusCodedd "
-,dd" #
-stringdd$ *
-problemTypedd+ 6
-)dd6 7'
-GetStatusCodeAndProblemTypedd8 S
-(ddS T
-	ExceptionddT ]
-	exceptiondd^ g
-)ddg h
-{ee 
-returnff 
-	exceptionff 
-switchff 
-{gg 	
-ValidationExceptionhh 
-=>hh  "
-(hh# $
-(hh$ %
-inthh% (
-)hh( )
-HttpStatusCodehh) 7
-.hh7 8
-UnprocessableEntityhh8 K
-,hhK L
-ProblemTypeshhM Y
-.hhY Z
-ValidationErrorhhZ i
-)hhi j
-,hhj k'
-UnauthorizedAccessExceptionii '
-=>ii( *
-(ii+ ,
-(ii, -
-intii- 0
-)ii0 1
-HttpStatusCodeii1 ?
-.ii? @
-Unauthorizedii@ L
-,iiL M
-ProblemTypesiiN Z
-.iiZ [
-AuthenticationErrorii[ n
-)iin o
-,iio p 
-KeyNotFoundExceptionjj  
-=>jj! #
-(jj$ %
-(jj% &
-intjj& )
-)jj) *
-HttpStatusCodejj* 8
-.jj8 9
-NotFoundjj9 A
-,jjA B
-ProblemTypesjjC O
-.jjO P
-NotFoundErrorjjP ]
-)jj] ^
-,jj^ _%
-InvalidOperationExceptionkk %
-invalidOpExkk& 1
-whenkk2 6
-invalidOpExkk7 B
-.kkB C
-MessagekkC J
-.kkJ K
-ContainskkK S
-(kkS T
-$strkkT d
-)kkd e
-=>kkf h
-(ll 
-(ll 
-intll 
-)ll 
-HttpStatusCodell $
-.ll$ %
-Conflictll% -
-,ll- .
-ProblemTypesll/ ;
-.ll; <
-ConflictErrorll< I
-)llI J
-,llJ K%
-InvalidOperationExceptionmm %
-=>mm& (
-(mm) *
-(mm* +
-intmm+ .
-)mm. /
-HttpStatusCodemm/ =
-.mm= >
-Conflictmm> F
-,mmF G
-ProblemTypesmmH T
-.mmT U
-ConflictErrormmU b
-)mmb c
-,mmc d
-ArgumentExceptionnn 
-=>nn  
-(nn! "
-(nn" #
-intnn# &
-)nn& '
-HttpStatusCodenn' 5
-.nn5 6
+statusCode]] "
+,]]" #
+string]]$ *
+problemType]]+ 6
+)]]6 7'
+GetStatusCodeAndProblemType]]8 S
+(]]S T
+	Exception]]T ]
+	exception]]^ g
+)]]g h
+{^^ 
+return__ 
+	exception__ 
+switch__ 
+{`` 	
+ValidationExceptionaa 
+=>aa  "
+(aa# $
+(aa$ %
+intaa% (
+)aa( )
+HttpStatusCodeaa) 7
+.aa7 8
+UnprocessableEntityaa8 K
+,aaK L
+ProblemTypesaaM Y
+.aaY Z
+ValidationErroraaZ i
+)aai j
+,aaj k'
+UnauthorizedAccessExceptionbb '
+=>bb( *
+(bb+ ,
+(bb, -
+intbb- 0
+)bb0 1
+HttpStatusCodebb1 ?
+.bb? @
+Unauthorizedbb@ L
+,bbL M
+ProblemTypesbbN Z
+.bbZ [
+AuthenticationErrorbb[ n
+)bbn o
+,bbo p 
+KeyNotFoundExceptioncc  
+=>cc! #
+(cc$ %
+(cc% &
+intcc& )
+)cc) *
+HttpStatusCodecc* 8
+.cc8 9
+NotFoundcc9 A
+,ccA B
+ProblemTypesccC O
+.ccO P
+NotFoundErrorccP ]
+)cc] ^
+,cc^ _%
+InvalidOperationExceptiondd %
+invalidOpExdd& 1
+whendd2 6
+invalidOpExdd7 B
+.ddB C
+MessageddC J
+.ddJ K
+ContainsddK S
+(ddS T
+$strddT d
+)ddd e
+=>ddf h
+(ee 
+(ee 
+intee 
+)ee 
+HttpStatusCodeee $
+.ee$ %
+Conflictee% -
+,ee- .
+ProblemTypesee/ ;
+.ee; <
+ConflictErroree< I
+)eeI J
+,eeJ K%
+InvalidOperationExceptionff %
+=>ff& (
+(ff) *
+(ff* +
+intff+ .
+)ff. /
+HttpStatusCodeff/ =
+.ff= >
+Conflictff> F
+,ffF G
+ProblemTypesffH T
+.ffT U
+ConflictErrorffU b
+)ffb c
+,ffc d
+ArgumentExceptiongg 
+=>gg  
+(gg! "
+(gg" #
+intgg# &
+)gg& '
+HttpStatusCodegg' 5
+.gg5 6
 
-BadRequestnn6 @
-,nn@ A
-ProblemTypesnnB N
-.nnN O
-BadRequestErrornnO ^
-)nn^ _
-,nn_ `
-_oo 
-=>oo 
-(oo 
-(oo 
-intoo 
-)oo 
-HttpStatusCodeoo %
-.oo% &
-InternalServerErroroo& 9
-,oo9 :
-ProblemTypesoo; G
-.ooG H
-InternalServerErrorooH [
-)oo[ \
-}pp 	
-;pp	 
+BadRequestgg6 @
+,gg@ A
+ProblemTypesggB N
+.ggN O
+BadRequestErrorggO ^
+)gg^ _
+,gg_ `
+_hh 
+=>hh 
+(hh 
+(hh 
+inthh 
+)hh 
+HttpStatusCodehh %
+.hh% &
+InternalServerErrorhh& 9
+,hh9 :
+ProblemTypeshh; G
+.hhG H
+InternalServerErrorhhH [
+)hh[ \
+}ii 	
+;ii	 
 
-}qq 
-privateyy 
-stringyy 
-GetDetailMessageyy #
-(yy# $
-	Exceptionyy$ -
-	exceptionyy. 7
-,yy7 8
-intyy9 <
+}jj 
+privaterr 
+stringrr 
+GetDetailMessagerr #
+(rr# $
+	Exceptionrr$ -
+	exceptionrr. 7
+,rr7 8
+intrr9 <
 
-statusCodeyy= G
-)yyG H
-{zz 
-if|| 
+statusCoderr= G
+)rrG H
+{ss 
+ifuu 
 
-(|| 
+(uu 
 
-statusCode|| 
->=|| 
-$num|| 
-&&||  
+statusCodeuu 
+>=uu 
+$numuu 
+&&uu  
 
-statusCode||! +
-<||, -
-$num||. 1
-)||1 2
-{}} 	
-return~~ 
-	exception~~ 
-.~~ 
-Message~~ $
-;~~$ %
-} 	
-if
-ÇÇ 
-
-(
-ÇÇ 
+statusCodeuu! +
+<uu, -
+$numuu. 1
+)uu1 2
+{vv 	
+returnww 
+	exceptionww 
+.ww 
+Messageww $
+;ww$ %
+}xx 	
+if{{ 
+
+({{ 
 
-statusCode
-ÇÇ 
->=
-ÇÇ 
-$num
-ÇÇ 
-)
-ÇÇ 
-{
-ÉÉ 	
-return
-ÑÑ 
-_environment
-ÑÑ 
-.
-ÑÑ  
-IsDevelopment
-ÑÑ  -
-(
-ÑÑ- .
-)
-ÑÑ. /
-?
-ÖÖ 
-	exception
-ÖÖ 
-.
-ÖÖ 
-Message
-ÖÖ #
-:
-ÜÜ 
-$str
-ÜÜ 5
-;
-ÜÜ5 6
+statusCode{{ 
+>={{ 
+$num{{ 
+){{ 
+{|| 	
+return}} 
+_environment}} 
+.}}  
+IsDevelopment}}  -
+(}}- .
+)}}. /
+?~~ 
+	exception~~ 
+.~~ 
+Message~~ #
+: 
+$str 5
+;5 6
 }
-áá 	
+ÄÄ 	
 return
-ââ 
+ÇÇ 
 	exception
-ââ 
+ÇÇ 
 .
-ââ 
+ÇÇ 
 Message
-ââ  
+ÇÇ  
 ;
-ââ  !
+ÇÇ  !
 }
-ää 
-}ãã Ô9
+ÉÉ 
+}ÑÑ Ô9
 </usr/src/backend/GeoQuizApi/Services/ConcurrencyUtilities.cs
 	namespace 	
 
@@ -11519,7 +11468,7 @@ emailRegex
 ÇÇ! "
 }
 ÉÉ 
-}ÑÑ ¸ˇ
+}ÑÑ Õã
 &/usr/src/backend/GeoQuizApi/Program.cs
 var 
 builder 
@@ -11748,28 +11697,33 @@ ModelState11F P
 .;; 
 
 Extensions;; %
-[;;% &
-$str;;& 1
-];;1 2
-=;;3 4
-DateTime;;5 =
-.;;= >
-UtcNow;;> D
-;;;D E
+[;;% &#
+ProblemDetailsConstants;;& =
+.;;= >
+TimestampKey;;> J
+];;J K
+=;;L M
+DateTime;;N V
+.;;V W
+UtcNow;;W ]
+;;;] ^
 problemDetails<< 
 .<< 
 
 Extensions<< %
-[<<% &
-$str<<& /
-]<</ 0
-=<<1 2
-context<<3 :
-.<<: ;
-HttpContext<<; F
-.<<F G
-TraceIdentifier<<G V
-;<<V W
+[<<% &#
+ProblemDetailsConstants<<& =
+.<<= >
+
+TraceIdKey<<> H
+]<<H I
+=<<J K
+context<<L S
+.<<S T
+HttpContext<<T _
+.<<_ `
+TraceIdentifier<<` o
+;<<o p
 return>> 
 new>> "
 BadRequestObjectResult>> -
@@ -11779,9 +11733,11 @@ Extensions<< %
 {?? 
 ContentTypes@@ 
 =@@ 
-{@@  
-$str@@! ;
-}@@< =
+{@@  #
+ProblemDetailsConstants@@! 8
+.@@8 9"
+ProblemJsonContentType@@9 O
+}@@P Q
 }AA 
 ;AA 
 }BB 	
@@ -12039,30 +11995,35 @@ JwtServicehh( 2
 .}} 
 
 Extensions}} )
-[}}) *
-$str}}* 5
-]}}5 6
-=}}7 8
-DateTime}}9 A
-.}}A B
-UtcNow}}B H
-;}}H I
+[}}) *#
+ProblemDetailsConstants}}* A
+.}}A B
+TimestampKey}}B N
+]}}N O
+=}}P Q
+DateTime}}R Z
+.}}Z [
+UtcNow}}[ a
+;}}a b
 context~~ 
 .~~ 
 ProblemDetails~~ 
 .~~ 
 
 Extensions~~ )
-[~~) *
-$str~~* 3
-]~~3 4
-=~~5 6
-context~~7 >
-.~~> ?
-HttpContext~~? J
-.~~J K
-TraceIdentifier~~K Z
-;~~Z [
+[~~) *#
+ProblemDetailsConstants~~* A
+.~~A B
+
+TraceIdKey~~B L
+]~~L M
+=~~N O
+context~~P W
+.~~W X
+HttpContext~~X c
+.~~c d
+TraceIdentifier~~d s
+;~~s t
 context
 ÅÅ 
 .
@@ -12680,21 +12641,25 @@ GetSection
 Extensions
 ƒƒ %
 [
-ƒƒ% &
-$str
-ƒƒ& 1
-]
-ƒƒ1 2
-=
-ƒƒ3 4
-DateTime
-ƒƒ5 =
+ƒƒ% &%
+ProblemDetailsConstants
+ƒƒ& =
 .
-ƒƒ= >
+ƒƒ= >
+TimestampKey
+ƒƒ> J
+]
+ƒƒJ K
+=
+ƒƒL M
+DateTime
+ƒƒN V
+.
+ƒƒV W
 UtcNow
-ƒƒ> D
+ƒƒW ]
 ;
-ƒƒD E
+ƒƒ] ^
 problemDetails
 ≈≈ 
 .
@@ -12703,25 +12668,30 @@ Extensions
 Extensions
 ≈≈ %
 [
-≈≈% &
-$str
-≈≈& /
+≈≈% &%
+ProblemDetailsConstants
+≈≈& =
+.
+≈≈= >
+
+TraceIdKey
+≈≈> H
 ]
-≈≈/ 0
+≈≈H I
 =
-≈≈1 2
+≈≈J K
 context
-≈≈3 :
+≈≈L S
 .
-≈≈: ;
+≈≈S T
 HttpContext
-≈≈; F
+≈≈T _
 .
-≈≈F G
+≈≈_ `
 TraceIdentifier
-≈≈G V
+≈≈` o
 ;
-≈≈V W
+≈≈o p
 context
 «« 
 .
@@ -12754,11 +12724,15 @@ StatusCode
 ContentType
 »» (
 =
-»») *
-$str
-»»+ E
+»») *%
+ProblemDetailsConstants
+»»+ B
+.
+»»B C$
+ProblemJsonContentType
+»»C Y
 ;
-»»E F
+»»Y Z
 return
    
 context
@@ -12914,21 +12888,25 @@ StatusCode
 Extensions
 ›› %
 [
-››% &
-$str
-››& 1
-]
-››1 2
-=
-››3 4
-DateTime
-››5 =
+››% &%
+ProblemDetailsConstants
+››& =
 .
-››= >
+››= >
+TimestampKey
+››> J
+]
+››J K
+=
+››L M
+DateTime
+››N V
+.
+››V W
 UtcNow
-››> D
+››W ]
 ;
-››D E
+››] ^
 problemDetails
 ﬁﬁ 
 .
@@ -12937,25 +12915,30 @@ Extensions
 Extensions
 ﬁﬁ %
 [
-ﬁﬁ% &
-$str
-ﬁﬁ& /
+ﬁﬁ% &%
+ProblemDetailsConstants
+ﬁﬁ& =
+.
+ﬁﬁ= >
+
+TraceIdKey
+ﬁﬁ> H
 ]
-ﬁﬁ/ 0
+ﬁﬁH I
 =
-ﬁﬁ1 2
+ﬁﬁJ K
 context
-ﬁﬁ3 :
+ﬁﬁL S
 .
-ﬁﬁ: ;
+ﬁﬁS T
 HttpContext
-ﬁﬁ; F
+ﬁﬁT _
 .
-ﬁﬁF G
+ﬁﬁ_ `
 TraceIdentifier
-ﬁﬁG V
+ﬁﬁ` o
 ;
-ﬁﬁV W
+ﬁﬁo p
 context
 ‡‡ 
 .
@@ -12988,11 +12971,15 @@ StatusCode
 ContentType
 ·· (
 =
-··) *
-$str
-··+ E
+··) *%
+ProblemDetailsConstants
+··+ B
+.
+··B C$
+ProblemJsonContentType
+··C Y
 ;
-··E F
+··Y Z
 return
 „„ 
 context
@@ -13906,21 +13893,25 @@ StatusCode
 Extensions
 ⁄⁄ !
 [
-⁄⁄! "
-$str
-⁄⁄" -
-]
-⁄⁄- .
-=
-⁄⁄/ 0
-DateTime
-⁄⁄1 9
+⁄⁄! "%
+ProblemDetailsConstants
+⁄⁄" 9
 .
-⁄⁄9 :
+⁄⁄9 :
+TimestampKey
+⁄⁄: F
+]
+⁄⁄F G
+=
+⁄⁄H I
+DateTime
+⁄⁄J R
+.
+⁄⁄R S
 UtcNow
-⁄⁄: @
+⁄⁄S Y
 ;
-⁄⁄@ A
+⁄⁄Y Z
 problemDetails
 €€ 
 .
@@ -13929,25 +13920,30 @@ Extensions
 Extensions
 €€ !
 [
-€€! "
-$str
-€€" +
+€€! "%
+ProblemDetailsConstants
+€€" 9
+.
+€€9 :
+
+TraceIdKey
+€€: D
 ]
-€€+ ,
+€€D E
 =
-€€- .
+€€F G
 context
-€€/ 6
+€€H O
 .
-€€6 7
+€€O P
 HttpContext
-€€7 B
+€€P [
 .
-€€B C
+€€[ \
 TraceIdentifier
-€€C R
+€€\ k
 ;
-€€R S
+€€k l
 response
 ›› 
 .
@@ -13955,11 +13951,15 @@ Extensions
 ContentType
 ›› 
 =
-›› 
-$str
-›› 9
+›› %
+ProblemDetailsConstants
+›› 6
+.
+››6 7$
+ProblemJsonContentType
+››7 M
 ;
-››9 :
+››M N
 await
 ﬁﬁ 
 response
@@ -14262,7 +14262,62 @@ EnableHsts
 ãã 	
 ;
 ãã	 
-˛?
+
+internaléé 
+static
+éé	 
+class
+éé %
+ProblemDetailsConstants
+éé -
+{èè 
+public
+êê 
+
+const
+êê 
+string
+êê 
+TimestampKey
+êê $
+=
+êê% &
+$str
+êê' 2
+;
+êê2 3
+public
+ëë 
+
+const
+ëë 
+string
+ëë 
+
+TraceIdKey
+ëë "
+=
+ëë# $
+$str
+ëë% .
+;
+ëë. /
+public
+íí 
+
+const
+íí 
+string
+íí $
+ProblemJsonContentType
+íí .
+=
+íí/ 0
+$str
+íí1 K
+;
+ííK L
+}ìì ˛?
 2/usr/src/backend/GeoQuizApi/Models/ProblemTypes.cs
 	namespace 	
 
@@ -18677,7 +18732,7 @@ ForeignKeyHH $
 ÅÅ 	
 }
 ÇÇ 
-}ÉÉ ô"
+}ÉÉ ¶
 C/usr/src/backend/GeoQuizApi/Middleware/SecurityHeadersMiddleware.cs
 	namespace 	
 
@@ -18697,248 +18752,215 @@ Middleware 
 _next% *
 ;* +
 private		 
-readonly		 
-SecuritySettings		 %
-_securitySettings		& 7
-;		7 8
-private
-
- 
-readonly
-
- 
-ILogger
-
- 
-<
-
- %
-SecurityHeadersMiddleware
-
- 6
->
-
-6 7
-_logger
-
-8 ?
-;
-
-? @
-public 
+readonly		 
+ILogger		 
+<		 %
+SecurityHeadersMiddleware		 6
+>		6 7
+_logger		8 ?
+;		? @
+public 
 %
-SecurityHeadersMiddleware $
-($ %
-RequestDelegate 
-next 
-, 
-IOptions 
-< 
-SecuritySettings !
->! "
-securitySettings# 3
-,3 4
-ILogger 
-< %
-SecurityHeadersMiddleware )
->) *
-logger+ 1
-)1 2
-{ 
-_next 
-= 
-next 
-; 
-_securitySettings 
-= 
-securitySettings ,
-., -
-Value- 2
-;2 3
-_logger 
-= 
-logger 
-; 
-} 
-public 
+SecurityHeadersMiddleware $
+($ %
+RequestDelegate 
+next 
+, 
+ILogger 
+< %
+SecurityHeadersMiddleware )
+>) *
+logger+ 1
+)1 2
+{ 
+_next 
+= 
+next 
+; 
+_logger 
+= 
+logger 
+; 
+} 
+public 
 
-async 
-Task 
-InvokeAsync !
-(! "
-HttpContext" -
-context. 5
-)5 6
-{ 
-AddSecurityHeaders 
-( 
-context "
-)" #
-;# $
-await 
-_next 
-( 
-context 
-) 
-; 
-} 
-private 
-void 
-AddSecurityHeaders #
-(# $
-HttpContext$ /
-context0 7
-)7 8
-{ 
-var   
-headers   
-=   
-context   
-.   
-Response   &
-.  & '
-Headers  ' .
-;  . /
-var!! 
-path!! 
-=!! 
-context!! 
-.!! 
-Request!! "
-.!!" #
-Path!!# '
-.!!' (
-Value!!( -
-?!!- .
-.!!. /
-ToLowerInvariant!!/ ?
-(!!? @
-)!!@ A
-;!!A B
-var$$ 
-isScalarEndpoint$$ 
-=$$ 
-path$$ #
-?$$# $
-.$$$ %
+async 
+Task 
+InvokeAsync !
+(! "
+HttpContext" -
+context. 5
+)5 6
+{ 
+AddSecurityHeaders 
+( 
+context "
+)" #
+;# $
+await 
+_next 
+( 
+context 
+) 
+; 
+} 
+private 
+void 
+AddSecurityHeaders #
+(# $
+HttpContext$ /
+context0 7
+)7 8
+{ 
+var 
+headers 
+= 
+context 
+. 
+Response &
+.& '
+Headers' .
+;. /
+var 
+path 
+= 
+context 
+. 
+Request "
+." #
+Path# '
+.' (
+Value( -
+?- .
+.. /
+ToLowerInvariant/ ?
+(? @
+)@ A
+;A B
+var!! 
+isScalarEndpoint!! 
+=!! 
+path!! #
+?!!# $
+.!!$ %
 
-StartsWith$$% /
-($$/ 0
-$str$$0 9
-)$$9 :
-==$$; =
-true$$> B
-||$$C E
-path$$F J
-?$$J K
-.$$K L
+StartsWith!!% /
+(!!/ 0
+$str!!0 9
+)!!9 :
+==!!; =
+true!!> B
+||!!C E
+path!!F J
+?!!J K
+.!!K L
 
-StartsWith$$L V
-($$V W
-$str$$W a
-)$$a b
-==$$c e
-true$$f j
-;$$j k
+StartsWith!!L V
+(!!V W
+$str!!W a
+)!!a b
+==!!c e
+true!!f j
+;!!j k
+headers$$ 
+.$$ 
+Append$$ 
+($$ 
+$str$$ /
+,$$/ 0
+$str$$1 :
+)$$: ;
+;$$; <
 headers'' 
 .'' 
 Append'' 
 ('' 
-$str'' /
-,''/ 0
-$str''1 :
-)'': ;
-;''; <
+$str'' (
+,''( )
+$str''* 0
+)''0 1
+;''1 2
 headers** 
 .** 
 Append** 
 (** 
-$str** (
-,**( )
-$str*** 0
-)**0 1
-;**1 2
+$str** )
+,**) *
+$str**+ :
+)**: ;
+;**; <
 headers-- 
 .-- 
 Append-- 
 (-- 
-$str-- )
-,--) *
-$str--+ :
-)--: ;
-;--; <
-headers00 
-.00 
-Append00 
-(00 
-$str00 (
-,00( )
-$str00* K
-)00K L
-;00L M
-if33 
+$str-- (
+,--( )
+$str--* K
+)--K L
+;--L M
+if00 
 
-(33 
-isScalarEndpoint33 
-)33 
-{44 	
-headers66 
-.66 
-Append66 
-(66 
-$str66 4
-,664 5
-$str77 &
-+77' (
-$str88 C
-+88D E
-$str99 4
-+995 6
-$str:: (
-+::) *
-$str;; B
-);;B C
-;;;C D
-}<< 	
-else== 
-{>> 	
-headers@@ 
-.@@ 
-Append@@ 
-(@@ 
-$str@@ 4
-,@@4 5
-$str@@6 c
-)@@c d
-;@@d e
-}AA 	
+(00 
+isScalarEndpoint00 
+)00 
+{11 	
+headers33 
+.33 
+Append33 
+(33 
+$str33 4
+,334 5
+$str44 &
++44' (
+$str55 C
++55D E
+$str66 4
++665 6
+$str77 (
++77) *
+$str88 B
+)88B C
+;88C D
+}99 	
+else:: 
+{;; 	
+headers== 
+.== 
+Append== 
+(== 
+$str== 4
+,==4 5
+$str==6 c
+)==c d
+;==d e
+}>> 	
+headersAA 
+.AA 
+AppendAA 
+(AA 
+$strAA :
+,AA: ;
+$strAA< B
+)AAB C
+;AAC D
 headersDD 
 .DD 
-AppendDD 
+RemoveDD 
 (DD 
-$strDD :
-,DD: ;
-$strDD< B
-)DDB C
-;DDC D
-headersGG 
-.GG 
-RemoveGG 
-(GG 
-$strGG 
-)GG  
-;GG  !
-_loggerII 
-.II 
-LogDebugII 
-(II 
-$strII N
-,IIN O
-pathIIP T
-)IIT U
-;IIU V
-}JJ 
-}KK ãQ
+$strDD 
+)DD  
+;DD  !
+_loggerFF 
+.FF 
+LogDebugFF 
+(FF 
+$strFF N
+,FFN O
+pathFFP T
+)FFT U
+;FFU V
+}GG 
+}HH ãQ
 H/usr/src/backend/GeoQuizApi/Middleware/Rfc9457ErrorHandlingMiddleware.cs
 	namespace 	
 
@@ -20924,7 +20946,7 @@ Connection
 ––J K
 }
 —— 
-}““ »Q
+}““ ¶O
 @/usr/src/backend/GeoQuizApi/Middleware/RateLimitingMiddleware.cs
 	namespace 	
 
@@ -20959,566 +20981,554 @@ Middleware 
 _securitySettings& 7
 ;7 8
 private 
-readonly 
-IConfiguration #
-_configuration$ 2
-;2 3
-private 
-readonly 
-ILogger 
-< "
-RateLimitingMiddleware 3
->3 4
-_logger5 <
-;< =
-private 
-static 
-readonly  
-ConcurrentDictionary 0
-<0 1
-string1 7
-,7 8
-ClientRequestInfo9 J
->J K
-_clientsL T
-=U V
-newW Z
-(Z [
-)[ \
-;\ ]
-public 
+readonly 
+ILogger 
+< "
+RateLimitingMiddleware 3
+>3 4
+_logger5 <
+;< =
+private 
+static 
+readonly  
+ConcurrentDictionary 0
+<0 1
+string1 7
+,7 8
+ClientRequestInfo9 J
+>J K
+_clientsL T
+=U V
+newW Z
+(Z [
+)[ \
+;\ ]
+public 
 "
-RateLimitingMiddleware !
-(! "
-RequestDelegate 
-next 
-, 
-IOptions 
-< 
-SecuritySettings !
->! "
-securitySettings# 3
-,3 4
-IConfiguration 
-configuration $
-,$ %
-ILogger 
-< "
-RateLimitingMiddleware &
->& '
-logger( .
-). /
-{ 
-_next 
-= 
-next 
-; 
-_securitySettings 
-= 
-securitySettings ,
-., -
-Value- 2
-;2 3
-_configuration 
-= 
-configuration &
-;& '
-_logger 
-= 
-logger 
-; 
-} 
-public 
+RateLimitingMiddleware !
+(! "
+RequestDelegate 
+next 
+, 
+IOptions 
+< 
+SecuritySettings !
+>! "
+securitySettings# 3
+,3 4
+ILogger 
+< "
+RateLimitingMiddleware &
+>& '
+logger( .
+). /
+{ 
+_next 
+= 
+next 
+; 
+_securitySettings 
+= 
+securitySettings ,
+., -
+Value- 2
+;2 3
+_logger 
+= 
+logger 
+; 
+} 
+public 
 
-async 
-Task 
-InvokeAsync !
-(! "
-HttpContext" -
-context. 5
-)5 6
-{ 
-if 
+async 
+Task 
+InvokeAsync !
+(! "
+HttpContext" -
+context. 5
+)5 6
+{ 
+if 
 
-( 
-! 
-_securitySettings 
-. 
-EnableRateLimiting 1
-)1 2
-{ 	
-await   
-_next   
-(   
-context   
-)    
-;    !
-return!! 
-;!! 
-}"" 	
-var$$ 
-clientId$$ 
-=$$ 
-GetClientIdentifier$$ *
-($$* +
-context$$+ 2
+( 
+! 
+_securitySettings 
+. 
+EnableRateLimiting 1
+)1 2
+{ 	
+await 
+_next 
+( 
+context 
+)  
+;  !
+return 
+; 
+} 	
+var!! 
+clientId!! 
+=!! 
+GetClientIdentifier!! *
+(!!* +
+context!!+ 2
+)!!2 3
+;!!3 4
+var"" 
+isAuthEndpoint"" 
+="" 
+IsAuthEndpoint"" +
+(""+ ,
+context"", 3
+.""3 4
+Request""4 ;
+.""; <
+Path""< @
+)""@ A
+;""A B
+if$$ 
+
+($$ 
+IsRateLimited$$ 
+($$ 
+clientId$$ "
+,$$" #
+isAuthEndpoint$$$ 2
 )$$2 3
-;$$3 4
-var%% 
-isAuthEndpoint%% 
-=%% 
-IsAuthEndpoint%% +
-(%%+ ,
-context%%, 3
-.%%3 4
-Request%%4 ;
-.%%; <
-Path%%< @
-)%%@ A
-;%%A B
-if'' 
-
-('' 
-IsRateLimited'' 
-('' 
-clientId'' "
-,''" #
-isAuthEndpoint''$ 2
-)''2 3
-)''3 4
-{(( 	
-_logger)) 
-.)) 
+)$$3 4
+{%% 	
+_logger&& 
+.&& 
 
-LogWarning)) 
-()) 
-$str)) Y
-,))Y Z
-clientId** 
-,** 
-context** !
-.**! "
-Request**" )
-.**) *
-Path*** .
-)**. /
-;**/ 0
-context,, 
-.,, 
-Response,, 
-.,, 
+LogWarning&& 
+(&& 
+$str&& Y
+,&&Y Z
+clientId'' 
+,'' 
+context'' !
+.''! "
+Request''" )
+.'') *
+Path''* .
+)''. /
+;''/ 0
+context)) 
+.)) 
+Response)) 
+.)) 
 
-StatusCode,, '
-=,,( )
-(,,* +
-int,,+ .
-),,. /
-HttpStatusCode,,/ =
-.,,= >
-TooManyRequests,,> M
-;,,M N
-context-- 
-.-- 
-Response-- 
-.-- 
-Headers-- $
-.--$ %
-Append--% +
-(--+ ,
-$str--, 9
-,--9 :
-$str--; ?
-)--? @
-;--@ A
-await// 
-context// 
-.// 
-Response// "
-.//" #
+StatusCode)) '
+=))( )
+())* +
+int))+ .
+))). /
+HttpStatusCode))/ =
+.))= >
+TooManyRequests))> M
+;))M N
+context** 
+.** 
+Response** 
+.** 
+Headers** $
+.**$ %
+Append**% +
+(**+ ,
+$str**, 9
+,**9 :
+$str**; ?
+)**? @
+;**@ A
+await,, 
+context,, 
+.,, 
+Response,, "
+.,," #
 
-WriteAsync//# -
-(//- .
-$str//. \
-)//\ ]
-;//] ^
-return00 
-;00 
-}11 	
-await33 
-_next33 
-(33 
-context33 
-)33 
-;33 
-}44 
-private66 
-string66 
-GetClientIdentifier66 &
-(66& '
-HttpContext66' 2
-context663 :
-)66: ;
-{77 
-var99 
-clientIp99 
-=99 
-context99 
-.99 
-Request99 &
-.99& '
-Headers99' .
-[99. /
-$str99/ @
-]99@ A
-.99A B
-FirstOrDefault99B P
-(99P Q
-)99Q R
-?99R S
-.99S T
-Split99T Y
-(99Y Z
-$char99Z ]
-)99] ^
-.99^ _
-FirstOrDefault99_ m
-(99m n
-)99n o
-?99o p
-.99p q
-Trim99q u
-(99u v
-)99v w
-??:: 
-context::  
-.::  !
-Request::! (
-.::( )
-Headers::) 0
-[::0 1
-$str::1 <
-]::< =
-.::= >
-FirstOrDefault::> L
-(::L M
-)::M N
-??;; 
-context;;  
-.;;  !
+WriteAsync,,# -
+(,,- .
+$str,,. \
+),,\ ]
+;,,] ^
+return-- 
+;-- 
+}.. 	
+await00 
+_next00 
+(00 
+context00 
+)00 
+;00 
+}11 
+private33 
+string33 
+GetClientIdentifier33 &
+(33& '
+HttpContext33' 2
+context333 :
+)33: ;
+{44 
+var66 
+clientIp66 
+=66 
+context66 
+.66 
+Request66 &
+.66& '
+Headers66' .
+[66. /
+$str66/ @
+]66@ A
+.66A B
+FirstOrDefault66B P
+(66P Q
+)66Q R
+?66R S
+.66S T
+Split66T Y
+(66Y Z
+$char66Z ]
+)66] ^
+.66^ _
+FirstOrDefault66_ m
+(66m n
+)66n o
+?66o p
+.66p q
+Trim66q u
+(66u v
+)66v w
+??77 
+context77  
+.77  !
+Request77! (
+.77( )
+Headers77) 0
+[770 1
+$str771 <
+]77< =
+.77= >
+FirstOrDefault77> L
+(77L M
+)77M N
+??88 
+context88  
+.88  !
 
-Connection;;! +
-.;;+ ,
-RemoteIpAddress;;, ;
-?;;; <
-.;;< =
-ToString;;= E
-(;;E F
-);;F G
-??<< 
-$str<< "
-;<<" #
-return>> 
-clientIp>> 
-;>> 
-}?? 
-privateAA 
-boolAA 
-IsAuthEndpointAA 
-(AA  
+Connection88! +
+.88+ ,
+RemoteIpAddress88, ;
+?88; <
+.88< =
+ToString88= E
+(88E F
+)88F G
+??99 
+$str99 "
+;99" #
+return;; 
+clientIp;; 
+;;; 
+}<< 
+private>> 
+bool>> 
+IsAuthEndpoint>> 
+(>>  
 
-PathStringAA  *
-pathAA+ /
-)AA/ 0
-{BB 
-returnCC 
-pathCC 
-.CC 
-StartsWithSegmentsCC &
-(CC& '
-$strCC' 2
-)CC2 3
-;CC3 4
-}DD 
-privateFF 
-boolFF 
-IsRateLimitedFF 
-(FF 
-stringFF %
-clientIdFF& .
-,FF. /
-boolFF0 4
-isAuthEndpointFF5 C
-)FFC D
-{GG 
-varHH 
-nowHH 
-=HH 
-DateTimeHH 
-.HH 
-UtcNowHH !
-;HH! "
-varII 
-windowStartII 
-=II 
-nowII 
-.II 
+PathString>>  *
+path>>+ /
+)>>/ 0
+{?? 
+return@@ 
+path@@ 
+.@@ 
+StartsWithSegments@@ &
+(@@& '
+$str@@' 2
+)@@2 3
+;@@3 4
+}AA 
+privateCC 
+boolCC 
+IsRateLimitedCC 
+(CC 
+stringCC %
+clientIdCC& .
+,CC. /
+boolCC0 4
+isAuthEndpointCC5 C
+)CCC D
+{DD 
+varEE 
+nowEE 
+=EE 
+DateTimeEE 
+.EE 
+UtcNowEE !
+;EE! "
+varFF 
+windowStartFF 
+=FF 
+nowFF 
+.FF 
 
-AddMinutesII (
-(II( )
--II) *
-_securitySettingsII* ;
-.II; <
-	RateLimitII< E
-.IIE F
-WindowSizeMinutesIIF W
-)IIW X
-;IIX Y
-varKK 
+AddMinutesFF (
+(FF( )
+-FF) *
+_securitySettingsFF* ;
+.FF; <
+	RateLimitFF< E
+.FFE F
+WindowSizeMinutesFFF W
+)FFW X
+;FFX Y
+varHH 
 
-clientInfoKK 
-=KK 
-_clientsKK !
-.KK! "
-AddOrUpdateKK" -
-(KK- .
-clientIdKK. 6
-,KK6 7
-newLL 
-ClientRequestInfoLL !
-{LL" #
-RequestsLL$ ,
-=LL- .
-newLL/ 2
-ListLL3 7
-<LL7 8
-DateTimeLL8 @
->LL@ A
-{LLB C
-nowLLD G
-}LLH I
-}LLJ K
-,LLK L
-(MM 
-keyMM 
-,MM 
-existingMM 
-)MM 
-=>MM 
-{NN 
-existingPP 
-.PP 
-RequestsPP !
-.PP! "
-	RemoveAllPP" +
-(PP+ ,
-rPP, -
-=>PP. 0
-rPP1 2
-<PP3 4
-windowStartPP5 @
-)PP@ A
-;PPA B
-existingQQ 
-.QQ 
-RequestsQQ !
-.QQ! "
-AddQQ" %
-(QQ% &
-nowQQ& )
-)QQ) *
-;QQ* +
-returnRR 
-existingRR 
-;RR  
-}SS 
-)SS 
-;SS 
-varUU 
-limitUU 
-=UU 
-isAuthEndpointUU "
-?VV 
-_securitySettingsVV 
-.VV  
-	RateLimitVV  )
-.VV) *"
-AuthEndpointsPerMinuteVV* @
-:WW 
-_securitySettingsWW 
-.WW  
-	RateLimitWW  )
-.WW) *%
-GeneralEndpointsPerMinuteWW* C
-;WWC D
-returnYY 
+clientInfoHH 
+=HH 
+_clientsHH !
+.HH! "
+AddOrUpdateHH" -
+(HH- .
+clientIdHH. 6
+,HH6 7
+newII 
+ClientRequestInfoII !
+{II" #
+RequestsII$ ,
+=II- .
+newII/ 2
+ListII3 7
+<II7 8
+DateTimeII8 @
+>II@ A
+{IIB C
+nowIID G
+}IIH I
+}IIJ K
+,IIK L
+(JJ 
+keyJJ 
+,JJ 
+existingJJ 
+)JJ 
+=>JJ 
+{KK 
+existingMM 
+.MM 
+RequestsMM !
+.MM! "
+	RemoveAllMM" +
+(MM+ ,
+rMM, -
+=>MM. 0
+rMM1 2
+<MM3 4
+windowStartMM5 @
+)MM@ A
+;MMA B
+existingNN 
+.NN 
+RequestsNN !
+.NN! "
+AddNN" %
+(NN% &
+nowNN& )
+)NN) *
+;NN* +
+returnOO 
+existingOO 
+;OO  
+}PP 
+)PP 
+;PP 
+varRR 
+limitRR 
+=RR 
+isAuthEndpointRR "
+?SS 
+_securitySettingsSS 
+.SS  
+	RateLimitSS  )
+.SS) *"
+AuthEndpointsPerMinuteSS* @
+:TT 
+_securitySettingsTT 
+.TT  
+	RateLimitTT  )
+.TT) *%
+GeneralEndpointsPerMinuteTT* C
+;TTC D
+returnVV 
 
-clientInfoYY 
-.YY 
-RequestsYY "
-.YY" #
-CountYY# (
->YY) *
-limitYY+ 0
-;YY0 1
-}ZZ 
-static]] 
+clientInfoVV 
+.VV 
+RequestsVV "
+.VV" #
+CountVV# (
+>VV) *
+limitVV+ 0
+;VV0 1
+}WW 
+staticZZ 
 "
-RateLimitingMiddleware]] !
-(]]! "
-)]]" #
-{^^ 
-var__ 
-timer__ 
-=__ 
-new__ 
-Timer__ 
-(__ 
-CleanupOldEntries__ /
-,__/ 0
-null__1 5
-,__5 6
-TimeSpan__7 ?
-.__? @
-FromMinutes__@ K
-(__K L
-$num__L M
-)__M N
-,__N O
-TimeSpan__P X
-.__X Y
-FromMinutes__Y d
-(__d e
-$num__e f
-)__f g
-)__g h
-;__h i
-}`` 
-privatebb 
-staticbb 
-voidbb 
-CleanupOldEntriesbb )
-(bb) *
-objectbb* 0
-?bb0 1
-statebb2 7
-)bb7 8
-{cc 
-vardd 
-cutoffdd 
-=dd 
-DateTimedd 
-.dd 
-UtcNowdd $
-.dd$ %
+RateLimitingMiddlewareZZ !
+(ZZ! "
+)ZZ" #
+{[[ 
+_]] 	
+=]]
+ 
+new]] 
+Timer]] 
+(]] 
+CleanupOldEntries]] '
+,]]' (
+null]]) -
+,]]- .
+TimeSpan]]/ 7
+.]]7 8
+FromMinutes]]8 C
+(]]C D
+$num]]D E
+)]]E F
+,]]F G
+TimeSpan]]H P
+.]]P Q
+FromMinutes]]Q \
+(]]\ ]
+$num]]] ^
+)]]^ _
+)]]_ `
+;]]` a
+}^^ 
+private`` 
+static`` 
+void`` 
+CleanupOldEntries`` )
+(``) *
+object``* 0
+?``0 1
+state``2 7
+)``7 8
+{aa 
+varbb 
+cutoffbb 
+=bb 
+DateTimebb 
+.bb 
+UtcNowbb $
+.bb$ %
 
-AddMinutesdd% /
-(dd/ 0
--dd0 1
-$numdd1 3
-)dd3 4
-;dd4 5
-varee 
-keysToRemoveee 
-=ee 
-newee 
-Listee #
-<ee# $
-stringee$ *
->ee* +
-(ee+ ,
-)ee, -
-;ee- .
-foreachgg 
-(gg 
-vargg 
-kvpgg 
-ingg 
-_clientsgg $
-)gg$ %
-{hh 	
-kvpii 
-.ii 
-Valueii 
-.ii 
-Requestsii 
-.ii 
-	RemoveAllii (
-(ii( )
-rii) *
-=>ii+ -
-rii. /
-<ii0 1
-cutoffii2 8
-)ii8 9
-;ii9 :
-ifjj 
-(jj 
-kvpjj 
-.jj 
-Valuejj 
-.jj 
-Requestsjj "
-.jj" #
-Countjj# (
-==jj) +
-$numjj, -
-)jj- .
-{kk 
-keysToRemovell 
-.ll 
-Addll  
-(ll  !
-kvpll! $
-.ll$ %
-Keyll% (
-)ll( )
-;ll) *
-}mm 
-}nn 	
-foreachpp 
-(pp 
-varpp 
-keypp 
-inpp 
-keysToRemovepp (
-)pp( )
-{qq 	
-_clientsrr 
-.rr 
-	TryRemoverr 
-(rr 
-keyrr "
-,rr" #
-outrr$ '
-_rr( )
-)rr) *
-;rr* +
-}ss 	
-}tt 
-}uu 
-publicww 
-classww 
-ClientRequestInfoww 
-{xx 
-publicyy 
+AddMinutesbb% /
+(bb/ 0
+-bb0 1
+$numbb1 3
+)bb3 4
+;bb4 5
+varcc 
+keysToRemovecc 
+=cc 
+newcc 
+Listcc #
+<cc# $
+stringcc$ *
+>cc* +
+(cc+ ,
+)cc, -
+;cc- .
+foreachee 
+(ee 
+varee 
+kvpee 
+inee 
+_clientsee $
+)ee$ %
+{ff 	
+kvpgg 
+.gg 
+Valuegg 
+.gg 
+Requestsgg 
+.gg 
+	RemoveAllgg (
+(gg( )
+rgg) *
+=>gg+ -
+rgg. /
+<gg0 1
+cutoffgg2 8
+)gg8 9
+;gg9 :
+ifhh 
+(hh 
+kvphh 
+.hh 
+Valuehh 
+.hh 
+Requestshh "
+.hh" #
+Counthh# (
+==hh) +
+$numhh, -
+)hh- .
+{ii 
+keysToRemovejj 
+.jj 
+Addjj  
+(jj  !
+kvpjj! $
+.jj$ %
+Keyjj% (
+)jj( )
+;jj) *
+}kk 
+}ll 	
+foreachnn 
+(nn 
+varnn 
+keynn 
+innn 
+keysToRemovenn (
+)nn( )
+{oo 	
+_clientspp 
+.pp 
+	TryRemovepp 
+(pp 
+keypp "
+,pp" #
+outpp$ '
+_pp( )
+)pp) *
+;pp* +
+}qq 	
+}rr 
+}ss 
+publicuu 
+classuu 
+ClientRequestInfouu 
+{vv 
+publicww 
 
-Listyy 
-<yy 
-DateTimeyy 
->yy 
-Requestsyy "
-{yy# $
-getyy% (
-;yy( )
-setyy* -
-;yy- .
-}yy/ 0
-=yy1 2
-newyy3 6
-(yy6 7
-)yy7 8
-;yy8 9
-}zz ®V
+Listww 
+<ww 
+DateTimeww 
+>ww 
+Requestsww "
+{ww# $
+getww% (
+;ww( )
+setww* -
+;ww- .
+}ww/ 0
+=ww1 2
+newww3 6
+(ww6 7
+)ww7 8
+;ww8 9
+}xx ÖU
 C/usr/src/backend/GeoQuizApi/Middleware/InputValidationMiddleware.cs
 	namespace 	
 
@@ -21759,395 +21769,386 @@ IgnoreCase/ 9
 )001 2
 )002 3
 {11 	
-var22 
-originalBody22 
-=22 
-context22 &
-.22& '
-Request22' .
-.22. /
-Body22/ 3
-;223 4
-try44 
-{55 
-context66 
-.66 
-Request66 
-.66  
-EnableBuffering66  /
-(66/ 0
-)660 1
-;661 2
-using88 
-var88 
-reader88  
-=88! "
-new88# &
-StreamReader88' 3
-(883 4
-context884 ;
-.88; <
-Request88< C
-.88C D
-Body88D H
-,88H I
-Encoding88J R
-.88R S
-UTF888S W
-,88W X
-	leaveOpen88Y b
-:88b c
-true88d h
-)88h i
-;88i j
-var99 
-body99 
-=99 
-await99  
-reader99! '
-.99' (
-ReadToEndAsync99( 6
-(996 7
-)997 8
-;998 9
-context:: 
-.:: 
-Request:: 
-.::  
-Body::  $
-.::$ %
-Position::% -
-=::. /
-$num::0 1
-;::1 2
-if<< 
-(<< 
-!<< 
-string<< 
-.<< 
-IsNullOrEmpty<< )
-(<<) *
-body<<* .
-)<<. /
-&&<<0 2$
-ContainsMaliciousContent<<3 K
-(<<K L
-body<<L P
-)<<P Q
-)<<Q R
-{== 
-_logger>> 
-.>> 
+try22 
+{33 
+context44 
+.44 
+Request44 
+.44  
+EnableBuffering44  /
+(44/ 0
+)440 1
+;441 2
+using66 
+var66 
+reader66  
+=66! "
+new66# &
+StreamReader66' 3
+(663 4
+context664 ;
+.66; <
+Request66< C
+.66C D
+Body66D H
+,66H I
+Encoding66J R
+.66R S
+UTF866S W
+,66W X
+	leaveOpen66Y b
+:66b c
+true66d h
+)66h i
+;66i j
+var77 
+body77 
+=77 
+await77  
+reader77! '
+.77' (
+ReadToEndAsync77( 6
+(776 7
+)777 8
+;778 9
+context88 
+.88 
+Request88 
+.88  
+Body88  $
+.88$ %
+Position88% -
+=88. /
+$num880 1
+;881 2
+if:: 
+(:: 
+!:: 
+string:: 
+.:: 
+IsNullOrEmpty:: )
+(::) *
+body::* .
+)::. /
+&&::0 2$
+ContainsMaliciousContent::3 K
+(::K L
+body::L P
+)::P Q
+)::Q R
+{;; 
+_logger<< 
+.<< 
 
-LogWarning>> &
-(>>& '
-$str>>' c
-,>>c d
-GetClientIpAddress?? *
-(??* +
-context??+ 2
-)??2 3
-,??3 4
-context??5 <
-.??< =
-Request??= D
-.??D E
-Path??E I
-,??I J
-body??K O
-)??O P
-;??P Q
-contextAA 
-.AA 
-ResponseAA $
-.AA$ %
+LogWarning<< &
+(<<& '
+$str<<' c
+,<<c d
+GetClientIpAddress== *
+(==* +
+context==+ 2
+)==2 3
+,==3 4
+context==5 <
+.==< =
+Request=== D
+.==D E
+Path==E I
+,==I J
+body==K O
+)==O P
+;==P Q
+context?? 
+.?? 
+Response?? $
+.??$ %
 
-StatusCodeAA% /
-=AA0 1
-$numAA2 5
-;AA5 6
-awaitBB 
-contextBB !
-.BB! "
-ResponseBB" *
-.BB* +
+StatusCode??% /
+=??0 1
+$num??2 5
+;??5 6
+await@@ 
+context@@ !
+.@@! "
+Response@@" *
+.@@* +
 
-WriteAsyncBB+ 5
-(BB5 6
-$strBB6 O
-)BBO P
-;BBP Q
-returnCC 
-;CC 
-}DD 
-}EE 
-catchFF 
-(FF 
-	ExceptionFF 
-exFF 
-)FF  
-{GG 
-_loggerHH 
-.HH 
-LogErrorHH  
-(HH  !
-exHH! #
-,HH# $
-$strHH% D
-)HHD E
-;HHE F
-}JJ 
-}KK 	
-awaitMM 
-_nextMM 
-(MM 
-contextMM 
-)MM 
-;MM 
-}NN 
-privatePP 
-staticPP 
-boolPP !
-ShouldValidateRequestPP -
-(PP- .
-HttpRequestPP. 9
-requestPP: A
-)PPA B
-{QQ 
-varRR 
-methodRR 
-=RR 
-requestRR 
-.RR 
-MethodRR #
-.RR# $
-ToUpperInvariantRR$ 4
-(RR4 5
-)RR5 6
-;RR6 7
-varSS 
-contentTypeSS 
-=SS 
-requestSS !
-.SS! "
-ContentTypeSS" -
-?SS- .
-.SS. /
-ToLowerInvariantSS/ ?
-(SS? @
-)SS@ A
-;SSA B
-returnUU 
-(UU 
-methodUU 
-==UU 
-$strUU  
-||UU! #
-methodUU$ *
-==UU+ -
-$strUU. 3
-||UU4 6
-methodUU7 =
-==UU> @
-$strUUA H
-)UUH I
-&&UUJ L
-(VV 
-contentTypeVV 
-?VV 
-.VV 
-ContainsVV %
-(VV% &
-$strVV& 8
-)VV8 9
-==VV: <
-trueVV= A
-||VVB D
-contentTypeWW 
-?WW 
-.WW 
-ContainsWW %
-(WW% &
-$strWW& I
-)WWI J
-==WWK M
-trueWWN R
-)WWR S
-;WWS T
-}XX 
-privateZZ 
-staticZZ 
-boolZZ $
-ContainsMaliciousContentZZ 0
-(ZZ0 1
-stringZZ1 7
-inputZZ8 =
-)ZZ= >
-{[[ 
-if\\ 
+WriteAsync@@+ 5
+(@@5 6
+$str@@6 O
+)@@O P
+;@@P Q
+returnAA 
+;AA 
+}BB 
+}CC 
+catchDD 
+(DD 
+	ExceptionDD 
+exDD 
+)DD  
+{EE 
+_loggerFF 
+.FF 
+LogErrorFF  
+(FF  !
+exFF! #
+,FF# $
+$strFF% D
+)FFD E
+;FFE F
+}HH 
+}II 	
+awaitKK 
+_nextKK 
+(KK 
+contextKK 
+)KK 
+;KK 
+}LL 
+privateNN 
+staticNN 
+boolNN !
+ShouldValidateRequestNN -
+(NN- .
+HttpRequestNN. 9
+requestNN: A
+)NNA B
+{OO 
+varPP 
+methodPP 
+=PP 
+requestPP 
+.PP 
+MethodPP #
+.PP# $
+ToUpperInvariantPP$ 4
+(PP4 5
+)PP5 6
+;PP6 7
+varQQ 
+contentTypeQQ 
+=QQ 
+requestQQ !
+.QQ! "
+ContentTypeQQ" -
+?QQ- .
+.QQ. /
+ToLowerInvariantQQ/ ?
+(QQ? @
+)QQ@ A
+;QQA B
+returnSS 
+(SS 
+methodSS 
+==SS 
+$strSS  
+||SS! #
+methodSS$ *
+==SS+ -
+$strSS. 3
+||SS4 6
+methodSS7 =
+==SS> @
+$strSSA H
+)SSH I
+&&SSJ L
+(TT 
+contentTypeTT 
+?TT 
+.TT 
+ContainsTT %
+(TT% &
+$strTT& 8
+)TT8 9
+==TT: <
+trueTT= A
+||TTB D
+contentTypeUU 
+?UU 
+.UU 
+ContainsUU %
+(UU% &
+$strUU& I
+)UUI J
+==UUK M
+trueUUN R
+)UUR S
+;UUS T
+}VV 
+privateXX 
+staticXX 
+boolXX $
+ContainsMaliciousContentXX 0
+(XX0 1
+stringXX1 7
+inputXX8 =
+)XX= >
+{YY 
+ifZZ 
 
-(\\ 
-string\\ 
-.\\ 
-IsNullOrEmpty\\  
-(\\  !
-input\\! &
-)\\& '
-)\\' (
-return]] 
-false]] 
-;]] 
-foreach`` 
-(`` 
-var`` 
-pattern`` 
-in`` 
-MaliciousPatterns``  1
-)``1 2
-{aa 	
-ifbb 
-(bb 
-patternbb 
-.bb 
-IsMatchbb 
-(bb  
-inputbb  %
-)bb% &
-)bb& '
-returncc 
-truecc 
-;cc 
-}dd 	
-vargg 
-sqlPatternsgg 
-=gg 
-newgg 
-[gg 
-]gg 
-{hh 	
-$strii 
-,ii 
-$strii (
-,ii( )
-$strii* 7
-,ii7 8
-$strii9 F
-,iiF G
-$strjj 
-,jj 
-$strjj !
-,jj! "
-$strjj# -
-,jj- .
-$strjj/ 4
-,jj4 5
-$strjj6 ;
-}kk 	
-;kk	 
+(ZZ 
+stringZZ 
+.ZZ 
+IsNullOrEmptyZZ  
+(ZZ  !
+inputZZ! &
+)ZZ& '
+)ZZ' (
+return[[ 
+false[[ 
+;[[ 
+foreach^^ 
+(^^ 
+var^^ 
+pattern^^ 
+in^^ 
+MaliciousPatterns^^  1
+)^^1 2
+{__ 	
+if`` 
+(`` 
+pattern`` 
+.`` 
+IsMatch`` 
+(``  
+input``  %
+)``% &
+)``& '
+returnaa 
+trueaa 
+;aa 
+}bb 	
+varee 
+sqlPatternsee 
+=ee 
+newee 
+[ee 
+]ee 
+{ff 	
+$strgg 
+,gg 
+$strgg (
+,gg( )
+$strgg* 7
+,gg7 8
+$strgg9 F
+,ggF G
+$strhh 
+,hh 
+$strhh !
+,hh! "
+$strhh# -
+,hh- .
+$strhh/ 4
+,hh4 5
+$strhh6 ;
+}ii 	
+;ii	 
 
-varmm 
+varkk 
 
-lowerInputmm 
-=mm 
-inputmm 
-.mm 
-ToLowerInvariantmm /
-(mm/ 0
-)mm0 1
-;mm1 2
-foreachnn 
-(nn 
-varnn 
-patternnn 
-innn 
-sqlPatternsnn  +
+lowerInputkk 
+=kk 
+inputkk 
+.kk 
+ToLowerInvariantkk /
+(kk/ 0
+)kk0 1
+;kk1 2
+foreachll 
+(ll 
+varll 
+patternll 
+inll 
+sqlPatternsll  +
+)ll+ ,
+{mm 	
+ifnn 
+(nn 
+
+lowerInputnn 
+.nn 
+Containsnn #
+(nn# $
+patternnn$ +
 )nn+ ,
-{oo 	
-ifpp 
-(pp 
+)nn, -
+returnoo 
+trueoo 
+;oo 
+}pp 	
+returnrr 
+falserr 
+;rr 
+}ss 
+privateuu 
+staticuu 
+stringuu 
+GetClientIpAddressuu ,
+(uu, -
+HttpContextuu- 8
+contextuu9 @
+)uu@ A
+{vv 
+returnww 
+contextww 
+.ww 
+Requestww 
+.ww 
+Headersww &
+[ww& '
+$strww' 8
+]ww8 9
+.ww9 :
+FirstOrDefaultww: H
+(wwH I
+)wwI J
+?wwJ K
+.wwK L
+SplitwwL Q
+(wwQ R
+$charwwR U
+)wwU V
+.wwV W
+FirstOrDefaultwwW e
+(wwe f
+)wwf g
+?wwg h
+.wwh i
+Trimwwi m
+(wwm n
+)wwn o
+??xx 
+contextxx 
+.xx 
+Requestxx !
+.xx! "
+Headersxx" )
+[xx) *
+$strxx* 5
+]xx5 6
+.xx6 7
+FirstOrDefaultxx7 E
+(xxE F
+)xxF G
+??yy 
+contextyy 
+.yy 
 
-lowerInputpp 
-.pp 
-Containspp #
-(pp# $
-patternpp$ +
-)pp+ ,
-)pp, -
-returnqq 
-trueqq 
-;qq 
-}rr 	
-returntt 
-falsett 
-;tt 
-}uu 
-privateww 
-staticww 
-stringww 
-GetClientIpAddressww ,
-(ww, -
-HttpContextww- 8
-contextww9 @
-)ww@ A
-{xx 
-returnyy 
-contextyy 
-.yy 
-Requestyy 
-.yy 
-Headersyy &
-[yy& '
-$stryy' 8
-]yy8 9
-.yy9 :
-FirstOrDefaultyy: H
-(yyH I
-)yyI J
-?yyJ K
-.yyK L
-SplityyL Q
-(yyQ R
-$charyyR U
-)yyU V
-.yyV W
-FirstOrDefaultyyW e
-(yye f
-)yyf g
-?yyg h
-.yyh i
-Trimyyi m
-(yym n
-)yyn o
-??zz 
-contextzz 
-.zz 
-Requestzz !
-.zz! "
-Headerszz" )
-[zz) *
-$strzz* 5
-]zz5 6
-.zz6 7
-FirstOrDefaultzz7 E
-(zzE F
-)zzF G
-??{{ 
-context{{ 
-.{{ 
-
-Connection{{ $
-.{{$ %
-RemoteIpAddress{{% 4
-?{{4 5
-.{{5 6
-ToString{{6 >
-({{> ?
-){{? @
-??|| 
-$str|| 
-;|| 
-}}} 
-}~~ ÙN
+Connectionyy $
+.yy$ %
+RemoteIpAddressyy% 4
+?yy4 5
+.yy5 6
+ToStringyy6 >
+(yy> ?
+)yy? @
+??zz 
+$strzz 
+;zz 
+}{{ 
+}|| ÙN
 4/usr/src/backend/GeoQuizApi/Data/GeoQuizDbContext.cs
 	namespace 	
 
@@ -23105,7 +23106,1150 @@ AddMinutesDD> H
 )KK' (
 ;KK( )
 }LL 
-}MM ß
+}MM ÂX
+@/usr/src/backend/GeoQuizApi/Controllers/LeaderboardController.cs
+	namespace 	
+
+GeoQuizApi
+ 
+. 
+Controllers  
+;  !
+[ 
+ApiController 
+] 
+[ 
+Route 
+( 
+$str 
+) 
+] 
+[ 
+Produces 	
+(	 
+
+$str
+ 
+) 
+] 
+[ 
+Tags 
+( 
+$str 
+) 
+] 
+public 
+class !
+LeaderboardController "
+:# $
+ControllerBase% 3
+{ 
+private 
+readonly 
+ILeaderboardService (
+_leaderboardService) <
+;< =
+private 
+readonly 
+ILogger 
+< !
+LeaderboardController 2
+>2 3
+_logger4 ;
+;; <
+public 
+!
+LeaderboardController  
+(  !
+ILeaderboardService! 4
+leaderboardService5 G
+,G H
+ILoggerI P
+<P Q!
+LeaderboardControllerQ f
+>f g
+loggerh n
+)n o
+{ 
+_leaderboardService 
+= 
+leaderboardService 0
+;0 1
+_logger 
+= 
+logger 
+; 
+} 
+[## 
+HttpGet## 
+]## 
+public$$ 
+
+async$$ 
+Task$$ 
+<$$ 
+ActionResult$$ "
+<$$" #
+LeaderboardResponse$$# 6
+>$$6 7
+>$$7 8 
+GetGlobalLeaderboard$$9 M
+($$M N
+[%% 	
+	FromQuery%%	 
+]%% 
+int%% 
+page%% 
+=%% 
+$num%%  
+,%%  !
+[&& 	
+	FromQuery&&	 
+]&& 
+int&& 
+pageSize&&  
+=&&! "
+$num&&# %
+)&&% &
+{'' 
+var(( 
+currentUserId(( 
+=(( 
+GetCurrentUserId(( ,
+(((, -
+)((- .
+;((. /
+var)) 
+leaderboard)) 
+=)) 
+await)) 
+_leaderboardService))  3
+.))3 4%
+GetGlobalLeaderboardAsync))4 M
+())M N
+page))N R
+,))R S
+pageSize))T \
+,))\ ]
+currentUserId))^ k
+)))k l
+;))l m
+_logger++ 
+.++ 
+LogInformation++ 
+(++ 
+$str++ n
+,++n o
+page,, 
+,,, 
+pageSize,, 
+,,, 
+leaderboard,, '
+.,,' (
+TotalPlayers,,( 4
+),,4 5
+;,,5 6
+return.. 
+Ok.. 
+(.. 
+leaderboard.. 
+).. 
+;.. 
+}// 
+[:: 
+HttpGet:: 
+(:: 
+$str:: #
+)::# $
+]::$ %
+public;; 
+
+async;; 
+Task;; 
+<;; 
+ActionResult;; "
+<;;" #
+LeaderboardResponse;;# 6
+>;;6 7
+>;;7 8$
+GetLeaderboardByGameType;;9 Q
+(;;Q R
+string<< 
+gameType<< 
+,<< 
+[== 	
+	FromQuery==	 
+]== 
+int== 
+page== 
+=== 
+$num==  
+,==  !
+[>> 	
+	FromQuery>>	 
+]>> 
+int>> 
+pageSize>>  
+=>>! "
+$num>># %
+)>>% &
+{?? 
+var@@ 
+currentUserId@@ 
+=@@ 
+GetCurrentUserId@@ ,
+(@@, -
+)@@- .
+;@@. /
+varAA 
+leaderboardAA 
+=AA 
+awaitAA 
+_leaderboardServiceAA  3
+.AA3 4)
+GetLeaderboardByGameTypeAsyncAA4 Q
+(AAQ R
+gameTypeAAR Z
+,AAZ [
+pageAA\ `
+,AA` a
+pageSizeAAb j
+,AAj k
+currentUserIdAAl y
+)AAy z
+;AAz {
+_loggerCC 
+.CC 
+LogInformationCC 
+(CC 
+$str	CC Ä
+,
+CCÄ Å
+gameTypeDD 
+,DD 
+pageDD 
+,DD 
+pageSizeDD $
+,DD$ %
+leaderboardDD& 1
+.DD1 2
+TotalPlayersDD2 >
+)DD> ?
+;DD? @
+returnFF 
+OkFF 
+(FF 
+leaderboardFF 
+)FF 
+;FF 
+}GG 
+[RR 
+HttpGetRR 
+(RR 
+$strRR 
+)RR 
+]RR  
+publicSS 
+
+asyncSS 
+TaskSS 
+<SS 
+ActionResultSS "
+<SS" #
+LeaderboardResponseSS# 6
+>SS6 7
+>SS7 8"
+GetLeaderboardByPeriodSS9 O
+(SSO P
+stringTT 
+periodTT 
+,TT 
+[UU 	
+	FromQueryUU	 
+]UU 
+intUU 
+pageUU 
+=UU 
+$numUU  
+,UU  !
+[VV 	
+	FromQueryVV	 
+]VV 
+intVV 
+pageSizeVV  
+=VV! "
+$numVV# %
+)VV% &
+{WW 
+varXX 
+currentUserIdXX 
+=XX 
+GetCurrentUserIdXX ,
+(XX, -
+)XX- .
+;XX. /
+varYY 
+leaderboardYY 
+=YY 
+awaitYY 
+_leaderboardServiceYY  3
+.YY3 4'
+GetLeaderboardByPeriodAsyncYY4 O
+(YYO P
+periodYYP V
+,YYV W
+pageYYX \
+,YY\ ]
+pageSizeYY^ f
+,YYf g
+currentUserIdYYh u
+)YYu v
+;YYv w
+_logger[[ 
+.[[ 
+LogInformation[[ 
+([[ 
+$str[[ {
+,[[{ |
+period\\ 
+,\\ 
+page\\ 
+,\\ 
+pageSize\\ "
+,\\" #
+leaderboard\\$ /
+.\\/ 0
+TotalPlayers\\0 <
+)\\< =
+;\\= >
+return^^ 
+Ok^^ 
+(^^ 
+leaderboard^^ 
+)^^ 
+;^^ 
+}__ 
+[kk 
+HttpGetkk 
+(kk 
+$strkk 
+)kk 
+]kk 
+publicll 
+
+asyncll 
+Taskll 
+<ll 
+ActionResultll "
+<ll" #
+LeaderboardResponsell# 6
+>ll6 7
+>ll7 8"
+GetFilteredLeaderboardll9 O
+(llO P
+[mm 	
+	FromQuerymm	 
+]mm 
+stringmm 
+?mm 
+gameTypemm $
+=mm% &
+nullmm' +
+,mm+ ,
+[nn 	
+	FromQuerynn	 
+]nn 
+stringnn 
+?nn 
+periodnn "
+=nn# $
+nullnn% )
+,nn) *
+[oo 	
+	FromQueryoo	 
+]oo 
+intoo 
+pageoo 
+=oo 
+$numoo  
+,oo  !
+[pp 	
+	FromQuerypp	 
+]pp 
+intpp 
+pageSizepp  
+=pp! "
+$numpp# %
+)pp% &
+{qq 
+varrr 
+currentUserIdrr 
+=rr 
+GetCurrentUserIdrr ,
+(rr, -
+)rr- .
+;rr. /
+varss 
+leaderboardss 
+=ss 
+awaitss 
+_leaderboardServicess  3
+.ss3 4'
+GetFilteredLeaderboardAsyncss4 O
+(ssO P
+gameTypessP X
+,ssX Y
+periodssZ `
+,ss` a
+pagessb f
+,ssf g
+pageSizessh p
+,ssp q
+currentUserIdssr 
+)	ss Ä
+;
+ssÄ Å
+_loggeruu 
+.uu 
+LogInformationuu 
+(uu 
+$str	uu ò
+,
+uuò ô
+gameTypevv 
+??vv 
+$strvv 
+,vv 
+periodvv %
+??vv& (
+$strvv) 3
+,vv3 4
+pagevv5 9
+,vv9 :
+pageSizevv; C
+,vvC D
+leaderboardvvE P
+.vvP Q
+TotalPlayersvvQ ]
+)vv] ^
+;vv^ _
+returnxx 
+Okxx 
+(xx 
+leaderboardxx 
+)xx 
+;xx 
+}yy 
+[
+ÅÅ 
+HttpPost
+ÅÅ 
+(
+ÅÅ 
+$str
+ÅÅ 
+)
+ÅÅ 
+]
+ÅÅ 
+[
+ÇÇ 
+	Authorize
+ÇÇ 
+]
+ÇÇ 
+public
+ÉÉ 
+
+ActionResult
+ÉÉ #
+ClearLeaderboardCache
+ÉÉ -
+(
+ÉÉ- .
+)
+ÉÉ. /
+{
+ÑÑ !
+_leaderboardService
+ÖÖ 
+.
+ÖÖ 
+
+ClearCache
+ÖÖ &
+(
+ÖÖ& '
+)
+ÖÖ' (
+;
+ÖÖ( )
+_logger
+ÜÜ 
+.
+ÜÜ 
+LogInformation
+ÜÜ 
+(
+ÜÜ 
+$str
+ÜÜ K
+,
+ÜÜK L
+GetCurrentUserId
+ÜÜM ]
+(
+ÜÜ] ^
+)
+ÜÜ^ _
+)
+ÜÜ_ `
+;
+ÜÜ` a
+return
+áá 
+Ok
+áá 
+(
+áá 
+new
+áá 
+{
+áá 
+message
+áá 
+=
+áá  !
+$str
+áá" J
+}
+ááK L
+)
+ááL M
+;
+ááM N
+}
+àà 
+[
+èè 
+HttpGet
+èè 
+(
+èè 
+$str
+èè 
+)
+èè 
+]
+èè 
+public
+êê 
+
+ActionResult
+êê 
+<
+êê 
+object
+êê 
+>
+êê 
+GetGameTypes
+êê  ,
+(
+êê, -
+)
+êê- .
+{
+ëë 
+return
+íí 
+Ok
+íí 
+(
+íí 
+new
+íí 
+{
+ìì 	
+	gameTypes
+îî 
+=
+îî 
+
+GeoQuizApi
+îî "
+.
+îî" #
+Models
+îî# )
+.
+îî) *
+	GameTypes
+îî* 3
+.
+îî3 4
+ValidGameTypes
+îî4 B
+,
+îîB C
+description
+ïï 
+=
+ïï 
+$str
+ïï F
+}
+ññ 	
+)
+ññ	 
+
+;
+ññ
+ 
+}
+óó 
+[
+ûû 
+HttpGet
+ûû 
+(
+ûû 
+$str
+ûû 
+)
+ûû 
+]
+ûû 
+public
+üü 
+
+ActionResult
+üü 
+<
+üü 
+object
+üü 
+>
+üü 
+
+GetPeriods
+üü  *
+(
+üü* +
+)
+üü+ ,
+{
+†† 
+return
+°° 
+Ok
+°° 
+(
+°° 
+new
+°° 
+{
+¢¢ 	
+periods
+££ 
+=
+££ 
+
+GeoQuizApi
+££  
+.
+££  !
+Models
+££! '
+.
+££' ( 
+LeaderboardPeriods
+££( :
+.
+££: ;
+ValidPeriods
+££; G
+,
+££G H
+description
+§§ 
+=
+§§ 
+$str
+§§ H
+}
+•• 	
+)
+••	 
+
+;
+••
+ 
+}
+¶¶ 
+private
+®® 
+Guid
+®® 
+?
+®® 
+GetCurrentUserId
+®® "
+(
+®®" #
+)
+®®# $
+{
+©© 
+var
+™™ 
+userIdClaim
+™™ 
+=
+™™ 
+User
+™™ 
+.
+™™ 
+	FindFirst
+™™ (
+(
+™™( )
+
+ClaimTypes
+™™) 3
+.
+™™3 4
+NameIdentifier
+™™4 B
+)
+™™B C
+?
+™™C D
+.
+™™D E
+Value
+™™E J
+;
+™™J K
+if
+´´ 
+
+(
+´´ 
+string
+´´ 
+.
+´´ 
+IsNullOrEmpty
+´´  
+(
+´´  !
+userIdClaim
+´´! ,
+)
+´´, -
+||
+´´. 0
+!
+´´1 2
+Guid
+´´2 6
+.
+´´6 7
+TryParse
+´´7 ?
+(
+´´? @
+userIdClaim
+´´@ K
+,
+´´K L
+out
+´´M P
+var
+´´Q T
+userId
+´´U [
+)
+´´[ \
+)
+´´\ ]
+{
+¨¨ 	
+return
+≠≠ 
+null
+≠≠ 
+;
+≠≠ 
+}
+ÆÆ 	
+return
+ØØ 
+userId
+ØØ 
+;
+ØØ 
+}
+∞∞ 
+}±± ñ/
+;/usr/src/backend/GeoQuizApi/Controllers/HealthController.cs
+	namespace 	
+
+GeoQuizApi
+ 
+. 
+Controllers  
+;  !
+[
+
+ 
+ApiController
+
+ 
+]
+
+ 
+[ 
+Route 
+( 
+$str 
+) 
+] 
+public 
+class 
+HealthController 
+: 
+ControllerBase  .
+{ 
+private 
+readonly 
+GeoQuizDbContext %
+_context& .
+;. /
+public 
+
+HealthController 
+( 
+GeoQuizDbContext ,
+context- 4
+)4 5
+{ 
+_context 
+= 
+context 
+; 
+} 
+[ 
+HttpGet 
+] 
+public 
+
+async 
+Task 
+< 
+IActionResult #
+># $
+Get% (
+(( )
+)) *
+{ 
+await 
+_context 
+. 
+Database 
+.  
+CanConnectAsync  /
+(/ 0
+)0 1
+;1 2
+var 
+healthStatus 
+= 
+new 
+{   	
+Status!! 
+=!! 
+$str!! 
+,!! 
+	Timestamp"" 
+="" 
+DateTime""  
+.""  !
+UtcNow""! '
+,""' (
+Version## 
+=## 
+$str## 
+,## 
+Environment$$ 
+=$$ 
+Environment$$ %
+.$$% &"
+GetEnvironmentVariable$$& <
+($$< =
+$str$$= U
+)$$U V
+??$$W Y
+$str$$Z c
+}%% 	
+;%%	 
+
+return'' 
+Ok'' 
+('' 
+healthStatus'' 
+)'' 
+;''  
+}(( 
+[.. 
+HttpGet.. 
+(.. 
+$str.. 
+).. 
+].. 
+public// 
+
+async// 
+Task// 
+<// 
+IActionResult// #
+>//# $
+GetDetailed//% 0
+(//0 1
+)//1 2
+{00 
+var11 
+healthChecks11 
+=11 
+new11 
+
+Dictionary11 )
+<11) *
+string11* 0
+,110 1
+object112 8
+>118 9
+(119 :
+)11: ;
+;11; <
+var22 
+overallStatus22 
+=22 
+$str22 %
+;22% &
+var55 
+dbStartTime55 
+=55 
+DateTime55 "
+.55" #
+UtcNow55# )
+;55) *
+var66 
+
+canConnect66 
+=66 
+await66 
+_context66 '
+.66' (
+Database66( 0
+.660 1
+CanConnectAsync661 @
+(66@ A
+)66A B
+;66B C
+var77 
+dbResponseTime77 
+=77 
+(77 
+DateTime77 &
+.77& '
+UtcNow77' -
+-77. /
+dbStartTime770 ;
+)77; <
+.77< =
+TotalMilliseconds77= N
+;77N O
+healthChecks99 
+[99 
+$str99 
+]99  
+=99! "
+new99# &
+{:: 	
+Status;; 
+=;; 
+
+canConnect;; 
+?;;  !
+$str;;" +
+:;;, -
+$str;;. 9
+,;;9 :
+ResponseTime<< 
+=<< 
+$"<< 
+{<< 
+dbResponseTime<< ,
+:<<, -
+$str<<- /
+}<</ 0
+$str<<0 2
+"<<2 3
+}== 	
+;==	 
+
+if?? 
+
+(?? 
+!?? 
+
+canConnect?? 
+)?? 
+{@@ 	
+overallStatusAA 
+=AA 
+$strAA '
+;AA' (
+}BB 	
+varEE 
+
+workingSetEE 
+=EE 
+GCEE 
+.EE 
+GetTotalMemoryEE *
+(EE* +
+falseEE+ 0
+)EE0 1
+;EE1 2
+healthChecksFF 
+[FF 
+$strFF 
+]FF 
+=FF  
+newFF! $
+{GG 	
+StatusHH 
+=HH 
+$strHH 
+,HH 
+
+WorkingSetII 
+=II 
+$"II 
+{II 
+
+workingSetII &
+/II' (
+$numII) -
+/II. /
+$numII0 4
+:II4 5
+$strII5 7
+}II7 8
+$strII8 ;
+"II; <
+}JJ 	
+;JJ	 
+
+varMM 
+processStartTimeMM 
+=MM 
+EnvironmentMM *
+.MM* +
+TickCount64MM+ 6
+;MM6 7
+varNN 
+uptimeNN 
+=NN 
+TimeSpanNN 
+.NN 
+FromMillisecondsNN .
+(NN. /
+processStartTimeNN/ ?
+)NN? @
+;NN@ A
+healthChecksOO 
+[OO 
+$strOO 
+]OO 
+=OO  
+newOO! $
+{PP 	
+StatusQQ 
+=QQ 
+$strQQ 
+,QQ 
+DurationRR 
+=RR 
+uptimeRR 
+.RR 
+ToStringRR &
+(RR& '
+$strRR' 8
+)RR8 9
+}SS 	
+;SS	 
+
+varUU 
+responseUU 
+=UU 
+newUU 
+{VV 	
+StatusWW 
+=WW 
+overallStatusWW "
+,WW" #
+	TimestampXX 
+=XX 
+DateTimeXX  
+.XX  !
+UtcNowXX! '
+,XX' (
+VersionYY 
+=YY 
+$strYY 
+,YY 
+EnvironmentZZ 
+=ZZ 
+EnvironmentZZ %
+.ZZ% &"
+GetEnvironmentVariableZZ& <
+(ZZ< =
+$strZZ= U
+)ZZU V
+??ZZW Y
+$strZZZ c
+,ZZc d
+Checks[[ 
+=[[ 
+healthChecks[[ !
+}\\ 	
+;\\	 
+
+return^^ 
+overallStatus^^ 
+==^^ 
+$str^^  )
+?^^* +
+Ok^^, .
+(^^. /
+response^^/ 7
+)^^7 8
+:^^9 :
+
+StatusCode^^; E
+(^^E F
+$num^^F I
+,^^I J
+response^^K S
+)^^S T
+;^^T U
+}__ 
+}`` ß
 >/usr/src/backend/GeoQuizApi/Controllers/GameStatsController.cs
 	namespace		 	
 
@@ -24353,1168 +25497,7 @@ ClaimTypes
 
 }
 —— 
-}““ Ò1
-;/usr/src/backend/GeoQuizApi/Controllers/HealthController.cs
-	namespace 	
-
-GeoQuizApi
- 
-. 
-Controllers  
-;  !
-[
-
- 
-ApiController
-
- 
-]
-
- 
-[ 
-Route 
-( 
-$str 
-) 
-] 
-public 
-class 
-HealthController 
-: 
-ControllerBase  .
-{ 
-private 
-readonly 
-GeoQuizDbContext %
-_context& .
-;. /
-private 
-readonly 
-ILogger 
-< 
-HealthController -
->- .
-_logger/ 6
-;6 7
-public 
-
-HealthController 
-( 
-GeoQuizDbContext ,
-context- 4
-,4 5
-ILogger6 =
-<= >
-HealthController> N
->N O
-loggerP V
-)V W
-{ 
-_context 
-= 
-context 
-; 
-_logger 
-= 
-logger 
-; 
-} 
-[ 
-HttpGet 
-] 
-public 
-
-async 
-Task 
-< 
-IActionResult #
-># $
-Get% (
-(( )
-)) *
-{ 
-await 
-_context 
-. 
-Database 
-.  
-CanConnectAsync  /
-(/ 0
-)0 1
-;1 2
-var!! 
-healthStatus!! 
-=!! 
-new!! 
-{"" 	
-Status## 
-=## 
-$str## 
-,## 
-	Timestamp$$ 
-=$$ 
-DateTime$$  
-.$$  !
-UtcNow$$! '
-,$$' (
-Version%% 
-=%% 
-$str%% 
-,%% 
-Environment&& 
-=&& 
-Environment&& %
-.&&% &"
-GetEnvironmentVariable&&& <
-(&&< =
-$str&&= U
-)&&U V
-??&&W Y
-$str&&Z c
-}'' 	
-;''	 
-
-return)) 
-Ok)) 
-()) 
-healthStatus)) 
-))) 
-;))  
-}** 
-[00 
-HttpGet00 
-(00 
-$str00 
-)00 
-]00 
-public11 
-
-async11 
-Task11 
-<11 
-IActionResult11 #
->11# $
-GetDetailed11% 0
-(110 1
-)111 2
-{22 
-var33 
-healthChecks33 
-=33 
-new33 
-
-Dictionary33 )
-<33) *
-string33* 0
-,330 1
-object332 8
->338 9
-(339 :
-)33: ;
-;33; <
-var44 
-overallStatus44 
-=44 
-$str44 %
-;44% &
-var77 
-dbStartTime77 
-=77 
-DateTime77 "
-.77" #
-UtcNow77# )
-;77) *
-var88 
-
-canConnect88 
-=88 
-await88 
-_context88 '
-.88' (
-Database88( 0
-.880 1
-CanConnectAsync881 @
-(88@ A
-)88A B
-;88B C
-var99 
-dbResponseTime99 
-=99 
-(99 
-DateTime99 &
-.99& '
-UtcNow99' -
--99. /
-dbStartTime990 ;
-)99; <
-.99< =
-TotalMilliseconds99= N
-;99N O
-healthChecks;; 
-[;; 
-$str;; 
-];;  
-=;;! "
-new;;# &
-{<< 	
-Status== 
-=== 
-
-canConnect== 
-?==  !
-$str==" +
-:==, -
-$str==. 9
-,==9 :
-ResponseTime>> 
-=>> 
-$">> 
-{>> 
-dbResponseTime>> ,
-:>>, -
-$str>>- /
-}>>/ 0
-$str>>0 2
-">>2 3
-}?? 	
-;??	 
-
-ifAA 
-
-(AA 
-!AA 
-
-canConnectAA 
-)AA 
-{BB 	
-overallStatusCC 
-=CC 
-$strCC '
-;CC' (
-}DD 	
-varGG 
-
-workingSetGG 
-=GG 
-GCGG 
-.GG 
-GetTotalMemoryGG *
-(GG* +
-falseGG+ 0
-)GG0 1
-;GG1 2
-healthChecksHH 
-[HH 
-$strHH 
-]HH 
-=HH  
-newHH! $
-{II 	
-StatusJJ 
-=JJ 
-$strJJ 
-,JJ 
-
-WorkingSetKK 
-=KK 
-$"KK 
-{KK 
-
-workingSetKK &
-/KK' (
-$numKK) -
-/KK. /
-$numKK0 4
-:KK4 5
-$strKK5 7
-}KK7 8
-$strKK8 ;
-"KK; <
-}LL 	
-;LL	 
-
-varOO 
-processStartTimeOO 
-=OO 
-EnvironmentOO *
-.OO* +
-TickCount64OO+ 6
-;OO6 7
-varPP 
-uptimePP 
-=PP 
-TimeSpanPP 
-.PP 
-FromMillisecondsPP .
-(PP. /
-processStartTimePP/ ?
-)PP? @
-;PP@ A
-healthChecksQQ 
-[QQ 
-$strQQ 
-]QQ 
-=QQ  
-newQQ! $
-{RR 	
-StatusSS 
-=SS 
-$strSS 
-,SS 
-DurationTT 
-=TT 
-uptimeTT 
-.TT 
-ToStringTT &
-(TT& '
-$strTT' 8
-)TT8 9
-}UU 	
-;UU	 
-
-varWW 
-responseWW 
-=WW 
-newWW 
-{XX 	
-StatusYY 
-=YY 
-overallStatusYY "
-,YY" #
-	TimestampZZ 
-=ZZ 
-DateTimeZZ  
-.ZZ  !
-UtcNowZZ! '
-,ZZ' (
-Version[[ 
-=[[ 
-$str[[ 
-,[[ 
-Environment\\ 
-=\\ 
-Environment\\ %
-.\\% &"
-GetEnvironmentVariable\\& <
-(\\< =
-$str\\= U
-)\\U V
-??\\W Y
-$str\\Z c
-,\\c d
-Checks]] 
-=]] 
-healthChecks]] !
-}^^ 	
-;^^	 
-
-return`` 
-overallStatus`` 
-==`` 
-$str``  )
-?``* +
-Ok``, .
-(``. /
-response``/ 7
-)``7 8
-:``9 :
-
-StatusCode``; E
-(``E F
-$num``F I
-,``I J
-response``K S
-)``S T
-;``T U
-}aa 
-}bb ÂX
-@/usr/src/backend/GeoQuizApi/Controllers/LeaderboardController.cs
-	namespace 	
-
-GeoQuizApi
- 
-. 
-Controllers  
-;  !
-[ 
-ApiController 
-] 
-[ 
-Route 
-( 
-$str 
-) 
-] 
-[ 
-Produces 	
-(	 
-
-$str
- 
-) 
-] 
-[ 
-Tags 
-( 
-$str 
-) 
-] 
-public 
-class !
-LeaderboardController "
-:# $
-ControllerBase% 3
-{ 
-private 
-readonly 
-ILeaderboardService (
-_leaderboardService) <
-;< =
-private 
-readonly 
-ILogger 
-< !
-LeaderboardController 2
->2 3
-_logger4 ;
-;; <
-public 
-!
-LeaderboardController  
-(  !
-ILeaderboardService! 4
-leaderboardService5 G
-,G H
-ILoggerI P
-<P Q!
-LeaderboardControllerQ f
->f g
-loggerh n
-)n o
-{ 
-_leaderboardService 
-= 
-leaderboardService 0
-;0 1
-_logger 
-= 
-logger 
-; 
-} 
-[## 
-HttpGet## 
-]## 
-public$$ 
-
-async$$ 
-Task$$ 
-<$$ 
-ActionResult$$ "
-<$$" #
-LeaderboardResponse$$# 6
->$$6 7
->$$7 8 
-GetGlobalLeaderboard$$9 M
-($$M N
-[%% 	
-	FromQuery%%	 
-]%% 
-int%% 
-page%% 
-=%% 
-$num%%  
-,%%  !
-[&& 	
-	FromQuery&&	 
-]&& 
-int&& 
-pageSize&&  
-=&&! "
-$num&&# %
-)&&% &
-{'' 
-var(( 
-currentUserId(( 
-=(( 
-GetCurrentUserId(( ,
-(((, -
-)((- .
-;((. /
-var)) 
-leaderboard)) 
-=)) 
-await)) 
-_leaderboardService))  3
-.))3 4%
-GetGlobalLeaderboardAsync))4 M
-())M N
-page))N R
-,))R S
-pageSize))T \
-,))\ ]
-currentUserId))^ k
-)))k l
-;))l m
-_logger++ 
-.++ 
-LogInformation++ 
-(++ 
-$str++ n
-,++n o
-page,, 
-,,, 
-pageSize,, 
-,,, 
-leaderboard,, '
-.,,' (
-TotalPlayers,,( 4
-),,4 5
-;,,5 6
-return.. 
-Ok.. 
-(.. 
-leaderboard.. 
-).. 
-;.. 
-}// 
-[:: 
-HttpGet:: 
-(:: 
-$str:: #
-)::# $
-]::$ %
-public;; 
-
-async;; 
-Task;; 
-<;; 
-ActionResult;; "
-<;;" #
-LeaderboardResponse;;# 6
->;;6 7
->;;7 8$
-GetLeaderboardByGameType;;9 Q
-(;;Q R
-string<< 
-gameType<< 
-,<< 
-[== 	
-	FromQuery==	 
-]== 
-int== 
-page== 
-=== 
-$num==  
-,==  !
-[>> 	
-	FromQuery>>	 
-]>> 
-int>> 
-pageSize>>  
-=>>! "
-$num>># %
-)>>% &
-{?? 
-var@@ 
-currentUserId@@ 
-=@@ 
-GetCurrentUserId@@ ,
-(@@, -
-)@@- .
-;@@. /
-varAA 
-leaderboardAA 
-=AA 
-awaitAA 
-_leaderboardServiceAA  3
-.AA3 4)
-GetLeaderboardByGameTypeAsyncAA4 Q
-(AAQ R
-gameTypeAAR Z
-,AAZ [
-pageAA\ `
-,AA` a
-pageSizeAAb j
-,AAj k
-currentUserIdAAl y
-)AAy z
-;AAz {
-_loggerCC 
-.CC 
-LogInformationCC 
-(CC 
-$str	CC Ä
-,
-CCÄ Å
-gameTypeDD 
-,DD 
-pageDD 
-,DD 
-pageSizeDD $
-,DD$ %
-leaderboardDD& 1
-.DD1 2
-TotalPlayersDD2 >
-)DD> ?
-;DD? @
-returnFF 
-OkFF 
-(FF 
-leaderboardFF 
-)FF 
-;FF 
-}GG 
-[RR 
-HttpGetRR 
-(RR 
-$strRR 
-)RR 
-]RR  
-publicSS 
-
-asyncSS 
-TaskSS 
-<SS 
-ActionResultSS "
-<SS" #
-LeaderboardResponseSS# 6
->SS6 7
->SS7 8"
-GetLeaderboardByPeriodSS9 O
-(SSO P
-stringTT 
-periodTT 
-,TT 
-[UU 	
-	FromQueryUU	 
-]UU 
-intUU 
-pageUU 
-=UU 
-$numUU  
-,UU  !
-[VV 	
-	FromQueryVV	 
-]VV 
-intVV 
-pageSizeVV  
-=VV! "
-$numVV# %
-)VV% &
-{WW 
-varXX 
-currentUserIdXX 
-=XX 
-GetCurrentUserIdXX ,
-(XX, -
-)XX- .
-;XX. /
-varYY 
-leaderboardYY 
-=YY 
-awaitYY 
-_leaderboardServiceYY  3
-.YY3 4'
-GetLeaderboardByPeriodAsyncYY4 O
-(YYO P
-periodYYP V
-,YYV W
-pageYYX \
-,YY\ ]
-pageSizeYY^ f
-,YYf g
-currentUserIdYYh u
-)YYu v
-;YYv w
-_logger[[ 
-.[[ 
-LogInformation[[ 
-([[ 
-$str[[ {
-,[[{ |
-period\\ 
-,\\ 
-page\\ 
-,\\ 
-pageSize\\ "
-,\\" #
-leaderboard\\$ /
-.\\/ 0
-TotalPlayers\\0 <
-)\\< =
-;\\= >
-return^^ 
-Ok^^ 
-(^^ 
-leaderboard^^ 
-)^^ 
-;^^ 
-}__ 
-[kk 
-HttpGetkk 
-(kk 
-$strkk 
-)kk 
-]kk 
-publicll 
-
-asyncll 
-Taskll 
-<ll 
-ActionResultll "
-<ll" #
-LeaderboardResponsell# 6
->ll6 7
->ll7 8"
-GetFilteredLeaderboardll9 O
-(llO P
-[mm 	
-	FromQuerymm	 
-]mm 
-stringmm 
-?mm 
-gameTypemm $
-=mm% &
-nullmm' +
-,mm+ ,
-[nn 	
-	FromQuerynn	 
-]nn 
-stringnn 
-?nn 
-periodnn "
-=nn# $
-nullnn% )
-,nn) *
-[oo 	
-	FromQueryoo	 
-]oo 
-intoo 
-pageoo 
-=oo 
-$numoo  
-,oo  !
-[pp 	
-	FromQuerypp	 
-]pp 
-intpp 
-pageSizepp  
-=pp! "
-$numpp# %
-)pp% &
-{qq 
-varrr 
-currentUserIdrr 
-=rr 
-GetCurrentUserIdrr ,
-(rr, -
-)rr- .
-;rr. /
-varss 
-leaderboardss 
-=ss 
-awaitss 
-_leaderboardServicess  3
-.ss3 4'
-GetFilteredLeaderboardAsyncss4 O
-(ssO P
-gameTypessP X
-,ssX Y
-periodssZ `
-,ss` a
-pagessb f
-,ssf g
-pageSizessh p
-,ssp q
-currentUserIdssr 
-)	ss Ä
-;
-ssÄ Å
-_loggeruu 
-.uu 
-LogInformationuu 
-(uu 
-$str	uu ò
-,
-uuò ô
-gameTypevv 
-??vv 
-$strvv 
-,vv 
-periodvv %
-??vv& (
-$strvv) 3
-,vv3 4
-pagevv5 9
-,vv9 :
-pageSizevv; C
-,vvC D
-leaderboardvvE P
-.vvP Q
-TotalPlayersvvQ ]
-)vv] ^
-;vv^ _
-returnxx 
-Okxx 
-(xx 
-leaderboardxx 
-)xx 
-;xx 
-}yy 
-[
-ÅÅ 
-HttpPost
-ÅÅ 
-(
-ÅÅ 
-$str
-ÅÅ 
-)
-ÅÅ 
-]
-ÅÅ 
-[
-ÇÇ 
-	Authorize
-ÇÇ 
-]
-ÇÇ 
-public
-ÉÉ 
-
-ActionResult
-ÉÉ #
-ClearLeaderboardCache
-ÉÉ -
-(
-ÉÉ- .
-)
-ÉÉ. /
-{
-ÑÑ !
-_leaderboardService
-ÖÖ 
-.
-ÖÖ 
-
-ClearCache
-ÖÖ &
-(
-ÖÖ& '
-)
-ÖÖ' (
-;
-ÖÖ( )
-_logger
-ÜÜ 
-.
-ÜÜ 
-LogInformation
-ÜÜ 
-(
-ÜÜ 
-$str
-ÜÜ K
-,
-ÜÜK L
-GetCurrentUserId
-ÜÜM ]
-(
-ÜÜ] ^
-)
-ÜÜ^ _
-)
-ÜÜ_ `
-;
-ÜÜ` a
-return
-áá 
-Ok
-áá 
-(
-áá 
-new
-áá 
-{
-áá 
-message
-áá 
-=
-áá  !
-$str
-áá" J
-}
-ááK L
-)
-ááL M
-;
-ááM N
-}
-àà 
-[
-èè 
-HttpGet
-èè 
-(
-èè 
-$str
-èè 
-)
-èè 
-]
-èè 
-public
-êê 
-
-ActionResult
-êê 
-<
-êê 
-object
-êê 
->
-êê 
-GetGameTypes
-êê  ,
-(
-êê, -
-)
-êê- .
-{
-ëë 
-return
-íí 
-Ok
-íí 
-(
-íí 
-new
-íí 
-{
-ìì 	
-	gameTypes
-îî 
-=
-îî 
-
-GeoQuizApi
-îî "
-.
-îî" #
-Models
-îî# )
-.
-îî) *
-	GameTypes
-îî* 3
-.
-îî3 4
-ValidGameTypes
-îî4 B
-,
-îîB C
-description
-ïï 
-=
-ïï 
-$str
-ïï F
-}
-ññ 	
-)
-ññ	 
-
-;
-ññ
- 
-}
-óó 
-[
-ûû 
-HttpGet
-ûû 
-(
-ûû 
-$str
-ûû 
-)
-ûû 
-]
-ûû 
-public
-üü 
-
-ActionResult
-üü 
-<
-üü 
-object
-üü 
->
-üü 
-
-GetPeriods
-üü  *
-(
-üü* +
-)
-üü+ ,
-{
-†† 
-return
-°° 
-Ok
-°° 
-(
-°° 
-new
-°° 
-{
-¢¢ 	
-periods
-££ 
-=
-££ 
-
-GeoQuizApi
-££  
-.
-££  !
-Models
-££! '
-.
-££' ( 
-LeaderboardPeriods
-££( :
-.
-££: ;
-ValidPeriods
-££; G
-,
-££G H
-description
-§§ 
-=
-§§ 
-$str
-§§ H
-}
-•• 	
-)
-••	 
-
-;
-••
- 
-}
-¶¶ 
-private
-®® 
-Guid
-®® 
-?
-®® 
-GetCurrentUserId
-®® "
-(
-®®" #
-)
-®®# $
-{
-©© 
-var
-™™ 
-userIdClaim
-™™ 
-=
-™™ 
-User
-™™ 
-.
-™™ 
-	FindFirst
-™™ (
-(
-™™( )
-
-ClaimTypes
-™™) 3
-.
-™™3 4
-NameIdentifier
-™™4 B
-)
-™™B C
-?
-™™C D
-.
-™™D E
-Value
-™™E J
-;
-™™J K
-if
-´´ 
-
-(
-´´ 
-string
-´´ 
-.
-´´ 
-IsNullOrEmpty
-´´  
-(
-´´  !
-userIdClaim
-´´! ,
-)
-´´, -
-||
-´´. 0
-!
-´´1 2
-Guid
-´´2 6
-.
-´´6 7
-TryParse
-´´7 ?
-(
-´´? @
-userIdClaim
-´´@ K
-,
-´´K L
-out
-´´M P
-var
-´´Q T
-userId
-´´U [
-)
-´´[ \
-)
-´´\ ]
-{
-¨¨ 	
-return
-≠≠ 
-null
-≠≠ 
-;
-≠≠ 
-}
-ÆÆ 	
-return
-ØØ 
-userId
-ØØ 
-;
-ØØ 
-}
-∞∞ 
-}±± ˛y
+}““ ˛y
 9/usr/src/backend/GeoQuizApi/Controllers/AuthController.cs
 	namespace
 

@@ -150,6 +150,7 @@
   </ServerSettings>
   <LocalSettings>
     <Property Name="sonar.host.url">http://sonarqube:9000</Property>
+    <Property Name="sonar.qualitygate.wait">true</Property>
   </LocalSettings>
   <ScannerOptsSettings />
   <AnalyzersSettings>

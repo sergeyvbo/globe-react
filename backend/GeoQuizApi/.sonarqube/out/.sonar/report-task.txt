@@ -2,5 +2,5 @@ projectKey=geoquiz-backend
 serverUrl=http://sonarqube:9000
 serverVersion=25.8.0.112029
 dashboardUrl=http://sonarqube:9000/dashboard?id=geoquiz-backend
-ceTaskId=e758f5ce-f57f-4542-a888-7fb9b71b35d8
-ceTaskUrl=http://sonarqube:9000/api/ce/task?id=e758f5ce-f57f-4542-a888-7fb9b71b35d8
+ceTaskId=0f85c676-c033-44f4-9fd4-c68e5b4583c1
+ceTaskUrl=http://sonarqube:9000/api/ce/task?id=0f85c676-c033-44f4-9fd4-c68e5b4583c1

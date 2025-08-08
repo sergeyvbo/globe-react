@@ -47,8 +47,6 @@ public class InputValidationMiddleware
         // Only validate POST, PUT, PATCH requests with JSON content
         if (ShouldValidateRequest(context.Request))
         {
-            var originalBody = context.Request.Body;
-            
             try
             {
                 context.Request.EnableBuffering();

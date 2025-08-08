@@ -56,12 +56,12 @@ builder.Services.AddControllers()
             };
 
             // Add additional fields
-            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
-            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            problemDetails.Extensions[ProblemDetailsConstants.TimestampKey] = DateTime.UtcNow;
+            problemDetails.Extensions[ProblemDetailsConstants.TraceIdKey] = context.HttpContext.TraceIdentifier;
 
             return new BadRequestObjectResult(problemDetails)
             {
-                ContentTypes = { "application/problem+json" }
+                ContentTypes = { ProblemDetailsConstants.ProblemJsonContentType }
             };
         };
     });
@@ -122,8 +122,8 @@ builder.Services.AddProblemDetails(options =>
     options.CustomizeProblemDetails = (context) =>
     {
         // Add timestamp and trace ID to all problem details
-        context.ProblemDetails.Extensions["timestamp"] = DateTime.UtcNow;
-        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        context.ProblemDetails.Extensions[ProblemDetailsConstants.TimestampKey] = DateTime.UtcNow;
+        context.ProblemDetails.Extensions[ProblemDetailsConstants.TraceIdKey] = context.HttpContext.TraceIdentifier;
         
         // Set instance to the current request path
         context.ProblemDetails.Instance = context.HttpContext.Request.Path;
@@ -193,11 +193,11 @@ builder.Services.AddAuthentication(options =>
             };
 
             // Add additional fields
-            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
-            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            problemDetails.Extensions[ProblemDetailsConstants.TimestampKey] = DateTime.UtcNow;
+            problemDetails.Extensions[ProblemDetailsConstants.TraceIdKey] = context.HttpContext.TraceIdentifier;
 
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/problem+json";
+            context.Response.ContentType = ProblemDetailsConstants.ProblemJsonContentType;
 
             return context.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
             {
@@ -218,11 +218,11 @@ builder.Services.AddAuthentication(options =>
             };
 
             // Add additional fields
-            problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
-            problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+            problemDetails.Extensions[ProblemDetailsConstants.TimestampKey] = DateTime.UtcNow;
+            problemDetails.Extensions[ProblemDetailsConstants.TraceIdKey] = context.HttpContext.TraceIdentifier;
 
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            context.Response.ContentType = "application/problem+json";
+            context.Response.ContentType = ProblemDetailsConstants.ProblemJsonContentType;
 
             return context.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
             {
@@ -343,10 +343,10 @@ app.UseStatusCodePages(async context =>
         };
 
         // Add additional fields
-        problemDetails.Extensions["timestamp"] = DateTime.UtcNow;
-        problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        problemDetails.Extensions[ProblemDetailsConstants.TimestampKey] = DateTime.UtcNow;
+        problemDetails.Extensions[ProblemDetailsConstants.TraceIdKey] = context.HttpContext.TraceIdentifier;
 
-        response.ContentType = "application/problem+json";
+        response.ContentType = ProblemDetailsConstants.ProblemJsonContentType;
         await response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -393,3 +393,11 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Constants for repeated strings
+internal static class ProblemDetailsConstants
+{
+    public const string TimestampKey = "timestamp";
+    public const string TraceIdKey = "traceId";
+    public const string ProblemJsonContentType = "application/problem+json";
+}

@@ -47,10 +47,10 @@ B/usr/src/backend/GeoQuizApi/Middleware/RequestLoggingMiddleware.csutf-8I
 @/usr/src/backend/GeoQuizApi/Middleware/RateLimitingMiddleware.csutf-8L
 C/usr/src/backend/GeoQuizApi/Middleware/InputValidationMiddleware.csutf-8=
 4/usr/src/backend/GeoQuizApi/Data/GeoQuizDbContext.csutf-85
-,/usr/src/backend/GeoQuizApi/Data/DbSeeder.csutf-8G
->/usr/src/backend/GeoQuizApi/Controllers/GameStatsController.csutf-8D
-;/usr/src/backend/GeoQuizApi/Controllers/HealthController.csutf-8I
-@/usr/src/backend/GeoQuizApi/Controllers/LeaderboardController.csutf-8B
+,/usr/src/backend/GeoQuizApi/Data/DbSeeder.csutf-8I
+@/usr/src/backend/GeoQuizApi/Controllers/LeaderboardController.csutf-8D
+;/usr/src/backend/GeoQuizApi/Controllers/HealthController.csutf-8G
+>/usr/src/backend/GeoQuizApi/Controllers/GameStatsController.csutf-8B
 9/usr/src/backend/GeoQuizApi/Controllers/AuthController.csutf-8F
 =/usr/src/backend/GeoQuizApi/Configuration/SecuritySettings.csutf-8A
 8/usr/src/backend/GeoQuizApi/Configuration/JwtSettings.csutf-8B

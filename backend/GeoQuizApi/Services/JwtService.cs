@@ -107,7 +107,7 @@ public class JwtService : IJwtService
                 ValidAudience = _jwtSettings.Audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
-            }, out SecurityToken validatedToken);
+            }, out _);
 
             return true;
         }

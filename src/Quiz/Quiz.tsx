@@ -135,7 +135,7 @@ const QuizButton: React.FC<QuizButtonProps> = React.memo(({
         onBtnClick(option.name)
     }, [onBtnClick, option.name])
 
-    const flagIcon = useMemo(() => 
+    const flagIcon = useMemo(() =>
         showFlags ? <FlagImage countryCode={option.code} size="20x15" alt={option.code} /> : null,
         [showFlags, option.code]
     )
@@ -154,6 +154,4 @@ const QuizButton: React.FC<QuizButtonProps> = React.memo(({
             </Typography>
         </Button>
     )
-})
-
 })
